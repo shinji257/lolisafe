@@ -20,7 +20,9 @@
     "pm2": "pm2 start --name safe ./lolisafe.js",
     "thumbs": "node ./scripts/thumbs.js",
     "cfpurge": "node ./scripts/cfpurge.js",
-    "pull": "git stash; git pull; yarn; git stash pop"
+    "pull": "git stash; git pull; yarn; git stash pop",
+    "snyk-protect": "snyk protect",
+    "prepublish": "npm run snyk-protect"
   },
   "dependencies": {
     "bcrypt": "^3.0.6",
@@ -39,7 +41,8 @@
     "randomstring": "^1.1.5",
     "readline": "^1.3.0",
     "sharp": "^0.22.1",
-    "sqlite3": "^4.0.9"
+    "sqlite3": "^4.0.9",
+    "snyk": "^1.189.0"
   },
   "devDependencies": {
     "eslint": "^5.16.0",
@@ -48,5 +51,6 @@
     "eslint-plugin-node": "^9.1.0",
     "eslint-plugin-promise": "^4.2.1",
     "eslint-plugin-standard": "^4.0.0"
-  }
+  },
+  "snyk": true
 }
