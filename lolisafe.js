@@ -216,14 +216,7 @@ safe.use('/api', api)
     }
 
     // Binds Express to port
-    await new Promise((resolve, reject) => {
-      try {
-        safe.listen(config.port, () => resolve())
-      } catch (error) {
-        reject(error)
-      }
-    })
-
+    await new Promise(resolve => safe.listen(config.port, () => resolve()))
     logger.log(`lolisafe started on port ${config.port}`)
 
     // Cache control (safe.fiery.me)
