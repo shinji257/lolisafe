@@ -949,26 +949,32 @@ page.filtersHelp = element => {
   content.innerHTML = `
     This supports 3 filter keys, namely <b>user</b> (username), <b>ip</b> and <b>name</b> (upload name).
     Each key can be specified more than once.
-    Backlashes should be used if the usernames have spaces.
-    There are also 2 additional flags, namely <b>-user</b> and <b>-ip</b>, which will match uploads by non-registered users and have no IPs respectively.
+    Backslashes should be used if the username contain whitespaces.
 
-    How does it work?
-    First, it will filter uploads matching ANY of the supplied <b>user</b> or <b>ip</b> keys.
-    Then, it will refine the matches using the supplied <b>name</b> keys.
+    There are 2 special flags, namely <b>-user</b> and <b>-ip</b>, which will match uploads by non-registered users and have no IPs respectively.
 
-    Examples:
+    Matches can also be sorted with <b>orderby:columnName[:direction]</b> key.
+    This key requires using the internal column names used in the database (size, timestamp, expirydate, and so on).
+    This key can also be specified more than once, where their order will decide the sorting steps.
 
+    <b>Internals:</b>
+    First, it will filter uploads matching ANY of the supplied filter keys AND/OR special flags, if any.
+    Second, it will refine the matches using the supplied <b>name</b> keys, if any.
+    Third, it will sort the matches using the supplied <b>orderby</b> keys, if any.
+
+    <b>Examples:</b>
     Uploads from user with username "demo":
     <code>user:demo</code>
-
-    Uploads from users with username either "John Doe" OR "demo":
+    Uploads from users with username "John Doe" AND/OR "demo":
     <code>user:John\\ Doe user:demo</code>
-
     Uploads from IP "127.0.0.1" AND which upload names match "*.rar" OR "*.zip":
     <code>ip:127.0.0.1 name:*.rar name:*.zip</code>
-
-    Uploads from user with username "test" OR from non-registered users:
+    Uploads from user with username "test" AND/OR from non-registered users:
     <code>user:test -user</code>
+    Sort results by "size" column in ascending and descending order respectively:
+    <code>orderby:expirydate</code>
+    <code>user:demo orderby:size</code>
+    <code>-user name:*.mp4 orderby:size:desc</code>
   `.trim().replace(/^ {6}/gm, '').replace(/\n/g, '<br>')
   swal({ content })
 }

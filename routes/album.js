@@ -59,7 +59,7 @@ routes.get('/a/:identifier', async (req, res, next) => {
   const files = await db.table('files')
     .select('name', 'size')
     .where('albumid', album.id)
-    .orderBy('id', 'DESC')
+    .orderBy('id', 'desc')
 
   album.thumb = ''
   album.totalSize = 0

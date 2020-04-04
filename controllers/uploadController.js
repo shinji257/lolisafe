@@ -775,6 +775,18 @@ self.list = async (req, res) => {
     }
   }
 
+  // Cast column(s) to specific type if they're stored differently
+  const _orderByCasts = {
+    size: 'integer'
+  }
+  // Columns with which to use SQLite's NULLS LAST option
+  const _orderByNullsLast = [
+    'userid',
+    'expirydate',
+    'ip'
+  ]
+  const _orderBy = []
+
   // Perhaps this can be simplified even further?
   if (filters) {
     const usernames = []
@@ -797,11 +809,26 @@ self.list = async (req, res) => {
       })
       .forEach(v => {
         if (!v) return
-        if (v[0] === 'user') usernames.push(v[1])
-        else if (v[0] === 'name') _filters.names.push(v[1])
-        else if (v[0] === 'ip') _filters.ips.push(v[1])
-        else if (v[0] === '-user') _filters.flags.nouser = true
-        else if (v[0] === '-ip') _filters.flags.noip = true
+        if (v[0] === 'user') {
+          usernames.push(v[1])
+        } else if (v[0] === 'name') {
+          _filters.names.push(v[1])
+        } else if (v[0] === 'ip') {
+          _filters.ips.push(v[1])
+        } else if (v[0] === '-user') {
+          _filters.flags.nouser = true
+        } else if (v[0] === '-ip') {
+          _filters.flags.noip = true
+        } else if (v[0] === 'orderby') {
+          const tmp = v[1].split(':')
+          let col = tmp[0]
+          let dir = 'asc'
+          if (_orderByCasts[col])
+            col = `cast (\`${col}\` as ${_orderByCasts[col]})`
+          if (tmp[1] && /^d/i.test(tmp[1]))
+            dir = 'desc'
+          _orderBy.push(`${col} ${dir}${_orderByNullsLast.includes(col) ? ' nulls last' : ''}`)
+        }
       })
     _filters.uploaders = await db.table('users')
       .whereIn('username', usernames)
@@ -855,7 +882,7 @@ self.list = async (req, res) => {
 
   const files = await db.table('files')
     .where(filter)
-    .orderBy('id', 'DESC')
+    .orderByRaw(_orderBy.length ? _orderBy.join(', ') : '`id` desc')
     .limit(25)
     .offset(25 * offset)
     .select(columns)
