@@ -16,7 +16,10 @@ const self = {
     scanner: null,
     timeout: config.uploads.scan.timeout || 5000,
     chunkSize: config.uploads.scan.chunkSize || 64 * 1024,
-    groupBypass: config.uploads.scan.groupBypass || null
+    groupBypass: config.uploads.scan.groupBypass || null,
+    whitelistExtensions: (Array.isArray(config.uploads.scan.whitelistExtensions) &&
+     config.uploads.scan.whitelistExtensions.length) ? config.uploads.scan.whitelistExtensions : null,
+    maxSize: (parseInt(config.uploads.scan.maxSize) * 1e6) || null
   },
   gitHash: null,
   idSet: null,

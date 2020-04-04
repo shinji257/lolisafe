@@ -536,11 +536,20 @@ self.cleanUpChunks = async (uuid) => {
 }
 
 self.scanFiles = async (req, user, infoMap) => {
-  if (user && utils.clamd.groupBypass && perms.is(user, utils.clamd.groupBypass))
+  // eslint-disable-next-line curly
+  if (user && utils.clamd.groupBypass && perms.is(user, utils.clamd.groupBypass)) {
+    // logger.log(`[ClamAV]: Skipping ${infoMap.length} file(s), ${utils.clamd.groupBypass} group bypass`)
     return false
+  }
 
   const foundThreats = []
   const results = await Promise.all(infoMap.map(async info => {
+    if (utils.clamd.whitelistExtensions && utils.clamd.whitelistExtensions.includes(info.data.extname))
+      return // logger.log(`[ClamAV]: Skipping ${info.data.filename}, extension whitelisted`)
+
+    if (utils.clamd.maxSize && info.data.size > utils.clamd.maxSize)
+      return // logger.log(`[ClamAV]: Skipping ${info.data.filename}, size ${info.data.size} > ${utils.clamd.maxSize}`)
+
     const reply = await utils.clamd.scanner.scanFile(info.path, utils.clamd.timeout, utils.clamd.chunkSize)
     if (!reply.includes('OK') || reply.includes('FOUND')) {
       // eslint-disable-next-line no-control-regex

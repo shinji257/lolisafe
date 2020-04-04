@@ -296,15 +296,33 @@ module.exports = {
       groupBypass: Name of the lowest ranked group whose files will not be scanned.
       Lowest ranked meanning that group AND any groups higher than it are included.
       Example: 'moderator' = moderators, admins & superadmins.
-      More about groups at controllers/permissionController.js.
     */
     scan: {
       enabled: false,
+
       ip: '127.0.0.1',
       port: 3310,
       timeout: 180 * 1000,
       chunkSize: 64 * 1024,
-      groupBypass: 'admin'
+
+      groupBypass: 'admin', // Other group names in controllers/permissionController.js
+      whitelistExtensions: null, /* [
+        '.webp',
+        '.jpg',
+        '.jpeg',
+        '.gif',
+        '.png',
+        '.tiff',
+        '.tif',
+        '.svg',
+        '.webm',
+        '.mp4',
+        '.wmv',
+        '.avi',
+        '.mov',
+        '.mkv'
+      ], */
+      maxSize: null // '25MB' // Needs to be in MB
     },
 
     /*
