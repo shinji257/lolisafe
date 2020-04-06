@@ -252,9 +252,9 @@ safe.use('/api', api)
         const result = await utils.bulkDeleteExpired()
 
         if (result.expired.length) {
-          let logMessage = `Deleted ${result.expired.length} expired upload(s)`
+          let logMessage = `Expired uploads: ${result.expired.length} deleted`
           if (result.failed.length)
-            logMessage += ` but unable to delete ${result.failed.length}`
+            logMessage += `, ${result.failed.length} errored`
 
           logger.log(logMessage)
         }
