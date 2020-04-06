@@ -86,7 +86,7 @@
     <div id="table" class="columns is-multiline is-mobile is-centered has-text-centered">
       {% for file in files %}
         <div class="image-container column">
-          <a class="image" href="{{ fileRoot }}/{{ file.name }}" target="_blank" rel="noopener">
+          <a class="image" href="{{ fileRoot }}/{{ file.name }}" target="_blank">
             {% if file.thumb -%}
               {% if nojs -%}
               <img alt="{{ file.name }}" src="{{ fileRoot }}/{{ file.thumb }}" width="200" height="200" loading="lazy">

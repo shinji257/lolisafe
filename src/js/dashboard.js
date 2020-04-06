@@ -613,9 +613,9 @@ page.getUploads = (params = {}) => {
         div.dataset.id = upload.id
 
         if (upload.thumb !== undefined)
-          div.innerHTML = `<a class="image" href="${upload.file}" target="_blank" rel="noopener"><img alt="${upload.name}" data-src="${upload.thumb}"/></a>`
+          div.innerHTML = `<a class="image" href="${upload.file}" target="_blank"><img alt="${upload.name}" data-src="${upload.thumb}"/></a>`
         else
-          div.innerHTML = `<a class="image" href="${upload.file}" target="_blank" rel="noopener"><h1 class="title">${upload.extname || 'N/A'}</h1></a>`
+          div.innerHTML = `<a class="image" href="${upload.file}" target="_blank"><h1 class="title">${upload.extname || 'N/A'}</h1></a>`
 
         div.innerHTML += `
           <input type="checkbox" class="checkbox" title="Select" data-index="${i}" data-action="select"${upload.selected ? ' checked' : ''}>
@@ -687,7 +687,7 @@ page.getUploads = (params = {}) => {
         tr.dataset.id = upload.id
         tr.innerHTML = `
           <td class="controls"><input type="checkbox" class="checkbox" title="Select" data-index="${i}" data-action="select"${upload.selected ? ' checked' : ''}></td>
-          <th><a href="${upload.file}" target="_blank" rel="noopener" title="${upload.file}">${upload.name}</a></th>
+          <th><a href="${upload.file}" target="_blank" title="${upload.file}">${upload.name}</a></th>
           ${params.album === undefined ? `<th>${upload.appendix}</th>` : ''}
           <td>${upload.prettyBytes}</td>
           ${params.all ? `<td>${upload.ip || ''}</td>` : ''}
@@ -1390,7 +1390,7 @@ page.getAlbums = (params = {}) => {
         <th>${album.name}</th>
         <th>${album.files}</th>
         <td>${album.prettyDate}</td>
-        <td><a ${album.public ? `href="${albumUrl}"` : 'class="is-linethrough"'} target="_blank" rel="noopener">${albumUrl}</a></td>
+        <td><a ${album.public ? `href="${albumUrl}"` : 'class="is-linethrough"'} target="_blank">${albumUrl}</a></td>
         <td class="has-text-right" data-id="${album.id}">
           <a class="button is-small is-primary is-outlined" title="Edit album" data-action="edit-album">
             <span class="icon is-small">
