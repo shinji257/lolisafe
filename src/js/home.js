@@ -39,6 +39,7 @@ const page = {
   tabs: [],
   activeTab: null,
   albumSelect: null,
+  albumSelectOnChange: null,
   previewTemplate: null,
 
   dropzone: null,
@@ -187,12 +188,13 @@ page.prepareUpload = () => {
     document.querySelector('#albumDiv').classList.remove('is-hidden')
 
     page.albumSelect = document.querySelector('#albumSelect')
-    page.albumSelect.addEventListener('change', () => {
+    page.albumSelectOnChange = () => {
       page.album = parseInt(page.albumSelect.value)
       // Re-generate ShareX config file
       if (typeof page.prepareShareX === 'function')
         page.prepareShareX()
-    })
+    }
+    page.albumSelect.addEventListener('change', page.albumSelectOnChange)
 
     // Fetch albums
     page.fetchAlbums()
@@ -673,6 +675,7 @@ page.createAlbum = () => {
       option.value = response.data.id
       option.innerHTML = name
       option.selected = true
+      page.albumSelectOnChange()
 
       swal('Woohoo!', 'Album was created successfully.', 'success')
     }).catch(page.onError)
