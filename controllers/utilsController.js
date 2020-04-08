@@ -40,11 +40,6 @@ const statsCache = {
     generating: false,
     generatedAt: 0
   },
-  disk: {
-    cache: null,
-    generating: false,
-    generatedAt: 0
-  },
   albums: {
     cache: null,
     generating: false,
@@ -65,7 +60,15 @@ const statsCache = {
   }
 }
 
-const cloudflareAuth = config.cloudflare && config.cloudflare.apiKey && config.cloudflare.email && config.cloudflare.zoneId
+if (config.linuxDiskStats)
+  statsCache.disk = {
+    cache: null,
+    generating: false,
+    generatedAt: 0
+  }
+
+const cloudflareAuth = config.cloudflare && config.cloudflare.apiKey &&
+  config.cloudflare.email && config.cloudflare.zoneId
 
 self.mayGenerateThumb = extname => {
   return (config.uploads.generateThumbs.image && self.imageExts.includes(extname)) ||
@@ -624,7 +627,7 @@ self.stats = async (req, res, next) => {
     }
 
     // Disk usage, only for Linux platform
-    if (os.platform === 'linux')
+    if (config.linuxDiskStats && os.platform === 'linux')
       if (!statsCache.disk.cache && statsCache.disk.generating) {
         stats.disk = false
       } else if (((Date.now() - statsCache.disk.generatedAt) <= 60000) || statsCache.disk.generating) {
@@ -782,8 +785,7 @@ self.stats = async (req, res, next) => {
         others: 0
       }
 
-      if (os.platform !== 'linux') {
-        // If not Linux platform, rely on DB for total size
+      if (!config.linuxDiskStats || os.platform !== 'linux') {
         const uploads = await db.table('files')
           .select('size')
         stats.uploads.total = uploads.length

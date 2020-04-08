@@ -487,6 +487,14 @@ module.exports = {
   cacheControl: false,
 
   /*
+    Enable Linux-only disk stats in Dashboard's Statistics.
+    This will use a combination of both "du" and "df" binaries.
+    Disabled by default as I personally found it to be very slow with +100k uploads
+    with my ancient potato server.
+  */
+  linuxDiskStats: false,
+
+  /*
     Folder where to store logs.
     NOTE: This is currently unused.
   */
