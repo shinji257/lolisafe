@@ -109,11 +109,11 @@
           We only support the following extensions:
           {%- else -%}
           We support any file extensions, except the following:
-          {%- endif -%}
+          {%- endif -%}<br>
           {% set comma = joiner(' ') -%}
-          <div class="is-spaced">{%- for extension in extensionsFilter -%}
+          {%- for extension in extensionsFilter -%}
           {{ comma() }}<code>{{ extension }}</code>
-          {%- endfor -%}</div>
+          {%- endfor -%}
         {%- else -%}
         We support any file extensions.
         {%- endif %}

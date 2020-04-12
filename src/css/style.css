@@ -166,10 +166,6 @@ fieldset[disabled] .select select:hover {
   border: 0
 }
 
-.message-body div.is-spaced {
-  margin-top: 0.5em
-}
-
 /* floating button's bottom offset + height + bottom offset */
 .section.has-extra-bottom-padding {
   padding-bottom: 6.5rem
