@@ -835,6 +835,9 @@ self.list = async (req, res) => {
       .select('id', 'username')
   }
 
+  if (filters && !(_filters.uploaders.length || _filters.names.length || _filters.ips.length || _filters.flags.nouser || _filters.flags.noip || _orderBy.length))
+    return res.json({ success: false, description: 'No valid filter or sort keys were used. Please confirm the valid keys through the Help? button!' })
+
   function filter () {
     if (req.params.id !== undefined)
       this.where('albumid', req.params.id)
@@ -861,91 +864,111 @@ self.list = async (req, res) => {
       })
   }
 
-  // Query uploads count for pagination
-  const count = await db.table('files')
-    .where(filter)
-    .count('id as count')
-    .then(rows => rows[0].count)
-  if (!count)
-    return res.json({ success: true, files: [], count })
+  try {
+    // Query uploads count for pagination
+    const count = await db.table('files')
+      .where(filter)
+      .count('id as count')
+      .then(rows => rows[0].count)
+    if (!count)
+      return res.json({ success: true, files: [], count })
 
-  let offset = req.params.page
-  if (offset === undefined) offset = 0
+    let offset = req.params.page
+    if (offset === undefined) offset = 0
 
-  const columns = ['id', 'name', 'userid', 'size', 'timestamp']
+    const columns = ['id', 'name', 'userid', 'size', 'timestamp']
 
-  if (temporaryUploads)
-    columns.push('expirydate')
+    if (temporaryUploads)
+      columns.push('expirydate')
 
-  // Only select IPs if we are listing all uploads
-  columns.push(all ? 'ip' : 'albumid')
+    // Only select IPs if we are listing all uploads
+    columns.push(all ? 'ip' : 'albumid')
 
-  const files = await db.table('files')
-    .where(filter)
-    .orderByRaw(_orderBy.length ? _orderBy.join(', ') : '`id` desc')
-    .limit(25)
-    .offset(25 * offset)
-    .select(columns)
+    const files = await db.table('files')
+      .where(filter)
+      .orderByRaw(_orderBy.length ? _orderBy.join(', ') : '`id` desc')
+      .limit(25)
+      .offset(25 * offset)
+      .select(columns)
 
-  if (!files.length)
-    return res.json({ success: true, files, count, basedomain })
-
-  for (const file of files) {
-    file.extname = utils.extname(file.name)
-    if (utils.mayGenerateThumb(file.extname))
-      file.thumb = `thumbs/${file.name.slice(0, -file.extname.length)}.png`
-  }
-
-  // If we are not listing all uploads, query album names
-  let albums = {}
-  if (!all) {
-    const albumids = files
-      .map(file => file.albumid)
-      .filter((v, i, a) => {
-        return v !== null && v !== undefined && v !== '' && a.indexOf(v) === i
-      })
-    albums = await db.table('albums')
-      .whereIn('id', albumids)
-      .where('enabled', 1)
-      .where('userid', user.id)
-      .select('id', 'name')
-      .then(rows => {
-        // Build Object indexed by their IDs
-        const obj = {}
-        for (const row of rows)
-          obj[row.id] = row.name
-        return obj
-      })
-  }
-
-  // If we are not listing all uploads, send response
-  if (!all)
-    return res.json({ success: true, files, count, albums, basedomain })
-
-  // Otherwise proceed to querying usernames
-  let _users = _filters.uploaders
-  if (!_users.length) {
-    const userids = files
-      .map(file => file.userid)
-      .filter((v, i, a) => {
-        return v !== null && v !== undefined && v !== '' && a.indexOf(v) === i
-      })
-
-    // If there are no uploads attached to a registered user, send response
-    if (userids.length === 0)
+    if (!files.length)
       return res.json({ success: true, files, count, basedomain })
 
-    // Query usernames of user IDs from currently selected files
-    _users = await db.table('users')
-      .whereIn('id', userids)
-      .select('id', 'username')
+    for (const file of files) {
+      file.extname = utils.extname(file.name)
+      if (utils.mayGenerateThumb(file.extname))
+        file.thumb = `thumbs/${file.name.slice(0, -file.extname.length)}.png`
+    }
+
+    // If we are not listing all uploads, query album names
+    let albums = {}
+    if (!all) {
+      const albumids = files
+        .map(file => file.albumid)
+        .filter((v, i, a) => {
+          return v !== null && v !== undefined && v !== '' && a.indexOf(v) === i
+        })
+      albums = await db.table('albums')
+        .whereIn('id', albumids)
+        .where('enabled', 1)
+        .where('userid', user.id)
+        .select('id', 'name')
+        .then(rows => {
+        // Build Object indexed by their IDs
+          const obj = {}
+          for (const row of rows)
+            obj[row.id] = row.name
+          return obj
+        })
+    }
+
+    // If we are not listing all uploads, send response
+    if (!all)
+      return res.json({ success: true, files, count, albums, basedomain })
+
+    // Otherwise proceed to querying usernames
+    let _users = _filters.uploaders
+    if (!_users.length) {
+      const userids = files
+        .map(file => file.userid)
+        .filter((v, i, a) => {
+          return v !== null && v !== undefined && v !== '' && a.indexOf(v) === i
+        })
+
+      // If there are no uploads attached to a registered user, send response
+      if (userids.length === 0)
+        return res.json({ success: true, files, count, basedomain })
+
+      // Query usernames of user IDs from currently selected files
+      _users = await db.table('users')
+        .whereIn('id', userids)
+        .select('id', 'username')
+    }
+
+    const users = {}
+    for (const user of _users)
+      users[user.id] = user.username
+
+    return res.json({ success: true, files, count, users, basedomain })
+  } catch (error) {
+    // If moderator, capture SQLITE_ERROR and use its error message for the response's description
+    let errorString
+    if (ismoderator && error.code === 'SQLITE_ERROR') {
+      const match = error.message.match(/SQLITE_ERROR: .*$/)
+      errorString = match && match[0]
+    }
+
+    // If not proper SQLITE_ERROR, log to console
+    if (!errorString) {
+      logger.error(error)
+      res.status(500) // Use 500 status code
+    }
+
+    return res.json({
+      success: false,
+      description: errorString || 'An unexpected error occurred. Try again?'
+    })
   }
-
-  const users = {}
-  for (const user of _users)
-    users[user.id] = user.username
-
-  return res.json({ success: true, files, count, users, basedomain })
 }
 
 module.exports = self
