@@ -55,7 +55,8 @@ code,
 }
 
 .title,
-.subtitle.is-brighter {
+.subtitle.is-brighter,
+.subtitle.is-brighter strong {
   color: #eff0f1
 }
 
