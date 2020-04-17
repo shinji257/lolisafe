@@ -772,7 +772,8 @@ self.list = async (req, res) => {
     flags: {
       nouser: false,
       noip: false
-    }
+    },
+    keywords: []
   }
 
   // Cast column(s) to specific type if they're stored differently
@@ -804,30 +805,34 @@ self.list = async (req, res) => {
         const x = v.indexOf(':')
         if (x >= 0 && v.substring(x + 1))
           return [v.substring(0, x), v.substring(x + 1)]
-        else if (v.startsWith('-'))
-          return [v]
+        else
+          return v
       })
       .forEach(v => {
-        if (!v) return
-        if (v[0] === 'user') {
-          usernames.push(v[1])
-        } else if (v[0] === 'name') {
-          _filters.names.push(v[1])
-        } else if (v[0] === 'ip') {
-          _filters.ips.push(v[1])
-        } else if (v[0] === '-user') {
-          _filters.flags.nouser = true
-        } else if (v[0] === '-ip') {
-          _filters.flags.noip = true
-        } else if (v[0] === 'orderby') {
-          const tmp = v[1].split(':')
-          let col = tmp[0]
-          let dir = 'asc'
-          if (_orderByCasts[col])
-            col = `cast (\`${col}\` as ${_orderByCasts[col]})`
-          if (tmp[1] && /^d/i.test(tmp[1]))
-            dir = 'desc'
-          _orderBy.push(`${col} ${dir}${_orderByNullsLast.includes(col) ? ' nulls last' : ''}`)
+        if (Array.isArray(v)) {
+          if (v[0] === 'user') {
+            usernames.push(v[1])
+          } else if (v[0] === 'name') {
+            _filters.names.push(v[1])
+          } else if (v[0] === 'ip') {
+            _filters.ips.push(v[1])
+          } else if (v[0] === 'orderby') {
+            const tmp = v[1].split(':')
+            let col = tmp[0]
+            let dir = 'asc'
+            if (_orderByCasts[col])
+              col = `cast (\`${col}\` as ${_orderByCasts[col]})`
+            if (tmp[1] && /^d/i.test(tmp[1]))
+              dir = 'desc'
+            _orderBy.push(`${col} ${dir}${_orderByNullsLast.includes(col) ? ' nulls last' : ''}`)
+          }
+        } else {
+          if (v === '-user')
+            _filters.flags.nouser = true
+          else if (v === '-ip')
+            _filters.flags.noip = true
+          else
+            _filters.keywords.push(v[0])
         }
       })
     _filters.uploaders = await db.table('users')
@@ -836,7 +841,11 @@ self.list = async (req, res) => {
   }
 
   if (filters && !(_filters.uploaders.length || _filters.names.length || _filters.ips.length || _filters.flags.nouser || _filters.flags.noip || _orderBy.length))
-    return res.json({ success: false, description: 'No valid filter or sort keys were used. Please confirm the valid keys through the Help? button!' })
+    if (_filters.keywords.length)
+      // TODO: Support filtering using keywords only
+      return res.json({ success: false, description: 'Filtering using keywords only is still work in progress. Please confirm valid filtering keys through the Help? button!' })
+    else
+      return res.json({ success: false, description: 'No valid filter or sort keys were used. Please confirm the valid keys through the Help? button!' })
 
   function filter () {
     if (req.params.id !== undefined)
