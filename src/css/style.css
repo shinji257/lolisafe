@@ -43,7 +43,8 @@ hr {
 code,
 .message-body code {
   background-color: #000;
-  border-radius: 5px
+  border-radius: 5px;
+  font-size: 1em
 }
 
 .subtitle {

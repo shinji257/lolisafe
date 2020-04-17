@@ -45,6 +45,7 @@ const page = {
     },
     // config of users view
     users: {
+      filters: null, // users' filters
       pageNum: null
     }
   },
@@ -325,14 +326,16 @@ page.domClick = event => {
       return page.deleteAlbum(id)
     case 'get-new-token':
       return page.getNewToken(element)
+    case 'create-user':
+      return page.createUser()
     case 'edit-user':
       return page.editUser(id)
     case 'disable-user':
       return page.disableUser(id)
     case 'delete-user':
       return page.deleteUser(id)
-    case 'filters-help':
-      return page.filtersHelp(element)
+    case 'user-filters-help':
+      return page.userFiltersHelp(element)
     case 'filter-uploads':
       return page.filterUploads(element)
     case 'view-user-uploads':
@@ -464,7 +467,7 @@ page.getUploads = (params = {}) => {
                 <input id="filters" class="input is-small" type="text" placeholder="Filters" value="${params.filters || ''}">
               </div>
               <div class="control">
-                <button type="button" class="button is-small is-primary is-outlined" title="Help?" data-action="filters-help">
+                <button type="button" class="button is-small is-primary is-outlined" title="Help?" data-action="user-filters-help">
                   <span class="icon">
                     <i class="icon-help-circled"></i>
                   </span>
@@ -943,7 +946,7 @@ page.clearSelection = () => {
   })
 }
 
-page.filtersHelp = element => {
+page.userFiltersHelp = element => {
   const content = document.createElement('div')
   content.style = 'text-align: left'
   content.innerHTML = `
@@ -1798,9 +1801,34 @@ page.getUsers = (params = {}) => {
 
     const pagination = page.paginate(response.data.count, 25, params.pageNum)
 
+    const filter = `
+      <div class="column">
+        <form class="prevent-default">
+          <div class="field has-addons">
+            <div class="control is-expanded">
+              <input id="filters" class="input is-small" type="text" placeholder="Filters (WIP)" value="${params.filters || ''}" disabled>
+            </div>
+            <div class="control">
+              <button type="button" class="button is-small is-primary is-outlined" title="Help? (WIP)" data-action="upload-filters-help" disabled>
+                <span class="icon">
+                  <i class="icon-help-circled"></i>
+                </span>
+              </button>
+            </div>
+            <div class="control">
+              <button type="submit" class="button is-small is-info is-outlined" title="Filter users (WIP)" data-action="filter-users" disabled>
+                <span class="icon">
+                  <i class="icon-filter"></i>
+                </span>
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    `
     const extraControls = `
       <div class="columns">
-        <div class="column is-hidden-mobile"></div>
+        ${filter}
         <div class="column is-one-quarter">
           <form class="prevent-default">
             <div class="field has-addons">
@@ -1821,21 +1849,27 @@ page.getUsers = (params = {}) => {
     `
 
     const controls = `
-      <div class="columns is-hidden">
-        <div class="column is-hidden-mobile"></div>
+      <div class="columns">
+        <div class="column has-text-left">
+          <a class="button is-small is-primary is-outlined" title="Create user (WIP)" data-action="create-user">
+            <span class="icon">
+              <i class="icon-plus"></i>
+            </span>
+            <span>Create user</span>
+        </a>
+        </div>
         <div class="column has-text-right">
-          <a class="button is-small is-info" title="Clear selection" data-action="clear-selection">
+          <a class="button is-small is-info is-outlined" title="Clear selection" data-action="clear-selection">
             <span class="icon">
               <i class="icon-cancel"></i>
             </span>
           </a>
-          <a class="button is-small is-warning" title="Bulk disable (WIP)" data-action="bulk-disable-users" disabled>
+          <a class="button is-small is-warning is-outlined" title="Bulk disable (WIP)" data-action="bulk-disable-users" disabled>
             <span class="icon">
               <i class="icon-hammer"></i>
             </span>
-            <span>Bulk disable</span>
           </a>
-          <a class="button is-small is-danger" title="Bulk delete (WIP)" data-action="bulk-delete-users" disabled>
+          <a class="button is-small is-danger is-outlined" title="Bulk delete (WIP)" data-action="bulk-delete-users" disabled>
             <span class="icon">
               <i class="icon-trash"></i>
             </span>
@@ -1856,7 +1890,7 @@ page.getUsers = (params = {}) => {
         <table class="table is-narrow is-fullwidth is-hoverable">
           <thead>
             <tr>
-              <th class="is-hidden"><input id="selectAll" class="checkbox" type="checkbox" title="Select all" data-action="select-all"></th>
+              <th><input id="selectAll" class="checkbox" type="checkbox" title="Select all" data-action="select-all"></th>
               <th>ID</th>
               <th>Username</th>
               <th>Uploads</th>
@@ -1898,7 +1932,7 @@ page.getUsers = (params = {}) => {
       const tr = document.createElement('tr')
       tr.dataset.id = user.id
       tr.innerHTML = `
-        <td class="controls is-hidden"><input type="checkbox" class="checkbox" title="Select" data-action="select"${selected ? ' checked' : ''}></td>
+        <td class="controls"><input type="checkbox" class="checkbox" title="Select" data-index="${i}" data-action="select"${selected ? ' checked' : ''}></td>
         <th>${user.id}</th>
         <th${enabled ? '' : ' class="is-linethrough"'}>${user.username}</td>
         <th>${user.uploads}</th>
@@ -1945,6 +1979,82 @@ page.getUsers = (params = {}) => {
   }).catch(error => {
     page.updateTrigger(params.trigger)
     page.onAxiosError(error)
+  })
+}
+
+page.createUser = () => {
+  const groupOptions = Object.keys(page.permissions).map((g, i, a) => {
+    const disabled = !(a[i + 1] && page.permissions[a[i + 1]])
+    return `<option value="${g}"${disabled ? ' disabled' : ''}>${g}</option>`
+  }).join('\n')
+
+  const div = document.createElement('div')
+  div.innerHTML = `
+    <div class="field">
+      <label class="label">Username</label>
+      <div class="controls">
+        <input id="swalUsername" class="input" type="text">
+      </div>
+    </div>
+    <div class="field">
+      <label class="label">Password (optional)</label>
+      <div class="controls">
+        <input id="swalPassword" class="input" type="text">
+      </div>
+    </div>
+    <div class="field">
+      <label class="label">User group</label>
+      <div class="control">
+        <div class="select is-fullwidth">
+          <select id="swalGroup">
+            ${groupOptions}
+          </select>
+        </div>
+      </div>
+    </div>
+  `
+
+  swal({
+    title: 'Create new user',
+    icon: 'info',
+    content: div,
+    buttons: {
+      cancel: true,
+      confirm: {
+        closeModal: false
+      }
+    }
+  }).then(proceed => {
+    if (!proceed) return
+
+    axios.post('api/users/create', {
+      username: document.querySelector('#swalUsername').value,
+      password: document.querySelector('#swalPassword').value,
+      group: document.querySelector('#swalGroup').value
+    }).then(response => {
+      if (!response) return
+
+      if (response.data.success === false)
+        if (response.data.description === 'No token provided') {
+          return page.verifyToken(page.token)
+        } else {
+          return swal('An error occurred!', response.data.description, 'error')
+        }
+
+      const div = document.createElement('div')
+      div.innerHTML = `
+        <p>Username: <b>${response.data.username}</b></p>
+        <p>Password: <code>${response.data.password}</code></p>
+        <p>User group: <b>${response.data.group}</b></p>
+      `
+      swal({
+        title: 'Created a new user!',
+        icon: 'success',
+        content: div
+      })
+
+      page.getUsers(page.views.users)
+    }).catch(page.onAxiosError)
   })
 }
 
