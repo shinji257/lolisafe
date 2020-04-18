@@ -298,34 +298,34 @@ page.domClick = event => {
   const action = element.dataset.action
 
   switch (action) {
+    // Uploads
     case 'view-list':
       return page.setUploadsView('list', element)
     case 'view-thumbs':
       return page.setUploadsView('thumbs', element)
-    case 'clear-selection':
-      return page.clearSelection()
-    case 'add-selected-uploads-to-album':
-      return page.addSelectedUploadsToAlbum()
-    case 'select':
-      return page.select(element, event)
-    case 'select-all':
-      return page.selectAll(element)
     case 'add-to-album':
       return page.addToAlbum(id)
     case 'delete-upload':
       return page.deleteUpload(id)
+    case 'add-selected-uploads-to-album':
+      return page.addSelectedUploadsToAlbum()
     case 'bulk-delete-uploads':
       return page.bulkDeleteUploads()
     case 'display-preview':
       return page.displayPreview(id)
+    // Manage uploads
+    case 'upload-filters-help':
+      return page.uploadFiltersHelp(element)
+    case 'filter-uploads':
+      return page.filterUploads(element)
+    // Manage your albums
     case 'submit-album':
       return page.submitAlbum(element)
     case 'edit-album':
       return page.editAlbum(id)
     case 'delete-album':
       return page.deleteAlbum(id)
-    case 'get-new-token':
-      return page.getNewToken(element)
+    // Manage users
     case 'create-user':
       return page.createUser()
     case 'edit-user':
@@ -334,12 +334,24 @@ page.domClick = event => {
       return page.disableUser(id)
     case 'delete-user':
       return page.deleteUser(id)
-    case 'user-filters-help':
-      return page.userFiltersHelp(element)
-    case 'filter-uploads':
-      return page.filterUploads(element)
     case 'view-user-uploads':
       return page.viewUserUploads(id, element)
+    /* // WIP
+    case 'user-filters-help':
+      return page.userFiltersHelp(element)
+    case 'filter-users':
+      return page.filterUsers(element)
+    */
+    // Others
+    case 'get-new-token':
+      return page.getNewToken(element)
+    // Uploads & Users
+    case 'clear-selection':
+      return page.clearSelection()
+    case 'select':
+      return page.select(element, event)
+    case 'select-all':
+      return page.selectAll(element)
     case 'page-ellipsis':
       return page.focusJumpToPage()
     case 'page-prev':
@@ -429,6 +441,11 @@ page.getUploads = (params = {}) => {
     filters: params.filters || ''
   }
 
+  // Send client timezone offset if using date filter
+  // Server will pretend client is on UTC if missing
+  if (headers.filters.includes('date:') || headers.filters.includes('expiry:'))
+    headers.minOffset = new Date().getTimezoneOffset()
+
   axios.get(url, { headers }).then(response => {
     if (response.data.success === false)
       if (response.data.description === 'No token provided') {
@@ -464,10 +481,10 @@ page.getUploads = (params = {}) => {
           <form class="prevent-default">
             <div class="field has-addons">
               <div class="control is-expanded">
-                <input id="filters" class="input is-small" type="text" placeholder="Filters" value="${params.filters || ''}">
+                <input id="filters" class="input is-small" type="text" placeholder="Filters" value="${page.escape(params.filters || '')}">
               </div>
               <div class="control">
-                <button type="button" class="button is-small is-primary is-outlined" title="Help?" data-action="user-filters-help">
+                <button type="button" class="button is-small is-primary is-outlined" title="Help?" data-action="upload-filters-help">
                   <span class="icon">
                     <i class="icon-help-circled"></i>
                   </span>
@@ -666,7 +683,7 @@ page.getUploads = (params = {}) => {
             <thead>
               <tr>
                 <th><input id="selectAll" class="checkbox" type="checkbox" title="Select all" data-action="select-all"></th>
-                <th>File</th>
+                <th>File name</th>
                 ${params.album === undefined ? `<th>${params.all ? 'User' : 'Album'}</th>` : ''}
                 <th>Size</th>
                 ${params.all ? '<th>IP</th>' : ''}
@@ -946,40 +963,68 @@ page.clearSelection = () => {
   })
 }
 
-page.userFiltersHelp = element => {
+page.uploadFiltersHelp = element => {
   const content = document.createElement('div')
   content.style = 'text-align: left'
   content.innerHTML = `
-    This supports 3 filter keys, namely <b>user</b> (username), <b>ip</b> and <b>name</b> (upload name).
-    Each key can be specified more than once.
-    Backslashes should be used if the username contain whitespaces.
+    There are 2 filter keys, namely <b>user</b> (username) and <b>ip</b>.
+    These keys can be specified more than once.
+    For usernames with whitespaces, wrap them with double quotes (<b>"</b>).
 
-    There are 2 special flags, namely <b>-user</b> and <b>-ip</b>, which will match uploads by non-registered users and have no IPs respectively.
+    There are 2 special filter keys, namely <b>user:-</b> and <b>ip:-</b>, to match uploads by non-registered users and have no IPs respectively.
 
-    Matches can also be sorted with <b>orderby:columnName[:direction]</b> key.
-    This key requires using the internal column names used in the database (size, timestamp, expirydate, and so on).
+    To exclude certain users/ips while still listing every other uploads, add negation sign (<b>-</b>) before the keys.
+    <b>Unfortunately</b>, this will not show uploads by non-registered users or have no IPs as well, instead you need to also use the special filter keys if you want to include them.
+
+    There are 2 range keys: <b>date</b> (upload date) and <b>expiry</b> (expiry date).
+    Their format is: <b>YYYY/MM/DD HH:MM:SS-YYYY/MM/DD HH:MM:SS</b> ("to" date is optional).
+    If any of the subsequent date or time units are not specified, their first value will be used (e.g. January for month, 1 for day, and so on).
+    If only time is specified, today's date will be used.
+    Meaning the following can be accepted: <b>2020/01/01 01:23</b>, <b>2018/01/01 06</b>, <b>2019/11</b>, <b>12:34:56</b>.
+    These keys can only be specified once each.
+
+    Matches can also be sorted with <b>orderby:columnName[:d[escending]]</b> keys.
+    This key require internal column names used in the database (id, userid, and so on), but there are 2 shortcuts, namely <b>date</b> for timestamp column and <b>expiry</b> for expirydate column.
     This key can also be specified more than once, where their order will decide the sorting steps.
 
+    Any leftover keywords which do not use keys will be matched against the matches' file names.
+    Excluding certain keywords is also supported by adding negation sign (<b>-</b>) before the keywords.
+
     <b>Internals:</b>
-    First, it will filter uploads matching ANY of the supplied filter keys AND/OR special flags, if any.
-    Second, it will refine the matches using the supplied <b>name</b> keys, if any.
-    Third, it will sort the matches using the supplied <b>orderby</b> keys, if any.
+    First, it will filter uploads matching ANY of the supplied filter keys AND/OR special filter keys, if any.
+    Second, it will refine the matches using the supplied <b>date</b> AND/OR <b>expiry</b> range keys, if any.
+    Third, it will refine the matches using the leftover non-keyed keywords, if any.
+    Finally, it will sort the matches using the supplied <b>orderby</b> keys, if any.
 
     <b>Examples:</b>
-    Uploads from user with username "demo":
+    Uploads from user named "demo":
     <code>user:demo</code>
-    Uploads from users with username "John Doe" AND/OR "demo":
-    <code>user:John\\ Doe user:demo</code>
-    Uploads from IP "127.0.0.1" AND which upload names match "*.rar" OR "*.zip":
-    <code>ip:127.0.0.1 name:*.rar name:*.zip</code>
-    Uploads from user with username "test" AND/OR from non-registered users:
-    <code>user:test -user</code>
-    Sort results by "size" column in ascending and descending order respectively:
-    <code>orderby:expirydate</code>
-    <code>user:demo orderby:size</code>
-    <code>-user name:*.mp4 orderby:size:desc</code>
+    Uploads from users named "demo" AND/OR "John Doe" AND/OR non-registered users:
+    <code>user:demo user:"John Doe" user:-</code>
+    ALL uploads, including from non-registered users, but NOT the ones from user named "demo":
+    <code>-user:demo user:-</code>
+    Uploads from IP "127.0.0.1" AND which file names match "*.rar" OR "*.zip":
+    <code>ip:127.0.0.1 *.rar *.zip</code>
+    Uploads uploaded since "1 June 2019 00:00:00":
+    <code>date:2019/06</code>
+    Uploads uploaded between "7 April 2020 00:00:00" and "7 April 2020 23:59:59":
+    <code>date:2020/04/07-2020/04/07 23:59:59</code>
+    Uploads which file names match "*.gz" but NOT "*.tar.gz":
+    <code>*.gz -*.tar.gz</code>
+    Sort matches by "size" column in ascending and descending order respectively:
+    <code>user:"John Doe" orderby:size</code>
+    <code>*.mp4 user:- orderby:size:d</code>
+
+    <b>Friendly reminder:</b> This window can be scrolled up!
   `.trim().replace(/^ {6}/gm, '').replace(/\n/g, '<br>')
-  swal({ content })
+
+  swal({ content }).then(() => {
+    // Restore modal size
+    document.body.querySelector('.swal-overlay .swal-modal').classList.remove('is-expanded')
+  })
+
+  // Expand modal size
+  document.body.querySelector('.swal-overlay .swal-modal:not(.is-expanded)').classList.add('is-expanded')
 }
 
 page.filterUploads = element => {
@@ -991,9 +1036,13 @@ page.viewUserUploads = (id, element) => {
   const user = page.cache.users[id]
   if (!user) return
   element.classList.add('is-loading')
+  // Wrap username in quotes if it contains whitespaces
+  const username = user.username.includes(' ')
+    ? `"${user.username}"`
+    : user.username
   page.getUploads({
     all: true,
-    filters: `user:${user.username.replace(/ /g, '\\ ')}`,
+    filters: `user:${username}`,
     trigger: document.querySelector('#itemManageUploads')
   })
 }
@@ -1682,7 +1731,9 @@ page.changeToken = (params = {}) => {
       swal({
         title: 'Woohoo!',
         text: 'Your token was successfully changed.',
-        icon: 'success'
+        icon: 'success',
+        buttons: false,
+        timer: 1500
       }).then(() => {
         axios.defaults.headers.common.token = response.data.token
         localStorage[lsKeys.token] = response.data.token
@@ -1806,10 +1857,10 @@ page.getUsers = (params = {}) => {
         <form class="prevent-default">
           <div class="field has-addons">
             <div class="control is-expanded">
-              <input id="filters" class="input is-small" type="text" placeholder="Filters (WIP)" value="${params.filters || ''}" disabled>
+              <input id="filters" class="input is-small" type="text" placeholder="Filters (WIP)" value="${page.escape(params.filters || '')}" disabled>
             </div>
             <div class="control">
-              <button type="button" class="button is-small is-primary is-outlined" title="Help? (WIP)" data-action="upload-filters-help" disabled>
+              <button type="button" class="button is-small is-primary is-outlined" title="Help? (WIP)" data-action="user-filters-help" disabled>
                 <span class="icon">
                   <i class="icon-help-circled"></i>
                 </span>
@@ -1851,11 +1902,11 @@ page.getUsers = (params = {}) => {
     const controls = `
       <div class="columns">
         <div class="column has-text-left">
-          <a class="button is-small is-primary is-outlined" title="Create user (WIP)" data-action="create-user">
+          <a class="button is-small is-primary is-outlined" title="Create new user" data-action="create-user">
             <span class="icon">
               <i class="icon-plus"></i>
             </span>
-            <span>Create user</span>
+            <span>Create new user</span>
         </a>
         </div>
         <div class="column has-text-right">
@@ -1891,7 +1942,6 @@ page.getUsers = (params = {}) => {
           <thead>
             <tr>
               <th><input id="selectAll" class="checkbox" type="checkbox" title="Select all" data-action="select-all"></th>
-              <th>ID</th>
               <th>Username</th>
               <th>Uploads</th>
               <th>Usage</th>
@@ -1933,7 +1983,6 @@ page.getUsers = (params = {}) => {
       tr.dataset.id = user.id
       tr.innerHTML = `
         <td class="controls"><input type="checkbox" class="checkbox" title="Select" data-index="${i}" data-action="select"${selected ? ' checked' : ''}></td>
-        <th>${user.id}</th>
         <th${enabled ? '' : ' class="is-linethrough"'}>${user.username}</td>
         <th>${user.uploads}</th>
         <td>${page.getPrettyBytes(user.usage)}</td>
@@ -2133,26 +2182,37 @@ page.editUser = id => {
           return swal('An error occurred!', response.data.description, 'error')
         }
 
-      if (response.data.password) {
-        const div = document.createElement('div')
-        div.innerHTML = `
-          <p><b>${user.username}</b>'s new password is:</p>
-          <p><code>${response.data.password}</code></p>
-        `
-        swal({
-          title: 'Success!',
-          icon: 'success',
-          content: div
-        })
-      } else if (response.data.update && response.data.update.username !== user.username) {
-        swal('Success!', `${user.username} was renamed into: ${response.data.update.username}.`, 'success')
-      } else {
-        swal('Success!', 'The user was edited!', 'success', {
-          buttons: false,
-          timer: 1500
-        })
+      let autoClose = true
+      const div = document.createElement('div')
+
+      let displayName = user.username
+      if (response.data.update.username !== user.username) {
+        div.innerHTML += `<p>${user.username} was renamed into: <b>${response.data.update.username}</b>.</p>`
+        autoClose = false
+        displayName = response.data.update.username
       }
 
+      if (response.data.update.password) {
+        div.innerHTML += `
+          <p>${displayName}'s new password is:</p>
+          <p><code>${response.data.update.password}</code></p>
+        `
+        autoClose = false
+      }
+
+      if (response.data.update.enabled !== user.enabled)
+        div.innerHTML += `<p>${displayName} has been ${response.data.update.enabled ? 'enabled' : 'disabled'}!</p>`
+
+      if (!div.innerHTML)
+        div.innerHTML = `<p>${displayName} was edited!</p>`
+
+      swal({
+        title: 'Success!',
+        icon: 'success',
+        content: div,
+        buttons: !autoClose,
+        timer: autoClose ? 1500 : null
+      })
       page.getUsers(page.views.users)
     }).catch(page.onAxiosError)
   })

@@ -31,7 +31,8 @@ const self = {
 
   ffprobe: promisify(ffmpeg.ffprobe),
 
-  albumsCache: {}
+  albumsCache: {},
+  timezoneOffset: new Date().getTimezoneOffset()
 }
 
 const statsCache = {
@@ -106,7 +107,7 @@ self.extname = filename => {
   return extname + multi
 }
 
-self.escape = (string) => {
+self.escape = string => {
   // MIT License
   // Copyright(c) 2012-2013 TJ Holowaychuk
   // Copyright(c) 2015 Andreas Lubbe

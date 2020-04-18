@@ -259,7 +259,7 @@ self.editUser = async (req, res, next) => {
     utils.invalidateStatsCache('users')
 
     const response = { success: true, update }
-    if (password) response.password = password
+    if (password) response.update.password = password
     return res.json(response)
   } catch (error) {
     logger.error(error)

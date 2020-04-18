@@ -4,6 +4,7 @@ const fs = require('fs')
 const multer = require('multer')
 const path = require('path')
 const randomstring = require('randomstring')
+const searchQuery = require('search-query-parser')
 const paths = require('./pathsController')
 const perms = require('./permissionController')
 const utils = require('./utilsController')
@@ -758,94 +759,172 @@ self.list = async (req, res) => {
 
   const all = Boolean(req.headers.all)
   const filters = req.headers.filters
+  const minoffset = req.headers.minoffset
   const ismoderator = perms.is(user, 'moderator')
   if ((all || filters) && !ismoderator)
     return res.status(403).end()
 
   const basedomain = config.domain
 
-  // For filtering uploads
-  const _filters = {
+  const filterObj = {
     uploaders: [],
-    names: [],
-    ips: [],
-    flags: {
-      nouser: false,
-      noip: false
+    excludeUploaders: [],
+    queries: {
+      exclude: {}
     },
-    keywords: []
+    flags: {}
   }
 
-  // Cast column(s) to specific type if they're stored differently
-  const _orderByCasts = {
-    size: 'integer'
+  const orderByObj = {
+    // Cast columns to specific type if they are stored differently
+    casts: {
+      size: 'integer'
+    },
+    // Columns mapping
+    maps: {
+      date: 'timestamp',
+      expiry: 'expirydate'
+    },
+    // Columns with which to use SQLite's NULLS LAST option
+    nullsLast: [
+      'userid',
+      'expirydate',
+      'ip'
+    ],
+    parsed: []
   }
-  // Columns with which to use SQLite's NULLS LAST option
-  const _orderByNullsLast = [
-    'userid',
-    'expirydate',
-    'ip'
-  ]
-  const _orderBy = []
 
-  // Perhaps this can be simplified even further?
   if (filters) {
-    const usernames = []
-    filters
-      .split(' ')
-      .map((v, i, a) => {
-        if (/[^\\]\\$/.test(v) && a[i + 1]) {
-          const tmp = `${v.slice(0, -1)} ${a[i + 1]}`
-          a[i + 1] = ''
-          return tmp
-        }
-        return v.replace(/\\\\/, '\\')
-      })
-      .map((v, i) => {
-        const x = v.indexOf(':')
-        if (x >= 0 && v.substring(x + 1))
-          return [v.substring(0, x), v.substring(x + 1)]
-        else
-          return v
-      })
-      .forEach(v => {
-        if (Array.isArray(v)) {
-          if (v[0] === 'user') {
-            usernames.push(v[1])
-          } else if (v[0] === 'name') {
-            _filters.names.push(v[1])
-          } else if (v[0] === 'ip') {
-            _filters.ips.push(v[1])
-          } else if (v[0] === 'orderby') {
-            const tmp = v[1].split(':')
-            let col = tmp[0]
-            let dir = 'asc'
-            if (_orderByCasts[col])
-              col = `cast (\`${col}\` as ${_orderByCasts[col]})`
-            if (tmp[1] && /^d/i.test(tmp[1]))
-              dir = 'desc'
-            _orderBy.push(`${col} ${dir}${_orderByNullsLast.includes(col) ? ' nulls last' : ''}`)
-          }
-        } else {
-          if (v === '-user')
-            _filters.flags.nouser = true
-          else if (v === '-ip')
-            _filters.flags.noip = true
-          else
-            _filters.keywords.push(v[0])
-        }
-      })
-    _filters.uploaders = await db.table('users')
-      .whereIn('username', usernames)
-      .select('id', 'username')
-  }
+    const keywords = [
+      'ip',
+      'user'
+    ]
+    const ranges = [
+      'date',
+      'expiry'
+    ]
+    filterObj.queries = searchQuery.parse(filters, {
+      keywords: keywords.concat([
+        'orderby'
+      ]),
+      ranges,
+      tokenize: true,
+      alwaysArray: true,
+      offsets: false
+    })
 
-  if (filters && !(_filters.uploaders.length || _filters.names.length || _filters.ips.length || _filters.flags.nouser || _filters.flags.noip || _orderBy.length))
-    if (_filters.keywords.length)
-      // TODO: Support filtering using keywords only
-      return res.json({ success: false, description: 'Filtering using keywords only is still work in progress. Please confirm valid filtering keys through the Help? button!' })
-    else
-      return res.json({ success: false, description: 'No valid filter or sort keys were used. Please confirm the valid keys through the Help? button!' })
+    for (const key of keywords)
+      if (filterObj.queries[key]) {
+        // Make sure keyword arrays only contain unique values
+        filterObj.queries[key] = filterObj.queries[key].filter((v, i, a) => a.indexOf(v) === i)
+
+        // Flag to match NULL values
+        const index = filterObj.queries[key].indexOf('-')
+        if (index !== -1) {
+          filterObj.flags[`no${key}`] = true
+          filterObj.queries[key].splice(index, 1)
+        }
+      }
+
+    const parseDate = (date, minoffset, resetMs) => {
+      // [YYYY][/MM][/DD] [HH][:MM][:SS]
+      // e.g. 2020/01/01 00:00:00, 2018/01/01 06, 2019/11, 12:34:00
+      const match = date.match(/^(\d{4})?(\/\d{2})?(\/\d{2})?\s?(\d{2})?(:\d{2})?(:\d{2})?$/)
+
+      if (match) {
+        const offset = 60000 * (utils.timezoneOffset - minoffset)
+        const dateObj = new Date(Date.now() + offset)
+
+        if (match[1] !== undefined)
+          dateObj.setFullYear(Number(match[1]), // full year
+            match[2] !== undefined ? (Number(match[2].slice(1)) - 1) : 0, // month, zero-based
+            match[3] !== undefined ? Number(match[3].slice(1)) : 1) // date
+
+        if (match[4] !== undefined)
+          dateObj.setHours(Number(match[4]), // hours
+            match[5] !== undefined ? Number(match[5].slice(1)) : 0, // minutes
+            match[6] !== undefined ? Number(match[6].slice(1)) : 0) // seconds
+
+        if (resetMs)
+          dateObj.setMilliseconds(0)
+
+        // Calculate timezone differences
+        const newDateObj = new Date(dateObj.getTime() - offset)
+        return newDateObj
+      } else {
+        return null
+      }
+    }
+
+    // Parse dates to timestamps
+    for (const range of ranges)
+      if (filterObj.queries[range]) {
+        if (filterObj.queries[range].from) {
+          const parsed = parseDate(filterObj.queries[range].from, minoffset, true)
+          filterObj.queries[range].from = parsed ? Math.floor(parsed / 1000) : null
+        }
+        if (filterObj.queries[range].to) {
+          const parsed = parseDate(filterObj.queries[range].to, minoffset, true)
+          filterObj.queries[range].to = parsed ? Math.ceil(parsed / 1000) : null
+        }
+      }
+
+    // Query users table for user IDs
+    if (filterObj.queries.user || filterObj.queries.exclude.user) {
+      const usernames = []
+        .concat(filterObj.queries.user || [])
+        .concat(filterObj.queries.exclude.user || [])
+
+      const uploaders = await db.table('users')
+        .whereIn('username', usernames)
+        .select('id', 'username')
+
+      // If no matches, or mismatched results
+      if (!uploaders || (uploaders.length !== usernames.length)) {
+        const notFound = usernames.filter(username => {
+          return !uploaders.find(uploader => uploader.username === username)
+        })
+        if (notFound)
+          return res.json({
+            success: false,
+            description: `User${notFound.length === 1 ? '' : 's'} not found: ${notFound.join(', ')}.`
+          })
+      }
+
+      for (const uploader of uploaders)
+        if (filterObj.queries.user && filterObj.queries.user.includes(uploader.username))
+          filterObj.uploaders.push(uploader)
+        else
+          filterObj.excludeUploaders.push(uploader)
+
+      delete filterObj.queries.user
+      delete filterObj.queries.exclude.user
+    }
+
+    // Parse orderby keys
+    if (filterObj.queries.orderby) {
+      for (const obQuery of filterObj.queries.orderby) {
+        const tmp = obQuery.toLowerCase().split(':')
+
+        let column = orderByObj.maps[tmp[0]] || tmp[0]
+        let direction = 'asc'
+
+        if (orderByObj.casts[column])
+          column = `cast (\`${column}\` as ${orderByObj.casts[column]})`
+        if (tmp[1] && /^d/.test(tmp[1]))
+          direction = 'desc'
+
+        const suffix = orderByObj.nullsLast.includes(column) ? ' nulls last' : ''
+        orderByObj.parsed.push(`${column} ${direction}${suffix}`)
+      }
+
+      delete filterObj.queries.orderby
+    }
+
+    // For some reason, single value won't be in Array even with 'alwaysArray' option
+    if (typeof filterObj.queries.exclude.text === 'string')
+      filterObj.queries.exclude.text = [filterObj.queries.exclude.text]
+  }
 
   function filter () {
     if (req.params.id !== undefined)
@@ -853,23 +932,53 @@ self.list = async (req, res) => {
     else if (!all)
       this.where('userid', user.id)
     else
-      // Fisrt, look for uploads matching ANY of the supplied 'user' OR 'ip' filters
-      // Then, refine the matches using the supplied 'name' filters
+      // Sheesh, these look too overbearing...
       this.where(function () {
-        if (_filters.uploaders.length)
-          this.orWhereIn('userid', _filters.uploaders.map(v => v.id))
-        if (_filters.ips.length)
-          this.orWhereIn('ip', _filters.ips)
-        if (_filters.flags.nouser)
+        // Filter uploads matching any of the supplied 'user' keys and/or NULL flag
+        if (filterObj.uploaders.length)
+          this.orWhereIn('userid', filterObj.uploaders.map(v => v.id))
+        if (filterObj.excludeUploaders.length)
+          this.orWhereNotIn('userid', filterObj.excludeUploaders.map(v => v.id))
+        if (filterObj.flags.nouser)
           this.orWhereNull('userid')
-        if (_filters.flags.noip)
+      }).orWhere(function () {
+        // Filter uploads matching any of the supplied 'ip' keys and/or NULL flag
+        if (filterObj.queries.ip)
+          this.orWhereIn('ip', filterObj.queries.ip)
+        if (filterObj.queries.exclude.ip)
+          this.orWhereNotIn('ip', filterObj.queries.exclude.ip)
+        if (filterObj.flags.noip)
           this.orWhereNull('ip')
       }).andWhere(function () {
-        for (const name of _filters.names)
+        // Then, refine using the supplied 'date' and/or 'expiry' ranges
+        if (filterObj.queries.date)
+          if (typeof filterObj.queries.date.to === 'number')
+            this.andWhereBetween('timestamp', [filterObj.queries.date.from, filterObj.queries.date.to])
+          else
+            this.andWhere('timestamp', '>=', filterObj.queries.date.from)
+        if (filterObj.queries.expiry)
+          if (typeof filterObj.queries.expiry.to === 'number')
+            this.andWhereBetween('expirydate', [filterObj.queries.expiry.from, filterObj.queries.expiry.to])
+          else
+            this.andWhere('expirydate', '>=', filterObj.queries.date.from)
+      }).andWhere(function () {
+        // Then, refine using the supplied keywords against their file names
+        if (!filterObj.queries.text) return
+        for (const name of filterObj.queries.text)
           if (name.includes('*'))
             this.orWhere('name', 'like', name.replace(/\*/g, '%'))
           else
-            this.orWhere('name', name)
+            // If no asterisks, assume partial
+            this.orWhere('name', 'like', `%${name}%`)
+      }).andWhere(function () {
+        // Finally, refine using the supplied exclusions against their file names
+        if (!filterObj.queries.exclude.text) return
+        for (const exclude of filterObj.queries.exclude.text)
+          if (exclude.includes('*'))
+            this.orWhere('name', 'not like', exclude.replace(/\*/g, '%'))
+          else
+            // If no asterisks, assume partial
+            this.orWhere('name', 'not like', `%${exclude}%`)
       })
   }
 
@@ -886,16 +995,18 @@ self.list = async (req, res) => {
     if (offset === undefined) offset = 0
 
     const columns = ['id', 'name', 'userid', 'size', 'timestamp']
-
     if (temporaryUploads)
       columns.push('expirydate')
 
     // Only select IPs if we are listing all uploads
     columns.push(all ? 'ip' : 'albumid')
 
+    const orderByRaw = orderByObj.parsed.length
+      ? orderByObj.parsed.join(', ')
+      : '`id` desc'
     const files = await db.table('files')
       .where(filter)
-      .orderByRaw(_orderBy.length ? _orderBy.join(', ') : '`id` desc')
+      .orderByRaw(orderByRaw)
       .limit(25)
       .offset(25 * offset)
       .select(columns)
@@ -923,7 +1034,7 @@ self.list = async (req, res) => {
         .where('userid', user.id)
         .select('id', 'name')
         .then(rows => {
-        // Build Object indexed by their IDs
+          // Build Object indexed by their IDs
           const obj = {}
           for (const row of rows)
             obj[row.id] = row.name
@@ -936,8 +1047,8 @@ self.list = async (req, res) => {
       return res.json({ success: true, files, count, albums, basedomain })
 
     // Otherwise proceed to querying usernames
-    let _users = _filters.uploaders
-    if (!_users.length) {
+    let usersTable = filterObj.uploaders
+    if (!usersTable.length) {
       const userids = files
         .map(file => file.userid)
         .filter((v, i, a) => {
@@ -949,13 +1060,13 @@ self.list = async (req, res) => {
         return res.json({ success: true, files, count, basedomain })
 
       // Query usernames of user IDs from currently selected files
-      _users = await db.table('users')
+      usersTable = await db.table('users')
         .whereIn('id', userids)
         .select('id', 'username')
     }
 
     const users = {}
-    for (const user of _users)
+    for (const user of usersTable)
       users[user.id] = user.username
 
     return res.json({ success: true, files, count, users, basedomain })
