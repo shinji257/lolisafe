@@ -81,8 +81,8 @@ const page = {
   lazyLoad: null,
 
   imageExts: ['.webp', '.jpg', '.jpeg', '.gif', '.png', '.tiff', '.tif', '.svg'],
-  // some of these extensions can not be played directly in browsers
-  videoExts: ['.webm', '.mp4', '.wmv', '.avi', '.mov', '.mkv'],
+  // TODO: Disable "Load original" button with non-streamable extensions
+  videoExts: ['.webm', '.mp4', '.wmv', '.avi', '.mov', '.mkv', '.m4v', '.m2ts'],
 
   isTriggerLoading: null,
   fadingIn: null,

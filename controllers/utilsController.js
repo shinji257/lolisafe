@@ -27,7 +27,7 @@ const self = {
   idMaxTries: config.uploads.maxTries || 1,
 
   imageExts: ['.webp', '.jpg', '.jpeg', '.gif', '.png', '.tiff', '.tif', '.svg'],
-  videoExts: ['.webm', '.mp4', '.wmv', '.avi', '.mov', '.mkv'],
+  videoExts: ['.webm', '.mp4', '.wmv', '.avi', '.mov', '.mkv', '.m4v', '.m2ts'],
 
   ffprobe: promisify(ffmpeg.ffprobe),
 

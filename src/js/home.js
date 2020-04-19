@@ -53,7 +53,7 @@ const page = {
   // Include BMP for uploads preview only, cause the real images will be used
   // Sharp isn't capable of making their thumbnails for dashboard and album public pages
   imageExts: ['.webp', '.jpg', '.jpeg', '.bmp', '.gif', '.png', '.tiff', '.tif', '.svg'],
-  videoExts: ['.webm', '.mp4', '.wmv', '.avi', '.mov', '.mkv'],
+  videoExts: ['.webm', '.mp4', '.wmv', '.avi', '.mov', '.mkv', '.m4v', '.m2ts'],
 
   albumTitleMaxLength: 70,
   albumDescMaxLength: 4000
