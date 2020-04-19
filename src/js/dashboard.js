@@ -200,7 +200,7 @@ page.prepareDashboard = () => {
     // Add onclick event listener
     const item = document.querySelector(itemMenus[i].selector)
     item.addEventListener('click', event => {
-      // This class name isn't actually being applied fast enough
+      // TODO: This class name isn't actually being applied fast enough
       if (page.menusContainer.classList.contains('is-loading'))
         return
 
@@ -242,11 +242,18 @@ page.logout = params => {
 page.updateTrigger = (trigger, newState) => {
   if (!trigger) return
 
-  // Disable menus container when loading
-  if (newState === 'loading')
+  // Disable menus container and pagination when loading
+  if (newState === 'loading') {
     page.menusContainer.classList.add('is-loading')
-  else
+    const paginations = page.dom.querySelectorAll('.pagination')
+    for (let i = 0; i < paginations.length; i++)
+      paginations[i].classList.add('is-loading')
+  } else {
     page.menusContainer.classList.remove('is-loading')
+    const paginations = page.dom.querySelectorAll('.pagination.is-loading')
+    for (let i = 0; i < paginations.length; i++)
+      paginations[i].classList.remove('is-loading')
+  }
 
   if (newState === 'loading') {
     trigger.classList.add('is-loading')
@@ -383,6 +390,10 @@ page.fadeAndScroll = disableFading => {
 }
 
 page.switchPage = (action, element) => {
+  // Skip if other pagination buttons are still loading
+  const isLoading = page.dom.querySelectorAll('.pagination.is-loading')
+  if (isLoading.length) return
+
   // eslint-disable-next-line compat/compat
   const params = Object.assign({
     trigger: element
