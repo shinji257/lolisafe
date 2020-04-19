@@ -775,7 +775,7 @@ self.list = async (req, res) => {
     flags: {}
   }
 
-  const orderByObj = {
+  const sortObj = {
     // Cast columns to specific type if they are stored differently
     casts: {
       size: 'integer'
@@ -805,7 +805,7 @@ self.list = async (req, res) => {
     ]
     filterObj.queries = searchQuery.parse(filters, {
       keywords: keywords.concat([
-        'orderby'
+        'sort'
       ]),
       ranges,
       tokenize: true,
@@ -813,18 +813,30 @@ self.list = async (req, res) => {
       offsets: false
     })
 
-    for (const key of keywords)
-      if (filterObj.queries[key]) {
-        // Make sure keyword arrays only contain unique values
-        filterObj.queries[key] = filterObj.queries[key].filter((v, i, a) => a.indexOf(v) === i)
+    for (const key of keywords) {
+      let queryIndex = -1
+      let excludeIndex = -1
 
-        // Flag to match NULL values
-        const index = filterObj.queries[key].indexOf('-')
-        if (index !== -1) {
-          filterObj.flags[`no${key}`] = true
-          filterObj.queries[key].splice(index, 1)
-        }
+      // Make sure keyword arrays only contain unique values
+      if (filterObj.queries[key]) {
+        filterObj.queries[key] = filterObj.queries[key].filter((v, i, a) => a.indexOf(v) === i)
+        queryIndex = filterObj.queries[key].indexOf('-')
       }
+      if (filterObj.queries.exclude[key]) {
+        filterObj.queries.exclude[key] = filterObj.queries.exclude[key].filter((v, i, a) => a.indexOf(v) === i)
+        excludeIndex = filterObj.queries.exclude[key].indexOf('-')
+      }
+
+      // Flag to match NULL values
+      const inQuery = queryIndex !== -1
+      const inExclude = excludeIndex !== -1
+      if (inQuery || inExclude) {
+        // Prioritize exclude keys when both types found
+        filterObj.flags[`${key}Null`] = inExclude ? false : inQuery
+        if (inQuery) filterObj.queries[key].splice(queryIndex, 1)
+        if (inExclude) filterObj.queries.exclude[key].splice(excludeIndex, 1)
+      }
+    }
 
     const parseDate = (date, minoffset, resetMs) => {
       // [YYYY][/MM][/DD] [HH][:MM][:SS]
@@ -901,24 +913,24 @@ self.list = async (req, res) => {
       delete filterObj.queries.exclude.user
     }
 
-    // Parse orderby keys
-    if (filterObj.queries.orderby) {
-      for (const obQuery of filterObj.queries.orderby) {
+    // Parse sort keys
+    if (filterObj.queries.sort) {
+      for (const obQuery of filterObj.queries.sort) {
         const tmp = obQuery.toLowerCase().split(':')
 
-        let column = orderByObj.maps[tmp[0]] || tmp[0]
+        let column = sortObj.maps[tmp[0]] || tmp[0]
         let direction = 'asc'
 
-        if (orderByObj.casts[column])
-          column = `cast (\`${column}\` as ${orderByObj.casts[column]})`
+        if (sortObj.casts[column])
+          column = `cast (\`${column}\` as ${sortObj.casts[column]})`
         if (tmp[1] && /^d/.test(tmp[1]))
           direction = 'desc'
 
-        const suffix = orderByObj.nullsLast.includes(column) ? ' nulls last' : ''
-        orderByObj.parsed.push(`${column} ${direction}${suffix}`)
+        const suffix = sortObj.nullsLast.includes(column) ? ' nulls last' : ''
+        sortObj.parsed.push(`${column} ${direction}${suffix}`)
       }
 
-      delete filterObj.queries.orderby
+      delete filterObj.queries.sort
     }
 
     // For some reason, single value won't be in Array even with 'alwaysArray' option
@@ -935,32 +947,50 @@ self.list = async (req, res) => {
       // Sheesh, these look too overbearing...
       this.where(function () {
         // Filter uploads matching any of the supplied 'user' keys and/or NULL flag
-        if (filterObj.uploaders.length)
-          this.orWhereIn('userid', filterObj.uploaders.map(v => v.id))
+        // Prioritze exclude keys when both types found
         if (filterObj.excludeUploaders.length)
           this.orWhereNotIn('userid', filterObj.excludeUploaders.map(v => v.id))
-        if (filterObj.flags.nouser)
+        else if (filterObj.uploaders.length)
+          this.orWhereIn('userid', filterObj.uploaders.map(v => v.id))
+        // Such overbearing logic for NULL values, smh...
+        if ((filterObj.excludeUploaders.length && filterObj.flags.userNull !== false) ||
+          (filterObj.uploaders.length && filterObj.flags.userNull) ||
+          (!filterObj.excludeUploaders.length && !filterObj.uploaders.length && filterObj.flags.userNull))
           this.orWhereNull('userid')
+        else if (filterObj.flags.userNull === false)
+          this.orWhereNotNull('userid')
       }).orWhere(function () {
         // Filter uploads matching any of the supplied 'ip' keys and/or NULL flag
-        if (filterObj.queries.ip)
-          this.orWhereIn('ip', filterObj.queries.ip)
+        // Same prioritization logics as above
         if (filterObj.queries.exclude.ip)
           this.orWhereNotIn('ip', filterObj.queries.exclude.ip)
-        if (filterObj.flags.noip)
+        else if (filterObj.queries.ip)
+          this.orWhereIn('ip', filterObj.queries.ip)
+        // ...
+        if ((filterObj.queries.exclude.ip && filterObj.flags.ipNull !== false) ||
+          (filterObj.queries.ip && filterObj.flags.ipNull) ||
+          (!filterObj.queries.exclude.ip && !filterObj.queries.ip && filterObj.flags.ipNull))
           this.orWhereNull('ip')
+        else if (filterObj.flags.ipNull === false)
+          this.orWhereNotNull('ip')
       }).andWhere(function () {
         // Then, refine using the supplied 'date' and/or 'expiry' ranges
         if (filterObj.queries.date)
-          if (typeof filterObj.queries.date.to === 'number')
-            this.andWhereBetween('timestamp', [filterObj.queries.date.from, filterObj.queries.date.to])
+          if (typeof filterObj.queries.date.from === 'number')
+            if (typeof filterObj.queries.date.to === 'number')
+              this.andWhereBetween('timestamp', [filterObj.queries.date.from, filterObj.queries.date.to])
+            else
+              this.andWhere('timestamp', '>=', filterObj.queries.date.from)
           else
-            this.andWhere('timestamp', '>=', filterObj.queries.date.from)
+            this.andWhere('timestamp', '<=', filterObj.queries.date.to)
         if (filterObj.queries.expiry)
-          if (typeof filterObj.queries.expiry.to === 'number')
-            this.andWhereBetween('expirydate', [filterObj.queries.expiry.from, filterObj.queries.expiry.to])
+          if (typeof filterObj.queries.expiry.from === 'number')
+            if (typeof filterObj.queries.expiry.to === 'number')
+              this.andWhereBetween('expirydate', [filterObj.queries.expiry.from, filterObj.queries.expiry.to])
+            else
+              this.andWhere('expirydate', '>=', filterObj.queries.date.from)
           else
-            this.andWhere('expirydate', '>=', filterObj.queries.date.from)
+            this.andWhere('expirydate', '<=', filterObj.queries.date.to)
       }).andWhere(function () {
         // Then, refine using the supplied keywords against their file names
         if (!filterObj.queries.text) return
@@ -975,10 +1005,10 @@ self.list = async (req, res) => {
         if (!filterObj.queries.exclude.text) return
         for (const exclude of filterObj.queries.exclude.text)
           if (exclude.includes('*'))
-            this.orWhere('name', 'not like', exclude.replace(/\*/g, '%'))
+            this.andWhere('name', 'not like', exclude.replace(/\*/g, '%'))
           else
             // If no asterisks, assume partial
-            this.orWhere('name', 'not like', `%${exclude}%`)
+            this.andWhere('name', 'not like', `%${exclude}%`)
       })
   }
 
@@ -1001,12 +1031,12 @@ self.list = async (req, res) => {
     // Only select IPs if we are listing all uploads
     columns.push(all ? 'ip' : 'albumid')
 
-    const orderByRaw = orderByObj.parsed.length
-      ? orderByObj.parsed.join(', ')
+    const sortRaw = sortObj.parsed.length
+      ? sortObj.parsed.join(', ')
       : '`id` desc'
     const files = await db.table('files')
       .where(filter)
-      .orderByRaw(orderByRaw)
+      .orderByRaw(sortRaw)
       .limit(25)
       .offset(25 * offset)
       .select(columns)

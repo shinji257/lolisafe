@@ -969,51 +969,57 @@ page.uploadFiltersHelp = element => {
   content.innerHTML = `
     There are 2 filter keys, namely <b>user</b> (username) and <b>ip</b>.
     These keys can be specified more than once.
-    For usernames with whitespaces, wrap them with double quotes (<b>"</b>).
+    For usernames with whitespaces, wrap them with double quotes (<code>"</code>).
+    Special cases such as uploads by non-registered users or have no IPs respectively, use <code>user:-</code> or <code>ip:-</code>.
 
-    There are 2 special filter keys, namely <b>user:-</b> and <b>ip:-</b>, to match uploads by non-registered users and have no IPs respectively.
-
-    To exclude certain users/ips while still listing every other uploads, add negation sign (<b>-</b>) before the keys.
-    <b>Unfortunately</b>, this will not show uploads by non-registered users or have no IPs as well, instead you need to also use the special filter keys if you want to include them.
+    To exclude certain users/ips while still listing every other uploads, add negation sign (<code>-</code>) before the keys.
+    Negation sign can also be used to exclude the special cases mentioned above (i.e. <code>-user:-</code> or <code>-ip:-</code>).
 
     There are 2 range keys: <b>date</b> (upload date) and <b>expiry</b> (expiry date).
-    Their format is: <b>YYYY/MM/DD HH:MM:SS-YYYY/MM/DD HH:MM:SS</b> ("to" date is optional).
+    Their format is: <code>YYYY/MM/DD HH:MM:SS-YYYY/MM/DD HH:MM:SS</code> ("from" date and "to" date respectively).
+    You can specify only one date. If "to" date is missing, 'now' will be used. If "from" date is missing, 'beginning of time' will be used.
     If any of the subsequent date or time units are not specified, their first value will be used (e.g. January for month, 1 for day, and so on).
     If only time is specified, today's date will be used.
-    Meaning the following can be accepted: <b>2020/01/01 01:23</b>, <b>2018/01/01 06</b>, <b>2019/11</b>, <b>12:34:56</b>.
+    In conclusion, the following examples are all valid: <code>date:2020/01/01 01:23-2018/01/01 06</code>, <code>expiry:-2020/05</code>, <code>date:12:34:56</code>.
     These keys can only be specified once each.
 
-    Matches can also be sorted with <b>orderby:columnName[:d[escending]]</b> keys.
-    This key require internal column names used in the database (id, userid, and so on), but there are 2 shortcuts, namely <b>date</b> for timestamp column and <b>expiry</b> for expirydate column.
+    <b>Timezone?</b> Don't fret, feel free to query the dates with your own timezone!
+    API requests to the filter endpoint will attach your browser's timezone offset, so the server will automatically calculate timezone differences.
+
+    Matches can also be sorted with <b>sort</b> keys.
+    Its format is: <code>sort:columnName[:d[escending]]</code>, where <code>:d[escending]</code> is an optional tag to set the direction to descending.
+    This key must be used with internal column names used in the database (<code>id</code>, <code>userid</code>, and so on),
+    but there are 2 shortcuts available: <b>date</b> for <code>timestamp</code> column and <b>expiry</b> for <code>expirydate</code> column.
     This key can also be specified more than once, where their order will decide the sorting steps.
 
-    Any leftover keywords which do not use keys will be matched against the matches' file names.
+    Any leftover keywords which do not use keys (non-keyed keywords) will be matched against the matches' file names.
     Excluding certain keywords is also supported by adding negation sign (<b>-</b>) before the keywords.
 
     <b>Internals:</b>
-    First, it will filter uploads matching ANY of the supplied filter keys AND/OR special filter keys, if any.
-    Second, it will refine the matches using the supplied <b>date</b> AND/OR <b>expiry</b> range keys, if any.
-    Third, it will refine the matches using the leftover non-keyed keywords, if any.
-    Finally, it will sort the matches using the supplied <b>orderby</b> keys, if any.
+    First, query uploads passing ALL exclusion filter keys OR matching ANY filter keys, if any.
+    Second, refine matches using range keys, if any.
+    Third, refine matches using ANY non-keyed keywords, if any.
+    Fourth, filter matches using ALL exclusion non-keyed keywords, if any.
+    Fifth, sort matches using sorting keys, if any.
 
     <b>Examples:</b>
-    Uploads from user named "demo":
-    <code>user:demo</code>
     Uploads from users named "demo" AND/OR "John Doe" AND/OR non-registered users:
     <code>user:demo user:"John Doe" user:-</code>
-    ALL uploads, including from non-registered users, but NOT the ones from user named "demo":
-    <code>-user:demo user:-</code>
+    ALL uploads, but NOT the ones from user named "demo" AND "John Doe":
+    <code>-user:demo -user:"John Doe"</code>
     Uploads from IP "127.0.0.1" AND which file names match "*.rar" OR "*.zip":
     <code>ip:127.0.0.1 *.rar *.zip</code>
     Uploads uploaded since "1 June 2019 00:00:00":
     <code>date:2019/06</code>
-    Uploads uploaded between "7 April 2020 00:00:00" and "7 April 2020 23:59:59":
-    <code>date:2020/04/07-2020/04/07 23:59:59</code>
+    Uploads uploaded between "7 April 2020 12:00:00" and "7 April 2020 23:59:59":
+    <code>date:2020/04/07 12-2020/04/07 23:59:59</code>
+    Uploads uploaded before "5 February 2020 00:00:00":
+    <code>date:-2020/02/05</code>
     Uploads which file names match "*.gz" but NOT "*.tar.gz":
     <code>*.gz -*.tar.gz</code>
     Sort matches by "size" column in ascending and descending order respectively:
-    <code>user:"John Doe" orderby:size</code>
-    <code>*.mp4 user:- orderby:size:d</code>
+    <code>user:"John Doe" sort:size</code>
+    <code>*.mp4 user:- sort:size:d</code>
 
     <b>Friendly reminder:</b> This window can be scrolled up!
   `.trim().replace(/^ {6}/gm, '').replace(/\n/g, '<br>')
