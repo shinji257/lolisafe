@@ -292,12 +292,15 @@ self.generateThumbs = async (name, extname, force) => {
       return false
     }
   } catch (error) {
+    // TODO: Parse ffmpeg/ffprobe errors into concise error messages (get rid of versions info)
     // Suppress error logging for errors matching these patterns
     const errorString = error.toString()
     const suppress = [
       /Input file contains unsupported image format/,
       /Invalid data found when processing input/,
-      /File does not have valid required data/
+      /File does not have valid required data/,
+      /Could not find codec parameters/,
+      /Duplicate element/
     ]
 
     if (!suppress.some(t => t.test(errorString)))
