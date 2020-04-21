@@ -339,9 +339,12 @@ page.prepareDropzone = () => {
             page.dropzone._handleUploadError(instances, xhr, 'Connection timed out. Try to reduce upload chunk size.')
           }
 
-        // Add start timestamp of upload attempt
-        if (xhr._start === undefined)
-          xhr._start = Date.now()
+        // Attach necessary data for initial upload speed calculation
+        if (xhr._upSpeedCalc === undefined)
+          xhr._upSpeedCalc = {
+            bytes: 0,
+            timestamp: Date.now()
+          }
 
         // If not chunked uploads, add extra headers
         if (!file.upload.chunked) {
@@ -381,15 +384,21 @@ page.prepareDropzone = () => {
           prefix = `Uploading chunk ${chunkIndex}/${file.upload.totalChunkCount}\u2026`
         }
 
-        let prettyBytesPerSec
+        // Upload speed calculation
+        let bytesPerSec
         if (!skipProgress) {
-          const elapsed = (Date.now() - xhr._start) / 1000
-          const bytesPerSec = elapsed ? (upl.bytesSent / elapsed) : 0
-          prettyBytesPerSec = page.getPrettyBytes(bytesPerSec)
+          const now = Date.now()
+          const elapsedSecs = (now - xhr._upSpeedCalc.timestamp) / 1000
+          const bytesSent = upl.bytesSent - xhr._upSpeedCalc.bytes
+          bytesPerSec = elapsedSecs ? (bytesSent / elapsedSecs) : 0
+
+          // Update data for next upload speed calculation
+          xhr._upSpeedCalc.bytes = upl.bytesSent
+          xhr._upSpeedCalc.timestamp = now
         }
 
         file.previewElement.querySelector('.descriptive-progress').innerHTML =
-          `${prefix} ${percentage}%${prettyBytesPerSec ? ` at ~${prettyBytesPerSec}/s` : ''}`
+          `${prefix} ${percentage}%${bytesPerSec ? ` at ${page.getPrettyBytes(bytesPerSec)}/s` : ''}`
       })
 
       this.on('success', (file, data) => {
