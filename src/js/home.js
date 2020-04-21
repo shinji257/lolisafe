@@ -385,22 +385,26 @@ page.prepareDropzone = () => {
         }
 
         // Upload speed calculation
-        let bytesPerSec
+        let prettyBytesPerSec
         if (!skipProgress) {
           const now = Date.now()
           const elapsedSecs = (now - xhr._upSpeedCalc.timestamp) / 1000
-          // Calculate only if at least 1 second has elapsed
+          // Calculate only if at least 1s has elapsed
           if (elapsedSecs >= 1) {
             const bytesSent = upl.bytesSent - xhr._upSpeedCalc.bytes
-            bytesPerSec = elapsedSecs ? (bytesSent / elapsedSecs) : 0
+            const bytesPerSec = elapsedSecs ? (bytesSent / elapsedSecs) : 0
             // Update data for next upload speed calculation
             xhr._upSpeedCalc.bytes = upl.bytesSent
             xhr._upSpeedCalc.timestamp = now
+            // Store latest pretty speed to be used in next iteration, if less than 1s elapsed
+            xhr._upSpeedCalc.lastPretty = prettyBytesPerSec = page.getPrettyBytes(bytesPerSec)
+          } else if (xhr._upSpeedCalc.lastPretty) {
+            prettyBytesPerSec = xhr._upSpeedCalc.lastPretty
           }
         }
 
         file.previewElement.querySelector('.descriptive-progress').innerHTML =
-          `${prefix} ${percentage}%${bytesPerSec ? ` at ${page.getPrettyBytes(bytesPerSec)}/s` : ''}`
+          `${prefix} ${percentage}%${prettyBytesPerSec ? ` at ${prettyBytesPerSec}/s` : ''}`
       })
 
       this.on('success', (file, data) => {
