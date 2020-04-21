@@ -389,12 +389,14 @@ page.prepareDropzone = () => {
         if (!skipProgress) {
           const now = Date.now()
           const elapsedSecs = (now - xhr._upSpeedCalc.timestamp) / 1000
-          const bytesSent = upl.bytesSent - xhr._upSpeedCalc.bytes
-          bytesPerSec = elapsedSecs ? (bytesSent / elapsedSecs) : 0
-
-          // Update data for next upload speed calculation
-          xhr._upSpeedCalc.bytes = upl.bytesSent
-          xhr._upSpeedCalc.timestamp = now
+          // Calculate only if at least 1 second has elapsed
+          if (elapsedSecs >= 1) {
+            const bytesSent = upl.bytesSent - xhr._upSpeedCalc.bytes
+            bytesPerSec = elapsedSecs ? (bytesSent / elapsedSecs) : 0
+            // Update data for next upload speed calculation
+            xhr._upSpeedCalc.bytes = upl.bytesSent
+            xhr._upSpeedCalc.timestamp = now
+          }
         }
 
         file.previewElement.querySelector('.descriptive-progress').innerHTML =
