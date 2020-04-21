@@ -340,10 +340,10 @@ page.prepareDropzone = () => {
           }
 
         // Attach necessary data for initial upload speed calculation
-        if (xhr._upSpeedCalc === undefined)
-          xhr._upSpeedCalc = {
-            bytes: 0,
-            timestamp: Date.now()
+        if (xhr._uplSpeedCalc === undefined)
+          xhr._uplSpeedCalc = {
+            lastSent: 0,
+            data: [{ timestamp: Date.now(), bytes: 0 }]
           }
 
         // If not chunked uploads, add extra headers
@@ -384,22 +384,50 @@ page.prepareDropzone = () => {
           prefix = `Uploading chunk ${chunkIndex}/${file.upload.totalChunkCount}\u2026`
         }
 
-        // Upload speed calculation
+        // Real-time upload speed calculation
         let prettyBytesPerSec
         if (!skipProgress) {
           const now = Date.now()
-          const elapsedSecs = (now - xhr._upSpeedCalc.timestamp) / 1000
-          // Calculate only if at least 1s has elapsed
-          if (elapsedSecs >= 1) {
-            const bytesSent = upl.bytesSent - xhr._upSpeedCalc.bytes
-            const bytesPerSec = elapsedSecs ? (bytesSent / elapsedSecs) : 0
-            // Update data for next upload speed calculation
-            xhr._upSpeedCalc.bytes = upl.bytesSent
-            xhr._upSpeedCalc.timestamp = now
-            // Store latest pretty speed to be used in next iteration, if less than 1s elapsed
-            xhr._upSpeedCalc.lastPretty = prettyBytesPerSec = page.getPrettyBytes(bytesPerSec)
-          } else if (xhr._upSpeedCalc.lastPretty) {
-            prettyBytesPerSec = xhr._upSpeedCalc.lastPretty
+          const bytesSent = upl.bytesSent - xhr._uplSpeedCalc.lastSent
+
+          // Push data of current iteration
+          xhr._uplSpeedCalc.lastSent = upl.bytesSent
+          xhr._uplSpeedCalc.data.push({ timestamp: now, bytes: bytesSent })
+
+          // Wait till at least the 2nd iteration (3 data including initial data)
+          const length = xhr._uplSpeedCalc.data.length
+          if (length > 2) {
+            // Calculate using data from all iterations
+            let elapsed = 0
+            let bytesPerSec = 0
+            let fullSec = false
+            let i = length - 1 // Always start with 2nd from last item
+            while (i--) {
+              // Splice data of unrequired iterations
+              if (fullSec) {
+                xhr._uplSpeedCalc.data.splice(i, 1)
+                continue
+              }
+              // Sum data
+              elapsed = now - xhr._uplSpeedCalc.data[i].timestamp
+              if (elapsed > 1000) {
+                const excessDuration = elapsed - 1000
+                const newerIterationElapsed = now - xhr._uplSpeedCalc.data[i + 1].timestamp
+                const duration = elapsed - newerIterationElapsed
+                const fragment = (duration - excessDuration) / duration * xhr._uplSpeedCalc.data[i + 1].bytes
+                bytesPerSec += fragment
+                fullSec = true
+              } else {
+                bytesPerSec += xhr._uplSpeedCalc.data[i + 1].bytes
+              }
+            }
+
+            // If not enough data
+            if (!fullSec)
+              bytesPerSec = 1000 / elapsed * bytesPerSec
+
+            // Get pretty bytes
+            prettyBytesPerSec = page.getPrettyBytes(bytesPerSec)
           }
         }
 
