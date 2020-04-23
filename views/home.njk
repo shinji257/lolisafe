@@ -28,6 +28,10 @@
 <script id="renderScript" data-version="{{ versions[4] }}" src="js/misc/render.js{{ versions[1] }}"></script>
 {% endblock %}
 
+{% block endmeta %}
+{% include "_partial/noscript-refresh.njk" %}
+{% endblock %}
+
 {% block content %}
 {{ super() }}
 <section id="home" class="hero is-fullheight">
