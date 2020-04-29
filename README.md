@@ -1,6 +1,6 @@
 # lolisafe, a small safe worth protecting
 
-[![safe.fiery.me](https://i.fiery.me/2Eeb.png)](https://safe.fiery.me)
+[![safe.fiery.me](https://i.fiery.me/pIsja.png)](https://safe.fiery.me)
 
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](https://raw.githubusercontent.com/WeebDev/lolisafe/master/LICENSE)
 
@@ -16,7 +16,7 @@ Configuration file of lolisafe, `config.js`, is also NOT fully compatible with t
 
 ## Running in production mode
 
-1. Ensure you have Node v10.x installed (v12.x have NOT been tested).
+1. Ensure you have at least Node v10.x installed (v12.x should also work just fine).
 2. Clone this repo.
 3. Copy `config.sample.js` as `config.js`.
 4. Modify port, domain and privacy options if desired.
@@ -47,6 +47,25 @@ During development, the rebuilt files will be saved in `dist-dev` directory inst
 
 Once you feel like your modifications are ready for production usage, you can then run `yarn build` to build production-ready files that will actually go to `dist` directory.
 
+## Updating when you have modified some files
+
+Try to use [git stash](https://www.git-scm.com/docs/git-stash).
+
+Basically you'll be doing this:
+
+1. `git stash` to stash away your changes.
+2. `git pull` to pull updates.
+3. `yarn install` (or `yarn install --production`) to install dependencies matching the updated `yarn.lock` file.
+4. `git stash pop` (or `git stash apply`) to restore your changes.
+
+Be warned that some files may have been updated too heavily that they will require manual merging.
+
+If you only do some small modifications such as editing `views/_globals.njk` and not much else, it's generally safe to do this even in a live production environment. But it's still best practice to at least review just what have been updated, and whether you will need to do some manual merging beforehand.
+
+Still, I heavily recommend simply forking this repository and manually merging upstream changes whenever you feel like doing so. Read more about [syncing a fork](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/syncing-a-fork).
+
+Afterwards, you can instead clone your fork in your production server and pull updates from there. You can then choose to only install production dependencies with `yarn install --production` there (hint: this is how I setup safe.fiery.me).
+
 ## Script for missing thumbnails
 
 Thumbnails will not be automatically generated for existing files, that had been uploaded prior to enabling thumbnails in the config file.
@@ -76,8 +95,10 @@ Or if you want to generate thumbnails for both image and video files, while also
 
 This fork has an optional virus scanning support using [ClamAV](https://www.clamav.net/), through [clamdjs](https://github.com/NingLin-P/clamdjs) library.
 
-It will scan new files right after they are uploaded. It will then print error messages to the uploaders (as in the virus names in ClamAV's databases) if the files are dirty.
+It will scan new files right after they are uploaded. It will then alert the uploaders of the virus names in ClamAV's database if their files are dirty.
 
-On the down side, this will slow down uploads processing (as it has to wait for the scan results before responding the uploader's requests), however it's still highly recommended for public usage.
+Unfortunately, this will slow down uploads processing as it has to wait for scan results before responding the uploaders, however it's still highly recommended for public usage (or at least if you find Google Safe Search too annoying).
 
 To enable this, make sure you have ClamAV daemon running, then fill in the daemon's IP and port into your config file.
+
+From the config file you can also choose to exclude certain extensions from being scanned to lessen the burden on your server.
