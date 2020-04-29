@@ -19,7 +19,8 @@
 <script src="libs/lazyload/lazyload.min.js{{ versions[3] }}"></script>
 {# Polyfill smooth scroll for older browsers #}
 <script src="libs/smoothscroll/smoothscroll.min.js{{ versions[3] }}"></script>
-<script src="js/dashboard.js{{ versions[1] }}"></script>
+{# We assign an ID for this so that the script can find out its own version #}
+<script id="mainScript" src="js/dashboard.js{{ versions[1] }}"></script>
 <script src="js/misc/utils.js{{ versions[1] }}"></script>
 {% endblock %}
 

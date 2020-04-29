@@ -122,17 +122,39 @@ page.onAxiosError = error => {
   return swal(`${error.response.status} ${statusText}`, description, 'error')
 }
 
+page.checkClientVersion = apiVersion => {
+  const self = document.querySelector('#mainScript')
+  const match = self.src.match(/\?_=(\d+)$/)
+  if (match && match[1] && match[1] !== apiVersion)
+    return swal({
+      title: 'Updated detected!',
+      text: 'Client assets have been updated. Reload to display the latest version?',
+      icon: 'info',
+      buttons: {
+        confirm: {
+          text: 'Reload',
+          closeModal: false
+        }
+      }
+    }).then(() => {
+      location.reload()
+    })
+}
+
 page.checkIfPublic = () => {
   let renderShown = false
   return axios.get('api/check', {
     onDownloadProgress: () => {
-      // Only show render after this request has been initiated
+      // Only show render after this request has been initiated to avoid blocking
       if (!renderShown && typeof page.doRender === 'function') {
         page.doRender()
         renderShown = true
       }
     }
   }).then(response => {
+    if (response.data.version)
+      page.checkClientVersion(response.data.version)
+
     page.private = response.data.private
     page.enableUserAccounts = response.data.enableUserAccounts
     page.maxSize = parseInt(response.data.maxSize)
@@ -141,6 +163,7 @@ page.checkIfPublic = () => {
     page.temporaryUploadAges = response.data.temporaryUploadAges
     page.fileIdentifierLength = response.data.fileIdentifierLength
     page.stripTagsConfig = response.data.stripTags
+
     return page.preparePage()
   }).catch(page.onInitError)
 }

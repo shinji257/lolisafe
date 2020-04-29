@@ -141,6 +141,25 @@ page.preparePage = () => {
     window.location = 'auth'
 }
 
+page.checkClientVersion = apiVersion => {
+  const self = document.querySelector('#mainScript')
+  const match = self.src.match(/\?_=(\d+)$/)
+  if (match && match[1] && match[1] !== apiVersion)
+    return swal({
+      title: 'Updated detected!',
+      text: 'Client assets have been updated. Reload to display the latest version?',
+      icon: 'info',
+      buttons: {
+        confirm: {
+          text: 'Reload',
+          closeModal: false
+        }
+      }
+    }).then(() => {
+      location.reload()
+    })
+}
+
 page.verifyToken = (token, reloadOnError) => {
   axios.post('api/tokens/verify', { token }).then(response => {
     if (response.data.success === false)
@@ -156,6 +175,9 @@ page.verifyToken = (token, reloadOnError) => {
 
     axios.defaults.headers.common.token = token
     localStorage[lsKeys.token] = token
+
+    if (response.data.version)
+      page.checkClientVersion(response.data.version)
 
     page.token = token
     page.username = response.data.username

@@ -52,11 +52,13 @@ self.verify = async (req, res, next) => {
     if (!user)
       return res.json({ success: false, description: 'Invalid token.' })
 
-    return res.json({
+    const obj = {
       success: true,
       username: user.username,
       permissions: perms.mapPermissions(user)
-    })
+    }
+    if (utils.clientVersion) obj.version = utils.clientVersion
+    return res.json(obj)
   } catch (error) {
     logger.error(error)
     return res.status(500).json({ success: false, description: 'An unexpected error occurred. Try again?' })

@@ -149,9 +149,12 @@ safe.use('/api', api)
 
     // Re-map version strings if cache control is enabled (safe.fiery.me)
     utils.versionStrings = {}
-    if (config.cacheControl)
+    if (config.cacheControl) {
       for (const type in versions)
         utils.versionStrings[type] = `?_=${versions[type]}`
+      if (versions['1'])
+        utils.clientVersion = versions['1']
+    }
 
     // Check for custom pages, otherwise fallback to Nunjucks templates
     for (const page of config.pages) {

@@ -7,7 +7,7 @@ const utilsController = require('./../controllers/utilsController')
 const config = require('./../config')
 
 routes.get('/check', (req, res, next) => {
-  return res.json({
+  const obj = {
     private: config.private,
     enableUserAccounts: config.enableUserAccounts,
     maxSize: config.uploads.maxSize,
@@ -15,7 +15,9 @@ routes.get('/check', (req, res, next) => {
     temporaryUploadAges: config.uploads.temporaryUploadAges,
     fileIdentifierLength: config.uploads.fileIdentifierLength,
     stripTags: config.uploads.stripTags
-  })
+  }
+  if (utilsController.clientVersion) obj.version = utilsController.clientVersion
+  return res.json(obj)
 })
 
 routes.post('/login', (req, res, next) => authController.verify(req, res, next))
