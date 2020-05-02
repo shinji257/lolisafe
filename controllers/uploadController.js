@@ -1177,17 +1177,19 @@ self.list = async (req, res) => {
     // Then, refine using type-is flags
     this.andWhere(function () {
       for (const type of filterObj.typeIs) {
-        const patterns = utils[`${type}Exts`].map(ext => `%${ext}`)
-
+        let func
         let operator
-        if (filterObj.flags[`is${type}`] === true)
+        if (filterObj.flags[`is${type}`] === true) {
+          func = 'orWhere'
           operator = 'like'
-        else if (filterObj.flags[`is${type}`] === false)
+        } else if (filterObj.flags[`is${type}`] === false) {
+          func = 'andWhere'
           operator = 'not like'
+        }
 
-        if (operator)
-          for (const pattern of patterns)
-            this.orWhere('name', operator, pattern)
+        if (func)
+          for (const pattern of utils[`${type}Exts`].map(ext => `%${ext}`))
+            this[func]('name', operator, pattern)
       }
     })
 
@@ -1202,7 +1204,7 @@ self.list = async (req, res) => {
     this.andWhere(function () {
       if (!filterObj.queries.exclude.text) return
       for (const pattern of filterObj.queries.exclude.text)
-        this.orWhere('name', 'not like', pattern)
+        this.andWhere('name', 'not like', pattern)
     })
   }
 
