@@ -487,8 +487,8 @@ module.exports = {
   cacheControl: false,
 
   /*
-    Enable Linux-only disk stats in Dashboard's Statistics.
-    This will use a combination of both "du" and "df" binaries.
+    Enable Linux-only extended disk stats in Dashboard's Statistics.
+    This will use "du" binary to query disk usage of each directories within uploads directory.
     Disabled by default as I personally found it to be very slow with +100k uploads
     with my ancient potato server.
   */
