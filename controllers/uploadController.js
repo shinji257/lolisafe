@@ -808,8 +808,7 @@ self.list = async (req, res) => {
 
     // Look for any glob operators
     const match = pattern.match(/(?<!\\)(\*|\?)/g)
-    if (match && match.length) {
-      logger.debug(pattern, match)
+    if (match && match.length)
       return {
         count: match.length,
         // Replace glob operators with their SQL equivalents
@@ -817,17 +816,19 @@ self.list = async (req, res) => {
           .replace(/(?<!\\)\*/g, '%')
           .replace(/(?<!\\)\?/g, '_')
       }
-    } else {
+    else
       return {
         count: 0,
         // Assume partial match
         escaped: `%${escaped}%`
       }
-    }
   }
 
   if (filters) {
-    let keywords = []
+    let keywords = [
+      'albumid'
+    ]
+
     // Only allow filtering by 'ip' and 'user' keys when listing all uploads
     if (all)
       keywords = keywords.concat([
@@ -1003,13 +1004,19 @@ self.list = async (req, res) => {
     // Parse sort keys
     if (filterObj.queries.sort) {
       let allowed = [
-        'albumid',
         'expirydate',
         'id',
         'name',
         'size',
         'timestamp'
       ]
+
+      // Only allow sorting by 'albumid' when not listing album's uploads
+      if (req.params.id === undefined)
+        allowed = allowed.concat([
+          'albumid'
+        ])
+
       // Only allow sorting by 'ip' and 'userid' columns when listing all uploads
       if (all)
         allowed = allowed.concat([
@@ -1046,86 +1053,102 @@ self.list = async (req, res) => {
   }
 
   function filter () {
-    if (req.params.id !== undefined) {
-      this.where('albumid', req.params.id)
-    } else {
-      // Sheesh, these look so overbearing...
-      if (!all)
-        // If not listing all uploads, list user's uploads
-        this.where('userid', user.id)
-      else
-        this.where(function () {
-          // Filter uploads matching any of the supplied 'user' keys and/or NULL flag
-          // Prioritze exclude keys when both types found
-          this.orWhere(function () {
-            if (filterObj.excludeUploaders.length)
-              this.orWhereNotIn('userid', filterObj.excludeUploaders.map(v => v.id))
-            else if (filterObj.uploaders.length)
-              this.orWhereIn('userid', filterObj.uploaders.map(v => v.id))
-            // Such overbearing logic for NULL values, smh...
-            if ((filterObj.excludeUploaders.length && filterObj.flags.userNull !== false) ||
-              (filterObj.uploaders.length && filterObj.flags.userNull) ||
-              (!filterObj.excludeUploaders.length && !filterObj.uploaders.length && filterObj.flags.userNull))
-              this.orWhereNull('userid')
-            else if (filterObj.flags.userNull === false)
-              this.orWhereNotNull('userid')
-          })
-
-          // Filter uploads matching any of the supplied 'ip' keys and/or NULL flag
-          // Same prioritization logic as above
-          this.orWhere(function () {
-            if (filterObj.queries.exclude.ip)
-              this.orWhereNotIn('ip', filterObj.queries.exclude.ip)
-            else if (filterObj.queries.ip)
-              this.orWhereIn('ip', filterObj.queries.ip)
-            // ...
-            if ((filterObj.queries.exclude.ip && filterObj.flags.ipNull !== false) ||
-              (filterObj.queries.ip && filterObj.flags.ipNull) ||
-              (!filterObj.queries.exclude.ip && !filterObj.queries.ip && filterObj.flags.ipNull))
-              this.orWhereNull('ip')
-            else if (filterObj.flags.ipNull === false)
-              this.orWhereNotNull('ip')
-          })
+    // If listing all uploads
+    if (all)
+      this.where(function () {
+        // Filter uploads matching any of the supplied 'user' keys and/or NULL flag
+        // Prioritze exclude keys when both types found
+        this.orWhere(function () {
+          if (filterObj.excludeUploaders.length)
+            this.orWhereNotIn('userid', filterObj.excludeUploaders.map(v => v.id))
+          else if (filterObj.uploaders.length)
+            this.orWhereIn('userid', filterObj.uploaders.map(v => v.id))
+          // Such overbearing logic for NULL values, smh...
+          if ((filterObj.excludeUploaders.length && filterObj.flags.userNull !== false) ||
+            (filterObj.uploaders.length && filterObj.flags.userNull) ||
+            (!filterObj.excludeUploaders.length && !filterObj.uploaders.length && filterObj.flags.userNull))
+            this.orWhereNull('userid')
+          else if (filterObj.flags.userNull === false)
+            this.orWhereNotNull('userid')
         })
 
-      // Then, refine using the supplied 'date' ranges
+        // Filter uploads matching any of the supplied 'ip' keys and/or NULL flag
+        // Same prioritization logic as above
+        this.orWhere(function () {
+          if (filterObj.queries.exclude.ip)
+            this.orWhereNotIn('ip', filterObj.queries.exclude.ip)
+          else if (filterObj.queries.ip)
+            this.orWhereIn('ip', filterObj.queries.ip)
+          // ...
+          if ((filterObj.queries.exclude.ip && filterObj.flags.ipNull !== false) ||
+            (filterObj.queries.ip && filterObj.flags.ipNull) ||
+            (!filterObj.queries.exclude.ip && !filterObj.queries.ip && filterObj.flags.ipNull))
+            this.orWhereNull('ip')
+          else if (filterObj.flags.ipNull === false)
+            this.orWhereNotNull('ip')
+        })
+      })
+    else
+      // If not listing all uploads, list user's uploads
+      this.where('userid', user.id)
+
+    // Then, refine using any of the supplied 'albumid' keys and/or NULL flag
+    // Same prioritization logic as 'userid' and 'ip' above
+    if (req.params.id === undefined)
       this.andWhere(function () {
-        if (!filterObj.queries.date) return
-        if (typeof filterObj.queries.date.from === 'number')
-          if (typeof filterObj.queries.date.to === 'number')
-            this.andWhereBetween('timestamp', [filterObj.queries.date.from, filterObj.queries.date.to])
-          else
-            this.andWhere('timestamp', '>=', filterObj.queries.date.from)
+        if (filterObj.queries.exclude.albumid)
+          this.orWhereNotIn('albumid', filterObj.queries.exclude.albumid)
+        else if (filterObj.queries.albumid)
+          this.orWhereIn('albumid', filterObj.queries.albumid)
+        // ...
+        if ((filterObj.queries.exclude.albumid && filterObj.flags.albumidNull !== false) ||
+              (filterObj.queries.albumid && filterObj.flags.albumidNull) ||
+              (!filterObj.queries.exclude.albumid && !filterObj.queries.albumid && filterObj.flags.albumidNull))
+          this.orWhereNull('albumid')
+        else if (filterObj.flags.ipNull === false)
+          this.orWhereNotNull('albumid')
+      })
+    else if (!all)
+      // If not listing all uploads, list uploads from user's album
+      this.andWhere('albumid', req.params.id)
+
+    // Then, refine using the supplied 'date' ranges
+    this.andWhere(function () {
+      if (!filterObj.queries.date) return
+      if (typeof filterObj.queries.date.from === 'number')
+        if (typeof filterObj.queries.date.to === 'number')
+          this.andWhereBetween('timestamp', [filterObj.queries.date.from, filterObj.queries.date.to])
         else
-          this.andWhere('timestamp', '<=', filterObj.queries.date.to)
-      })
+          this.andWhere('timestamp', '>=', filterObj.queries.date.from)
+      else
+        this.andWhere('timestamp', '<=', filterObj.queries.date.to)
+    })
 
-      // Then, refine using the supplied 'expiry' ranges
-      this.andWhere(function () {
-        if (!filterObj.queries.expiry) return
-        if (typeof filterObj.queries.expiry.from === 'number')
-          if (typeof filterObj.queries.expiry.to === 'number')
-            this.andWhereBetween('expirydate', [filterObj.queries.expiry.from, filterObj.queries.expiry.to])
-          else
-            this.andWhere('expirydate', '>=', filterObj.queries.date.from)
+    // Then, refine using the supplied 'expiry' ranges
+    this.andWhere(function () {
+      if (!filterObj.queries.expiry) return
+      if (typeof filterObj.queries.expiry.from === 'number')
+        if (typeof filterObj.queries.expiry.to === 'number')
+          this.andWhereBetween('expirydate', [filterObj.queries.expiry.from, filterObj.queries.expiry.to])
         else
-          this.andWhere('expirydate', '<=', filterObj.queries.date.to)
-      })
+          this.andWhere('expirydate', '>=', filterObj.queries.date.from)
+      else
+        this.andWhere('expirydate', '<=', filterObj.queries.date.to)
+    })
 
-      // Then, refine using the supplied keywords against their file names
-      this.andWhere(function () {
-        if (!filterObj.queries.text) return
-        for (const pattern of filterObj.queries.text)
-          this.orWhere('name', 'like', pattern)
-      })
+    // Then, refine using the supplied keywords against their file names
+    this.andWhere(function () {
+      if (!filterObj.queries.text) return
+      for (const pattern of filterObj.queries.text)
+        this.orWhere('name', 'like', pattern)
+    })
 
-      // Finally, refine using the supplied exclusions against their file names
-      this.andWhere(function () {
-        if (!filterObj.queries.exclude.text) return
-        for (const pattern of filterObj.queries.exclude.text)
-          this.orWhere('name', 'not like', pattern)
-      })
-    }
+    // Finally, refine using the supplied exclusions against their file names
+    this.andWhere(function () {
+      if (!filterObj.queries.exclude.text) return
+      for (const pattern of filterObj.queries.exclude.text)
+        this.orWhere('name', 'not like', pattern)
+    })
   }
 
   try {
@@ -1144,9 +1167,13 @@ self.list = async (req, res) => {
     const columns = ['id', 'name', 'userid', 'size', 'timestamp']
     if (temporaryUploads)
       columns.push('expirydate')
+    if (!all || filterObj.queries.albumid || filterObj.queries.exclude.albumid ||
+      filterObj.flags.albumidNull !== undefined)
+      columns.push('albumid')
 
     // Only select IPs if we are listing all uploads
-    columns.push(all ? 'ip' : 'albumid')
+    if (all)
+      columns.push('ip')
 
     // Build raw query for order by (sorting) operation
     let orderByRaw
@@ -1177,9 +1204,9 @@ self.list = async (req, res) => {
         file.thumb = `thumbs/${file.name.slice(0, -file.extname.length)}.png`
     }
 
-    // If we are not listing all uploads, query album names
+    // If we queried albumid, query album names
     let albums = {}
-    if (!all) {
+    if (columns.includes('albumid')) {
       const albumids = files
         .map(file => file.albumid)
         .filter((v, i, a) => {
@@ -1188,7 +1215,6 @@ self.list = async (req, res) => {
       albums = await db.table('albums')
         .whereIn('id', albumids)
         .where('enabled', 1)
-        .where('userid', user.id)
         .select('id', 'name')
         .then(rows => {
           // Build Object indexed by their IDs
@@ -1214,7 +1240,7 @@ self.list = async (req, res) => {
 
       // If there are no uploads attached to a registered user, send response
       if (userids.length === 0)
-        return res.json({ success: true, files, count, basedomain })
+        return res.json({ success: true, files, count, albums, basedomain })
 
       // Query usernames of user IDs from currently selected files
       usersTable = await db.table('users')
@@ -1226,7 +1252,7 @@ self.list = async (req, res) => {
     for (const user of usersTable)
       users[user.id] = user.username
 
-    return res.json({ success: true, files, count, users, basedomain })
+    return res.json({ success: true, files, count, users, albums, basedomain })
   } catch (error) {
     // If moderator, capture SQLITE_ERROR and use its error message for the response's description
     let errorString

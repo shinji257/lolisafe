@@ -718,6 +718,7 @@ page.getUploads = (params = {}) => {
         page.checkboxes[page.currentView] = table.querySelectorAll('.checkbox[data-action="select"]')
       }
     } else {
+      const allAlbums = params.all && params.filters && params.filters.includes('albumid:')
       page.dom.innerHTML = `
         ${pagination}
         ${extraControls}
@@ -729,6 +730,7 @@ page.getUploads = (params = {}) => {
                 <th><input id="selectAll" class="checkbox" type="checkbox" title="Select all" data-action="select-all"></th>
                 <th>File name</th>
                 ${params.album === undefined ? `<th>${params.all ? 'User' : 'Album'}</th>` : ''}
+                ${allAlbums ? '<th>Album</th>' : ''}
                 <th>Size</th>
                 ${params.all ? '<th>IP</th>' : ''}
                 <th>Date</th>
@@ -755,6 +757,7 @@ page.getUploads = (params = {}) => {
           <td class="controls"><input type="checkbox" class="checkbox" title="Select" data-index="${i}" data-action="select"${upload.selected ? ' checked' : ''}></td>
           <th><a href="${upload.file}" target="_blank" title="${upload.file}">${upload.name}</a></th>
           ${params.album === undefined ? `<th>${upload.appendix}</th>` : ''}
+          ${allAlbums ? `<th>${files[i].albumid ? (albums[files[i].albumid] || '') : ''}</th>` : ''}
           <td>${upload.prettyBytes}</td>
           ${params.all ? `<td>${upload.ip || ''}</td>` : ''}
           <td>${upload.prettyDate}</td>
@@ -1021,7 +1024,17 @@ page.uploadFiltersHelp = element => {
 
     To exclude certain users/ips while still listing every other uploads, add negation sign (<code>-</code>) before the keys.
     Negation sign can also be used to exclude the special cases mentioned above (i.e. <code>-user:-</code> or <code>-ip:-</code>).
-    ` : ''}
+
+    If you know the ID of a user's album, you can list its uploads with <b>albumid</b> key.
+    Negation sign works for this key as well.
+    ` : `
+    There is only 1 filter key, namely <b>albumid</b>.
+    This key can be specified more than once.
+    Special case such as uploads with no albums, use <code>albumid:-</code>.
+
+    To exclude certain albums while still listing every other uploads, add negation sign (<code>-</code>) before the keys.
+    Negation sign can also be used to exclude the special case mentioned above (i.e. <code>-albumid:-</code>).
+    `}
     There are 2 range keys: <b>date</b> (upload date) and <b>expiry</b> (expiry date).
     Their format is: <code>YYYY/MM/DD HH:MM:SS-YYYY/MM/DD HH:MM:SS</code> ("from" date and "to" date respectively).
     You may specify only one of the dates.
@@ -1059,7 +1072,11 @@ page.uploadFiltersHelp = element => {
     <code>-user:demo -user:"John Doe"</code>
     - Uploads from IP "127.0.0.1" AND which file names match "*.rar" OR "*.zip":
     <code>ip:127.0.0.1 *.rar *.zip</code>
-    ` : ''}- Uploads uploaded since "1 June 2019 00:00:00":
+    ` : ''}- Uploads without albums:
+    <code>albumid:-</code>
+    - ALL uploads, but NOT the ones from album with ID 69:
+    <code>-albumid:69</code>
+    - Uploads uploaded since "1 June 2019 00:00:00":
     <code>date:2019/06</code>
     - Uploads uploaded between "7 April 2020 12:00:00" and "7 April 2020 23:59:59":
     <code>date:2020/04/07 12-2020/04/07 23:59:59</code>
