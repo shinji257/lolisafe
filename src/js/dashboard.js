@@ -382,7 +382,7 @@ page.domClick = event => {
     case 'select-all':
       return page.selectAll(element)
     case 'page-ellipsis':
-      return page.focusJumpToPage()
+      return page.focusJumpToPage(element)
     case 'page-prev':
     case 'page-next':
     case 'page-goto':
@@ -436,7 +436,7 @@ page.switchPage = (action, element) => {
       params.pageNum = parseInt(element.dataset.goto)
       return func(params)
     case 'jump-to-page': {
-      const jumpToPage = document.querySelector('#jumpToPage')
+      const jumpToPage = document.querySelector(`#${element.dataset.jumpid || 'jumpToPage'}`)
       if (!jumpToPage.checkValidity()) return
       const parsed = parseInt(jumpToPage.value)
       params.pageNum = isNaN(parsed) ? 0 : (parsed - 1)
@@ -446,11 +446,11 @@ page.switchPage = (action, element) => {
   }
 }
 
-page.focusJumpToPage = () => {
-  const element = document.querySelector('#jumpToPage')
-  if (!element) return
-  element.focus()
-  element.select()
+page.focusJumpToPage = element => {
+  const jumpToPage = document.querySelector(`#${element.dataset.jumpid || 'jumpToPage'}`)
+  if (!jumpToPage) return
+  jumpToPage.focus()
+  jumpToPage.select()
 }
 
 page.getUploads = (params = {}) => {
@@ -593,6 +593,17 @@ page.getUploads = (params = {}) => {
       </div>
     `
 
+    // Do some string replacements for bottom controls
+    const bottomFiltersId = 'bFilters'
+    const bottomJumpId = 'bJumpToPage'
+    const bottomExtraControls = extraControls
+      .replace(/id="filters"/, `id="${bottomFiltersId}"`)
+      .replace(/(data-action="filter-uploads")/, `$1 data-filtersid="${bottomFiltersId}"`)
+      .replace(/id="jumpToPage"/, `id="${bottomJumpId}"`)
+      .replace(/(data-action="jump-to-page")/g, `$1 data-jumpid="${bottomJumpId}"`)
+    const bottomPagination = pagination
+      .replace(/(data-action="page-ellipsis")/g, `$1 data-jumpid="${bottomJumpId}"`)
+
     // Whether there are any unselected items
     let unselected = false
 
@@ -654,7 +665,9 @@ page.getUploads = (params = {}) => {
         ${controls}
         <div id="table" class="columns is-multiline is-mobile is-centered">
         </div>
-        ${pagination}
+        ${controls}
+        ${bottomExtraControls}
+        ${bottomPagination}
       `
 
       const table = document.querySelector('#table')
@@ -729,7 +742,9 @@ page.getUploads = (params = {}) => {
             </tbody>
           </table>
         </div>
-        ${pagination}
+        ${controls}
+        ${bottomExtraControls}
+        ${bottomPagination}
       `
 
       const table = document.querySelector('#table')
@@ -1067,7 +1082,7 @@ page.uploadFiltersHelp = element => {
 }
 
 page.filterUploads = element => {
-  const filters = document.querySelector('#filters').value.trim()
+  const filters = document.querySelector(`#${element.dataset.filtersid || 'filters'}`).value.trim()
   page.getUploads({ all: true, filters }, element)
 }
 
