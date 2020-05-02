@@ -1143,7 +1143,7 @@ self.list = async (req, res) => {
               (filterObj.queries.albumid && filterObj.flags.albumidNull) ||
               (!filterObj.queries.exclude.albumid && !filterObj.queries.albumid && filterObj.flags.albumidNull))
           this.orWhereNull('albumid')
-        else if (filterObj.flags.ipNull === false)
+        else if (filterObj.flags.albumidNull === false)
           this.orWhereNotNull('albumid')
       })
     else if (!all)
