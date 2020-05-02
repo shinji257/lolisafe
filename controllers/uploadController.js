@@ -770,6 +770,7 @@ self.list = async (req, res) => {
   const MAX_WILDCARDS_IN_KEY = 2
   const MAX_TEXT_QUERIES = 3 // non-keyed keywords
   const MAX_SORT_KEYS = 1
+  const MAX_IS_KEYS = 1
 
   const filterObj = {
     uploaders: [],
@@ -777,6 +778,10 @@ self.list = async (req, res) => {
     queries: {
       exclude: {}
     },
+    typeIs: [
+      'image',
+      'video'
+    ],
     flags: {}
   }
 
@@ -843,6 +848,7 @@ self.list = async (req, res) => {
 
     filterObj.queries = searchQuery.parse(filters, {
       keywords: keywords.concat([
+        'is',
         'sort'
       ]),
       ranges,
@@ -855,6 +861,7 @@ self.list = async (req, res) => {
     if (typeof filterObj.queries.exclude.text === 'string')
       filterObj.queries.exclude.text = [filterObj.queries.exclude.text]
 
+    // Text (non-keyed keywords) queries
     let textQueries = 0
     if (filterObj.queries.text) textQueries += filterObj.queries.text.length
     if (filterObj.queries.exclude.text) textQueries += filterObj.queries.exclude.text.length
@@ -869,7 +876,7 @@ self.list = async (req, res) => {
     if (filterObj.queries.text)
       for (let i = 0; i < filterObj.queries.text.length; i++) {
         const result = sqlLikeParser(filterObj.queries.text[i])
-        if (result.count > MAX_WILDCARDS_IN_KEY)
+        if (!ismoderator && result.count > MAX_WILDCARDS_IN_KEY)
           return res.json({
             success: false,
             description: `Users are only allowed to use ${MAX_WILDCARDS_IN_KEY} wildcard${MAX_WILDCARDS_IN_KEY === 1 ? '' : 's'} per key.`
@@ -877,18 +884,16 @@ self.list = async (req, res) => {
         filterObj.queries.text[i] = result.escaped
       }
 
-    if (filterObj.queries.exclude.text) {
-      textQueries += filterObj.queries.exclude.text.length
+    if (filterObj.queries.exclude.text)
       for (let i = 0; i < filterObj.queries.exclude.text.length; i++) {
         const result = sqlLikeParser(filterObj.queries.exclude.text[i])
-        if (result.count > MAX_WILDCARDS_IN_KEY)
+        if (!ismoderator && result.count > MAX_WILDCARDS_IN_KEY)
           return res.json({
             success: false,
             description: `Users are only allowed to use ${MAX_WILDCARDS_IN_KEY} wildcard${MAX_WILDCARDS_IN_KEY === 1 ? '' : 's'} per key.`
           })
         filterObj.queries.exclude.text[i] = result.escaped
       }
-    }
 
     for (const key of keywords) {
       let queryIndex = -1
@@ -1050,6 +1055,39 @@ self.list = async (req, res) => {
       // Delete key to avoid unexpected behavior
       delete filterObj.queries.sort
     }
+
+    // Parse is keys
+    let isKeys = 0
+    let isLast
+    if (filterObj.queries.is || filterObj.queries.exclude.is) {
+      for (const type of filterObj.typeIs) {
+        const inQuery = filterObj.queries.is && filterObj.queries.is.includes(type)
+        const inExclude = filterObj.queries.exclude.is && filterObj.queries.exclude.is.includes(type)
+
+        // Prioritize exclude keys when both types found
+        if (inQuery || inExclude) {
+          filterObj.flags[`is${type}`] = inExclude ? false : inQuery
+          if (isLast !== undefined && isLast !== filterObj.flags[`is${type}`])
+            return res.json({
+              success: false,
+              description: 'Cannot mix inclusion and exclusion type-is keys.'
+            })
+          isKeys++
+          isLast = filterObj.flags[`is${type}`]
+        }
+      }
+
+      // Delete keys to avoid unexpected behavior
+      delete filterObj.queries.is
+      delete filterObj.queries.exclude.is
+    }
+
+    // Regular user threshold check
+    if (!ismoderator && isKeys > MAX_IS_KEYS)
+      return res.json({
+        success: false,
+        description: `Users are only allowed to use ${MAX_IS_KEYS} type-is key${MAX_IS_KEYS === 1 ? '' : 's'} at a time.`
+      })
   }
 
   function filter () {
@@ -1134,6 +1172,23 @@ self.list = async (req, res) => {
           this.andWhere('expirydate', '>=', filterObj.queries.date.from)
       else
         this.andWhere('expirydate', '<=', filterObj.queries.date.to)
+    })
+
+    // Then, refine using type-is flags
+    this.andWhere(function () {
+      for (const type of filterObj.typeIs) {
+        const patterns = utils[`${type}Exts`].map(ext => `%${ext}`)
+
+        let operator
+        if (filterObj.flags[`is${type}`] === true)
+          operator = 'like'
+        else if (filterObj.flags[`is${type}`] === false)
+          operator = 'not like'
+
+        if (operator)
+          for (const pattern of patterns)
+            this.orWhere('name', operator, pattern)
+      }
     })
 
     // Then, refine using the supplied keywords against their file names
