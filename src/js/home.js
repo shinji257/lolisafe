@@ -504,7 +504,7 @@ page.prepareDropzone = () => {
         headers: {
           token: page.token,
           // Unlike the options above (e.g. albumid, filelength, etc.),
-          // strip tags can not yet be configured per file with this API
+          // strip tags cannot yet be configured per file with this API
           striptags: page.stripTags
         }
       }).catch(error => {

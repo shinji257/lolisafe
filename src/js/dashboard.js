@@ -457,8 +457,8 @@ page.getUploads = (params = {}) => {
   if (params === undefined)
     params = {}
 
-  if ((params.all || params.filters) && !page.permissions.moderator)
-    return swal('An error occurred!', 'You can not do this!', 'error')
+  if (params.all && !page.permissions.moderator)
+    return swal('An error occurred!', 'You cannot do this!', 'error')
 
   page.updateTrigger(params.trigger, 'loading')
 
@@ -474,9 +474,9 @@ page.getUploads = (params = {}) => {
     filters: params.filters || ''
   }
 
-  // Send client timezone offset if using date filter
+  // Send client timezone offset if using filters
   // Server will pretend client is on UTC if missing
-  if (headers.filters.includes('date:') || headers.filters.includes('expiry:'))
+  if (headers.filters)
     headers.minOffset = new Date().getTimezoneOffset()
 
   axios.get(url, { headers }).then(response => {
@@ -507,33 +507,31 @@ page.getUploads = (params = {}) => {
     const basedomain = response.data.basedomain
     const pagination = page.paginate(response.data.count, 25, params.pageNum)
 
-    let filter = '<div class="column is-hidden-mobile"></div>'
-    if (params.all)
-      filter = `
-        <div class="column">
-          <form class="prevent-default">
-            <div class="field has-addons">
-              <div class="control is-expanded">
-                <input id="filters" class="input is-small" type="text" placeholder="Filters" value="${page.escape(params.filters || '')}">
-              </div>
-              <div class="control">
-                <button type="button" class="button is-small is-primary is-outlined" title="Help?" data-action="upload-filters-help">
-                  <span class="icon">
-                    <i class="icon-help-circled"></i>
-                  </span>
-                </button>
-              </div>
-              <div class="control">
-                <button type="submit" class="button is-small is-info is-outlined" title="Filter uploads" data-action="filter-uploads">
-                  <span class="icon">
-                    <i class="icon-filter"></i>
-                  </span>
-                </button>
-              </div>
+    const filter = `
+      <div class="column">
+        <form class="prevent-default">
+          <div class="field has-addons">
+            <div class="control is-expanded">
+              <input id="filters" class="input is-small" type="text" placeholder="Filters" value="${page.escape(params.filters || '')}">
             </div>
-          </form>
-        </div>
-      `
+            <div class="control">
+              <button type="button" class="button is-small is-primary is-outlined" title="Help?" data-action="upload-filters-help"${params.all ? ' data-all="true"' : ''}">
+                <span class="icon">
+                  <i class="icon-help-circled"></i>
+                </span>
+              </button>
+            </div>
+            <div class="control">
+              <button type="submit" class="button is-small is-info is-outlined" title="Filter uploads" data-action="filter-uploads">
+                <span class="icon">
+                  <i class="icon-filter"></i>
+                </span>
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    `
     const extraControls = `
       <div class="columns">
         ${filter}
@@ -1012,9 +1010,10 @@ page.clearSelection = () => {
 }
 
 page.uploadFiltersHelp = element => {
+  const all = Boolean(element.dataset.all)
   const content = document.createElement('div')
   content.style = 'text-align: left'
-  content.innerHTML = `
+  content.innerHTML = `${all ? `
     There are 2 filter keys, namely <b>user</b> (username) and <b>ip</b>.
     These keys can be specified more than once.
     For usernames with whitespaces, wrap them with double quotes (<code>"</code>).
@@ -1022,10 +1021,12 @@ page.uploadFiltersHelp = element => {
 
     To exclude certain users/ips while still listing every other uploads, add negation sign (<code>-</code>) before the keys.
     Negation sign can also be used to exclude the special cases mentioned above (i.e. <code>-user:-</code> or <code>-ip:-</code>).
-
+    ` : ''}
     There are 2 range keys: <b>date</b> (upload date) and <b>expiry</b> (expiry date).
     Their format is: <code>YYYY/MM/DD HH:MM:SS-YYYY/MM/DD HH:MM:SS</code> ("from" date and "to" date respectively).
-    You can specify only one date. If "to" date is missing, 'now' will be used. If "from" date is missing, 'beginning of time' will be used.
+    You may specify only one of the dates.
+    If "to" date is missing, 'now' will be used.
+    If "from" date is missing, 'beginning of time' will be used.
     If any of the subsequent date or time units are not specified, their first value will be used (e.g. January for month, 1 for day, and so on).
     If only time is specified, today's date will be used.
     In conclusion, the following examples are all valid: <code>date:2020/01/01 01:23-2018/01/01 06</code>, <code>expiry:-2020/05</code>, <code>date:12:34:56</code>.
@@ -1036,41 +1037,44 @@ page.uploadFiltersHelp = element => {
 
     Matches can also be sorted with <b>sort</b> keys.
     Its format is: <code>sort:columnName[:d[escending]]</code>, where <code>:d[escending]</code> is an optional tag to set the direction to descending.
-    This key must be used with internal column names used in the database (<code>id</code>, <code>userid</code>, and so on),
+    This key must be used with internal column names used in the database (<code>id</code>, <code>${all ? 'userid' : 'albumid'}</code>, and so on),
     but there are 2 shortcuts available: <b>date</b> for <code>timestamp</code> column and <b>expiry</b> for <code>expirydate</code> column.
     This key can also be specified more than once, where their order will decide the sorting steps.
 
     Any leftover keywords which do not use keys (non-keyed keywords) will be matched against the matches' file names.
     Excluding certain keywords is also supported by adding negation sign (<b>-</b>) before the keywords.
 
-    <b>Internals:</b>
-    First, query uploads passing ALL exclusion filter keys OR matching ANY filter keys, if any.
-    Second, refine matches using range keys, if any.
-    Third, refine matches using ANY non-keyed keywords, if any.
-    Fourth, filter matches using ALL exclusion non-keyed keywords, if any.
-    Fifth, sort matches using sorting keys, if any.
+    <b>Internal steps:</b>
+    ${all ? `- Query uploads passing ALL exclusion filter keys OR matching ANY filter keys, if any.
+    - Refine matches` : '- Filter uploads'} using date key, if any.
+    - Refine matches using expiry key, if any.
+    - Refine matches using ANY non-keyed keywords, if any.
+    - Filter matches using ALL exclusion non-keyed keywords, if any.
+    - Sort matches using sorting keys, if any.
 
     <b>Examples:</b>
-    Uploads from users named "demo" AND/OR "John Doe" AND/OR non-registered users:
+    ${all ? `- Uploads from users named "demo" AND/OR "John Doe" AND/OR non-registered users:
     <code>user:demo user:"John Doe" user:-</code>
-    ALL uploads, but NOT the ones from user named "demo" AND "John Doe":
+    - ALL uploads, but NOT the ones from user named "demo" AND "John Doe":
     <code>-user:demo -user:"John Doe"</code>
-    Uploads from IP "127.0.0.1" AND which file names match "*.rar" OR "*.zip":
+    - Uploads from IP "127.0.0.1" AND which file names match "*.rar" OR "*.zip":
     <code>ip:127.0.0.1 *.rar *.zip</code>
-    Uploads uploaded since "1 June 2019 00:00:00":
+    ` : ''}- Uploads uploaded since "1 June 2019 00:00:00":
     <code>date:2019/06</code>
-    Uploads uploaded between "7 April 2020 12:00:00" and "7 April 2020 23:59:59":
+    - Uploads uploaded between "7 April 2020 12:00:00" and "7 April 2020 23:59:59":
     <code>date:2020/04/07 12-2020/04/07 23:59:59</code>
-    Uploads uploaded before "5 February 2020 00:00:00":
+    - Uploads uploaded before "5 February 2020 00:00:00":
     <code>date:-2020/02/05</code>
-    Uploads which file names match "*.gz" but NOT "*.tar.gz":
+    - Uploads which file names match "*.gz" but NOT "*.tar.gz":
     <code>*.gz -*.tar.gz</code>
-    Sort matches by "size" column in ascending and descending order respectively:
-    <code>user:"John Doe" sort:size</code>
-    <code>*.mp4 user:- sort:size:d</code>
-
+    - Sort matches by "size" column in ascending and descending order respectively:
+    <code>${all ? 'user:"John Doe"' : '*.txt'} sort:size</code>
+    <code>*.mp4 ${all ? 'user:- ' : ''}sort:size:d</code>
+    ${!page.permissions.moderator ? `
+    <b>Notice:</b> Regular users may face some limitations in the amount of keys that can be used at a time.
+    ` : ''}
     <b>Friendly reminder:</b> This window can be scrolled up!
-  `.trim().replace(/^ {6}/gm, '').replace(/\n/g, '<br>')
+  `.trim().replace(/^\s*/g, '').replace(/\n/g, '<br>')
 
   swal({ content }).then(() => {
     // Restore modal size
@@ -1083,7 +1087,11 @@ page.uploadFiltersHelp = element => {
 
 page.filterUploads = element => {
   const filters = document.querySelector(`#${element.dataset.filtersid || 'filters'}`).value.trim()
-  page.getUploads({ all: true, filters }, element)
+  // eslint-disable-next-line compat/compat
+  page.getUploads(Object.assign(page.views[page.currentView], {
+    filters,
+    pageNum: 0
+  }), element)
 }
 
 page.viewUserUploads = (id, element) => {
@@ -1879,7 +1887,7 @@ page.getUsers = (params = {}) => {
     params.pageNum = 0
 
   if (!page.permissions.admin)
-    return swal('An error occurred!', 'You can not do this!', 'error')
+    return swal('An error occurred!', 'You cannot do this!', 'error')
 
   const url = `api/users/${params.pageNum}`
   axios.get(url).then(response => {
@@ -2170,7 +2178,7 @@ page.createUser = () => {
         content: div
       })
 
-      // Reload users list
+      // Load last page of users list
       // eslint-disable-next-line compat/compat
       page.getUsers(Object.assign(page.views.users, {
         pageNum: -1
@@ -2449,7 +2457,7 @@ page.paginate = (totalItems, itemsPerPage, currentPage) => {
 
 page.getStatistics = (params = {}) => {
   if (!page.permissions.admin)
-    return swal('An error occurred!', 'You can not do this!', 'error')
+    return swal('An error occurred!', 'You cannot do this!', 'error')
 
   page.updateTrigger(params.trigger, 'loading')
 
