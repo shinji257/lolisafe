@@ -1119,9 +1119,9 @@ page.deleteUpload = id => {
 
       // Reload upload list
       // eslint-disable-next-line compat/compat
-      page.getUploads(Object.assign({
+      page.getUploads(Object.assign(page.views[page.currentView], {
         autoPage: true
-      }, page.views[page.currentView]))
+      }))
     }
   })
 }
@@ -1153,9 +1153,9 @@ page.bulkDeleteUploads = () => {
 
       // Reload uploads list
       // eslint-disable-next-line compat/compat
-      page.getUploads(Object.assign({
+      page.getUploads(Object.assign(page.views[page.currentView], {
         autoPage: true
-      }, page.views[page.currentView]))
+      }))
     }
   })
 }
@@ -1904,6 +1904,7 @@ page.getUsers = (params = {}) => {
     page.currentView = 'users'
     page.cache.users = {}
 
+    if (params.pageNum < 0) params.pageNum = Math.max(0, pages + params.pageNum)
     const pagination = page.paginate(response.data.count, 25, params.pageNum)
 
     const filter = `
@@ -1984,6 +1985,17 @@ page.getUsers = (params = {}) => {
       </div>
     `
 
+    // Do some string replacements for bottom controls
+    const bottomFiltersId = 'bFilters'
+    const bottomJumpId = 'bJumpToPage'
+    const bottomExtraControls = extraControls
+      .replace(/id="filters"/, `id="${bottomFiltersId}"`)
+      .replace(/(data-action="filter-uploads")/, `$1 data-filtersid="${bottomFiltersId}"`)
+      .replace(/id="jumpToPage"/, `id="${bottomJumpId}"`)
+      .replace(/(data-action="jump-to-page")/g, `$1 data-jumpid="${bottomJumpId}"`)
+    const bottomPagination = pagination
+      .replace(/(data-action="page-ellipsis")/g, `$1 data-jumpid="${bottomJumpId}"`)
+
     // Whether there are any unselected items
     let unselected = false
 
@@ -2007,7 +2019,9 @@ page.getUsers = (params = {}) => {
           </tbody>
         </table>
       </div>
-      ${pagination}
+      ${controls}
+      ${bottomExtraControls}
+      ${bottomPagination}
     `
 
     const table = document.querySelector('#table')
@@ -2156,7 +2170,11 @@ page.createUser = () => {
         content: div
       })
 
-      page.getUsers(page.views.users)
+      // Reload users list
+      // eslint-disable-next-line compat/compat
+      page.getUsers(Object.assign(page.views.users, {
+        pageNum: -1
+      }))
     }).catch(page.onAxiosError)
   })
 }
@@ -2372,9 +2390,9 @@ page.deleteUser = id => {
 
       // Reload users list
       // eslint-disable-next-line compat/compat
-      page.getUsers(Object.assign({
+      page.getUsers(Object.assign(page.views.users, {
         autoPage: true
-      }, page.views.users))
+      }))
     }).catch(page.onAxiosError)
   })
 }

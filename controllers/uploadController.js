@@ -1021,8 +1021,9 @@ self.list = async (req, res) => {
     if (!count)
       return res.json({ success: true, files: [], count })
 
-    let offset = req.params.page
-    if (offset === undefined) offset = 0
+    let offset = Number(req.params.page)
+    if (isNaN(offset)) offset = 0
+    else if (offset < 0) offset = Math.max(0, Math.ceil(count / 25) + offset)
 
     const columns = ['id', 'name', 'userid', 'size', 'timestamp']
     if (temporaryUploads)
