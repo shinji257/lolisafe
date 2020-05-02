@@ -1067,6 +1067,7 @@ page.uploadFiltersHelp = element => {
     ${all ? `- Query uploads passing ALL exclusion filter keys OR matching ANY filter keys, if any.
     - Refine matches` : '- Filter uploads'} using date key, if any.
     - Refine matches using expiry key, if any.
+    - Refine matches using type-is keys, if any.
     - Refine matches using ANY non-keyed keywords, if any.
     - Filter matches using ALL exclusion non-keyed keywords, if any.
     - Sort matches using sorting keys, if any.
