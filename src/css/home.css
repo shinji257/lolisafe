@@ -12,8 +12,12 @@
   animation-timing-function: cubic-bezier(0, 0.71, 0.29, 1)
 }
 
-#b img.logo {
+.logo {
   max-height: 200px
+}
+
+.logo.is-2x {
+  display: none
 }
 
 #dropzone * {
