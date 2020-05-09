@@ -11,6 +11,8 @@ const logger = require('./logger')
 const versions = require('./src/versions')
 const safe = express()
 
+logger.log('Starting lolisafe\u2026')
+
 process.on('uncaughtException', error => {
   logger.error(error, { prefix: 'Uncaught Exception: ' })
 })
@@ -291,7 +293,7 @@ safe.use('/api', api)
       }).on('SIGINT', () => {
         process.exit(0)
       })
-      logger.log('Development mode (disabled nunjucks caching & enabled readline interface)')
+      logger.log('DEVELOPMENT MODE: Disabled Nunjucks caching & enabled readline interface')
     }
   } catch (error) {
     logger.error(error)
