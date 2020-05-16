@@ -849,13 +849,21 @@ self.list = async (req, res) => {
     filterObj.queries = searchQuery.parse(filters, {
       keywords: keywords.concat([
         'is',
-        'sort'
+        'sort',
+        'orderby'
       ]),
       ranges,
       tokenize: true,
       alwaysArray: true,
       offsets: false
     })
+
+    // Accept orderby as alternative for sort
+    if (filterObj.queries.orderby) {
+      if (!filterObj.queries.sort) filterObj.queries.sort = []
+      filterObj.queries.sort = filterObj.queries.sort.concat(filterObj.queries.orderby)
+      delete filterObj.queries.orderby
+    }
 
     // For some reason, single value won't be in Array even with 'alwaysArray' option
     if (typeof filterObj.queries.exclude.text === 'string')
