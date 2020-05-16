@@ -732,13 +732,13 @@ page.getUploads = (params = {}) => {
             <thead>
               <tr>
                 <th><input id="selectAll" class="checkbox" type="checkbox" title="Select all" data-action="select-all"></th>
-                <th>File name</th>
-                ${params.album === undefined ? `<th>${params.all ? 'User' : 'Album'}</th>` : ''}
-                ${allAlbums ? '<th>Album</th>' : ''}
-                <th>Size</th>
-                ${params.all ? '<th>IP</th>' : ''}
-                <th>Upload date</th>
-                ${hasExpiryDateColumn ? '<th>Expiry date</th>' : ''}
+                <th title="Key: name">File name</th>
+                ${params.album === undefined ? `<th title="Key: ${params.all ? 'userid">User' : 'albumid">Album'}</th>` : ''}
+                ${allAlbums ? '<th title="Key: albumid">Album</th>' : ''}
+                <th title="Key: size">Size</th>
+                ${params.all ? '<th title="Key: ip">IP</th>' : ''}
+                <th title="Key: timestamp">Upload date</th>
+                ${hasExpiryDateColumn ? '<th title="Key: expirydate">Expiry date</th>' : ''}
                 <th></th>
               </tr>
             </thead>
@@ -2061,12 +2061,12 @@ page.getUsers = (params = {}) => {
           <thead>
             <tr>
               <th><input id="selectAll" class="checkbox" type="checkbox" title="Select all" data-action="select-all"></th>
-              <th>Username</th>
+              <th title="Key: username">Username</th>
               <th>Uploads</th>
               <th>Usage</th>
-              <th>Group</th>
-              <th>Registration date</th>
-              <th>Last token update</th>
+              <th title="Key: permission">Group</th>
+              <th title="Key: registration">Registration date</th>
+              <th title="Key: timestamp">Last token update</th>
               <th></th>
             </tr>
           </thead>
@@ -2102,10 +2102,10 @@ page.getUsers = (params = {}) => {
         displayGroup
       }
 
-      const prettyDate = user.registration !== undefined
+      const prettyDate = user.registration
         ? page.getPrettyDate(new Date(user.registration * 1000))
         : '-'
-      const prettyTokenUpdate = user.timestamp !== undefined
+      const prettyTokenUpdate = user.timestamp
         ? page.getPrettyDate(new Date(user.timestamp * 1000))
         : '-'
 
