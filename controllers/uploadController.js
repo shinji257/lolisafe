@@ -830,9 +830,12 @@ self.list = async (req, res) => {
   }
 
   if (filters) {
-    let keywords = [
-      'albumid'
-    ]
+    let keywords = []
+
+    if (req.params.id === undefined)
+      keywords = keywords.concat([
+        'albumid'
+      ])
 
     // Only allow filtering by 'ip' and 'user' keys when listing all uploads
     if (all)
