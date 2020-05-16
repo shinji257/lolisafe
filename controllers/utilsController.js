@@ -549,19 +549,21 @@ self.purgeCloudflareCache = async (names, uploads, thumbs) => {
   return results
 }
 
-self.bulkDeleteExpired = async (dryrun) => {
+self.bulkDeleteExpired = async (dryrun, verbose) => {
   const timestamp = Date.now() / 1000
-  const field = 'id'
+  const fields = ['id']
+  if (verbose) fields.push('name')
   const sudo = { username: 'root' }
 
   const result = {}
   result.expired = await db.table('files')
     .where('expirydate', '<=', timestamp)
-    .select(field)
-    .then(rows => rows.map(row => row[field]))
+    .select(fields)
 
   if (!dryrun) {
-    const values = result.expired.slice() // Make a shallow copy
+    // Make a shallow copy
+    const field = fields[0]
+    const values = result.expired.slice().map(row => row[field])
     result.failed = await self.bulkDeleteFromDb(field, values, sudo)
   }
 

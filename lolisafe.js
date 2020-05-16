@@ -246,8 +246,10 @@ safe.use('/api', api)
         logger.log('Cache control enabled without Cloudflare\'s cache purging')
       }
 
-    // Temporary uploads
-    if (Array.isArray(config.uploads.temporaryUploadAges) && config.uploads.temporaryUploadAges.length) {
+    // Temporary uploads (only check for expired uploads if config.uploads.temporaryUploadsInterval is also set)
+    if (Array.isArray(config.uploads.temporaryUploadAges) &&
+      config.uploads.temporaryUploadAges.length &&
+      config.uploads.temporaryUploadsInterval) {
       let temporaryUploadsInProgress = false
       const temporaryUploadCheck = async () => {
         if (temporaryUploadsInProgress)
@@ -266,10 +268,9 @@ safe.use('/api', api)
 
         temporaryUploadsInProgress = false
       }
-      temporaryUploadCheck()
 
-      if (config.uploads.temporaryUploadsInterval)
-        setInterval(temporaryUploadCheck, config.uploads.temporaryUploadsInterval)
+      temporaryUploadCheck()
+      setInterval(temporaryUploadCheck, config.uploads.temporaryUploadsInterval)
     }
 
     // NODE_ENV=development yarn start
