@@ -4,7 +4,21 @@
 {% set keywords = "upload,lolisafe,file,images,hosting,bobby,fiery" %}
 
 {# Used in home.njk and nojs.njk #}
-{% set home_subtitle = "A <strong>modern</strong> self-hosted file upload service" %}
+{% set home_subtitle = "A <strong>modern</strong> self-hosted file upload service" %} {# HTML supported #}
+
+{# Used in faq.njk and cookiepolicy.njk #}
+{% set rootDomain = "fiery.me" %}
+{% set wholeFaq = root + " website and sub-domains" %}
+{% set wholeCookie = "This site and " + rootDomain + " website and sub-domains" %}
+{% set email = "bobby@fiery.me" %}
+
+{% set forkRepo = "https://github.com/BobbyWibowo/lolisafe" %}
+{% set forkHost = "GitHub" %}
+{% set forkIssues = forkRepo + "/issues/new/choose" %}
+
+{% set takedownsUrl = "https://safe.fiery.me/takedowns" %}
+{% set supportFaq = 'Thanks! You can become a patron on my <a href="https://www.patreon.com/bobbywibowo" target="_blank" rel="noopener">Patreon</a>!' %} {# HTML supported #}
+{% set serverLocation = "Paris, <strong>France</strong>" %} {# HTML supported #}
 
 {#
   These are the footer links in the homepage and the No-JS uploader (home.njk & nojs.njk respectively).

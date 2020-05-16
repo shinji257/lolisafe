@@ -1,0 +1,207 @@
+{% set metaTitle = "Cookie Policy" %}
+{% set metaUrl = '/cookiepolicy' %}
+
+{% extends "_layout.njk" %}
+
+{% block stylesheets %}
+{{ super() }}
+<link rel="stylesheet" href="libs/fontello/fontello.css{{ versions[1] }}">
+{% endblock %}
+
+{% block content %}
+{{ super() }}
+<section class="section has-extra-bottom-padding">
+  <div class="container has-text-left">
+    <h1 class='title'>Cookie Policy</h1>
+    <h1 class="subtitle">
+      {{ globals.wholeCookie }} may use cookies. This page describe how and why we use cookies.
+    </h1>
+    <hr>
+
+    <h2 class='subtitle is-brighter'>What are cookies? -or- How to disable cookies?</h2>
+    <article class="message">
+      <div class="message-body">
+        <strong>Simply put, a cookie is a technology for remembering something about you.</strong><br>
+        If you want to learn more about cookies, as well as how to control and disable them, check out <a href="https://www.cookiesandyou.com/" target="_blank" rel="noopener">Cookies & You</a> website.
+      </div>
+    </article>
+
+    <h2 class='subtitle is-brighter'>How We Use Cookies</h2>
+    <article class="message">
+      <div class="message-body">
+        We use cookies for a variety of reasons detailed below.<br>
+        Unfortunately in most cases there are no industry standard options for disabling cookies without completely disabling the functionality and features they add to this site.<br>
+        It is recommended that you leave on all cookies if you are not sure whether you need them or not in case they are used to provide a service that you use.
+      </div>
+    </article>
+
+    <h2 class='subtitle is-brighter'>Account related cookies</h2>
+    <article class="message">
+      <div class="message-body">
+        If you create an account with us, then we will use cookies for the management of the signup process and general administration.
+      </div>
+    </article>
+
+    <h2 class='subtitle is-brighter'>Login related cookies</h2>
+    <article class="message">
+      <div class="message-body">
+        We use cookies when you are logged in so that we can remember that you are logged in.<br>
+        This prevents you from having to log in every single time you visit a new page.<br>
+        These cookies are typically removed or cleared when you log out to ensure that you can only access restricted features and areas when logged in.
+      </div>
+    </article>
+
+    <h2 class='subtitle is-brighter'>What information do we know about you?</h2>
+    <article class="message">
+      <div class="message-body">
+        We don’t request or require you to provide personal information to access our web site.<br>
+        However, we may receive your IP address and user agent automatically.
+      </div>
+    </article>
+
+    <h2 class='subtitle is-brighter'>What about cookies?</h2>
+    <article class="message">
+      <div class="message-body">
+        {{ globals.wholeCookie }} may place cookies on your browser in order to identify you when you return to our website.
+      </div>
+    </article>
+
+    <h2 class='subtitle is-brighter'>Cookies We May Use</h2>
+    <article class="message">
+      <div class="message-body">
+        We may use the following cookies:<br>
+        <br>
+        <div class="table-container">
+          <table class="table is-fullwidth is-hoverable">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Source</th>
+                <th>Purpose</th>
+                <th>Storage Days</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th>chunkSize</th>
+                <td>{{ globals.rootDomain }}</td>
+                <td>Personalization</td>
+                <td>LocalStorage</td>
+              </tr>
+              <tr>
+                <th>cid</th>
+                <td>{{ globals.rootDomain }}</td>
+                <td>Analytics</td>
+                <td>730</td>
+              </tr>
+              <tr>
+                <th>cookieconsent_status</th>
+                <td>{{ globals.rootDomain }}</td>
+                <td>Necessary</td>
+                <td>730</td>
+              </tr>
+              <tr>
+                <th>fileLength</th>
+                <td>{{ globals.rootDomain }}</td>
+                <td>Personalization</td>
+                <td>LocalStorage</td>
+              </tr>
+              <tr>
+                <th>parallelUploads</th>
+                <td>{{ globals.rootDomain }}</td>
+                <td>Personalization</td>
+                <td>LocalStorage</td>
+              </tr>
+              <tr>
+                <th>previewImages</th>
+                <td>{{ globals.rootDomain }}</td>
+                <td>Personalization</td>
+                <td>LocalStorage</td>
+              </tr>
+              <tr>
+                <th>render</th>
+                <td>{{ globals.rootDomain }}</td>
+                <td>Personalization</td>
+                <td>LocalStorage</td>
+              </tr>
+              <tr>
+                <th>selectedUploads</th>
+                <td>{{ globals.rootDomain }}</td>
+                <td>Necessary</td>
+                <td>LocalStorage</td>
+              </tr>
+              <tr>
+                <th>selectedUploadsAll</th>
+                <td>{{ globals.rootDomain }}</td>
+                <td>Necessary</td>
+                <td>LocalStorage</td>
+              </tr>
+              <tr>
+                <th>selectedUsers</th>
+                <td>{{ globals.rootDomain }}</td>
+                <td>Necessary</td>
+                <td>LocalStorage</td>
+              </tr>
+              <tr>
+                <th>siBytes</th>
+                <td>{{ globals.rootDomain }}</td>
+                <td>Personalization</td>
+                <td>LocalStorage</td>
+              </tr>
+              <tr>
+                <th>stripTags</th>
+                <td>{{ globals.rootDomain }}</td>
+                <td>Personalization</td>
+                <td>LocalStorage</td>
+              </tr>
+              <tr>
+                <th>token</th>
+                <td>{{ globals.rootDomain }}</td>
+                <td>Necessary</td>
+                <td>LocalStorage</td>
+              </tr>
+              <tr>
+                <th>uploadAge</th>
+                <td>{{ globals.rootDomain }}</td>
+                <td>Personalization</td>
+                <td>LocalStorage</td>
+              </tr>
+              <tr>
+                <th>uploadsHistoryOrder</th>
+                <td>{{ globals.rootDomain }}</td>
+                <td>Personalization</td>
+                <td>LocalStorage</td>
+              </tr>
+              <tr>
+                <th>viewTypeUploads</th>
+                <td>{{ globals.rootDomain }}</td>
+                <td>Necessary</td>
+                <td>LocalStorage</td>
+              </tr>
+              <tr>
+                <th>viewTypeUploadsAll</th>
+                <td>{{ globals.rootDomain }}</td>
+                <td>Necessary</td>
+                <td>LocalStorage</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </article>
+
+    <h2 class='subtitle is-brighter'>Questions?</h2>
+    <article class="message">
+      <div class="message-body">
+        For more information, email <a href="mailto:{{ globals.email }}">{{ globals.email }}</a>.
+      </div>
+    </article>
+  </div>
+</section>
+
+<a class="floating-home-button" title="Back to Safe" href=".">
+  <span class="icon is-medium">
+    <i class="icon-home icon-2x"></i>
+  </span>
+</a>
+{% endblock %}

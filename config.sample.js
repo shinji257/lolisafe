@@ -46,6 +46,15 @@ module.exports = {
   pages: ['home', 'auth', 'dashboard', 'faq'],
 
   /*
+    This will load public/libs/cookieconsent/cookieconsent.min.{css,js} on homepage (configured from home.js).
+    You may use this if you have some specific needs, since lolisafe by itself will not use Cookies at all.
+    Instead it will use Local Storage for both authentication and preferences/states in Dashboard.
+    I'm not sure if Cookies Laws apply to Local Storage as well, although I supppose it makes sense if they do.
+    NOTE: Enabling this will automatically push 'cookiepolicy' to pages array above.
+  */
+  cookiePolicy: false,
+
+  /*
     This can be either 'blacklist' or 'whitelist', which should be self-explanatory.
     When this is set to neither, this will fallback to 'blacklist'.
   */

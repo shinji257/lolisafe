@@ -7,10 +7,14 @@
 {% set urlExtensionsFilter = config.uploads.urlExtensionsFilter %}
 {% set urlExtensionsFilterEnabled = urlExtensionsFilterMode and urlExtensionsFilterMode !== 'inherit' and urlExtensionsFilter.length %}
 {% set temporaryUploadAges = config.uploads.temporaryUploadAges %}
+{% set cookiePolicy = config.cookiePolicy %}
 
 {% block stylesheets %}
 {{ super() }}
 <link rel="stylesheet" href="libs/fontello/fontello.css{{ versions[1] }}">
+{% if cookiePolicy -%}
+<link rel="stylesheet" href="libs/cookieconsent/cookieconsent.min.css{{ versions[3] }}">
+{%- endif %}
 <link rel="stylesheet" href="css/sweetalert.css{{ versions[1] }}">
 <link rel="stylesheet" href="css/home.css{{ versions[1] }}">
 {% endblock %}
@@ -22,6 +26,9 @@
 <script src="libs/axios/axios.min.js{{ versions[3] }}"></script>
 <script src="libs/clipboard.js/clipboard.min.js{{ versions[3] }}"></script>
 <script src="libs/lazyload/lazyload.min.js{{ versions[3] }}"></script>
+{% if cookiePolicy -%}
+<script src="libs/cookieconsent/cookieconsent.min.js{{ versions[3] }}"></script>
+{%- endif %}
 {# We assign an ID for this so that the script can find out its own version #}
 <script id="mainScript" src="js/home.js{{ versions[1] }}"></script>
 <script src="js/misc/utils.js{{ versions[1] }}"></script>

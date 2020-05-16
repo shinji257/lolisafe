@@ -1,5 +1,5 @@
 .swal-modal {
-  background-color: #2f2f2f
+  background-color: #282828
 }
 
 .swal-modal .field {
@@ -129,12 +129,12 @@
 }
 
 .swal-icon--success__hide-corners {
-  background-color: #2f2f2f
+  background-color: #282828
 }
 
 .swal-icon--success::after,
 .swal-icon--success::before {
-  background: #2f2f2f
+  background: #282828
 }
 
 .swal-display-thumb-container {

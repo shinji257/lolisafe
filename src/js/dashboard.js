@@ -1499,7 +1499,7 @@ page.getAlbums = (params = {}) => {
       <hr>
       <h2 class="subtitle">List of albums</h2>
       <div class="table-container">
-        <table class="table is-fullwidth is-hoverable">
+        <table class="table is-narrow is-fullwidth is-hoverable">
           <thead>
             <tr>
               <th>ID</th>
@@ -2567,10 +2567,10 @@ page.getStatistics = (params = {}) => {
 
             const string = valKeys[j]
               .replace(/([A-Z])/g, ' $1')
-              .toUpperCase()
+              .replace(/(^|\s)(cpu|db)/gi, (match, p1, p2) => p1 + p2.toUpperCase())
             rows += `
               <tr>
-                <th>${string}</th>
+                <th class="capitalize">${string}</th>
                 <td>${parsed}</td>
               </tr>
             `
@@ -2587,10 +2587,10 @@ page.getStatistics = (params = {}) => {
 
       content += `
         <div class="table-container">
-          <table id="statistics" class="table is-fullwidth is-hoverable">
+          <table id="statistics" class="table is-narrow is-fullwidth is-hoverable">
             <thead>
               <tr>
-                <th>${keys[i].toUpperCase()}</th>
+                <th class="capitalize">${keys[i]}</th>
                 <td></td>
               </tr>
             </thead>

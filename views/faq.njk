@@ -19,11 +19,11 @@
   <div class="container has-text-left">
     <h1 class='title is-spaced'>General</h1>
 
-    <h2 class='subtitle is-brighter'>What is safe.fiery.me?</h2>
+    <h2 class='subtitle is-brighter'>What is {{ globals.name }}?</h2>
     <article class="message">
       <div class="message-body">
         This is a fork of <a href="https://github.com/WeebDev/lolisafe" target="_blank" rel="noopener">lolisafe</a>.<br>
-        GitHub repository of the fork is located <a href="https://github.com/BobbyWibowo/lolisafe" target="_blank" rel="noopener">here</a>.
+        {{ globals.forkHost }} repository of the fork is located <a href="{{ globals.forkRepo }}" target="_blank" rel="noopener">here</a>.
       </div>
     </article>
 
@@ -37,10 +37,10 @@
         <strong>Full-length episodes of anime or TV shows.</strong> These include <strong>audio files from CD dramas</strong>.<br>
         <br>
         Any of such uploads, when found, will be purged immediately without any prior notice.<br>
-        Repeat offenders will have their IPs permanently blocked from accessing <i>*.fiery.me</i> network.<br>
+        Repeat offenders will have their IPs permanently blocked from accessing {{ globals.wholeFaq }}.<br>
         For child pornography specifically, first offenders will immediately be blocked permanently.<br>
         <br>
-        * When Google Safe Search detects <i>unwanted software</i>, Chrome's users will be warned whenever they want to download anything from <i>*.fiery.me</i>, that the site is <i>unsafe</i>.
+        * When Google Safe Search detects <i>unwanted software</i>, Chrome's users will be alerted that anything they download from {{ globals.wholeFaq }} are <i>unsafe</i>.
       </div>
     </article>
 
@@ -48,7 +48,9 @@
     <article class="message">
       <div class="message-body">
         Unless the uploads are included within the banned categories above, or some other bullshit, I will.<br>
-        In case I have to take down any uploads, I will log their names and explanations in <a href="https://safe.fiery.me/takedowns" target="_blank">here</a>.<br>
+        {% if globals.takedownsUrl -%}
+        In case I have to take down any uploads, I will log their names and explanations in <a href="{{ globals.takedownsUrl }}" target="_blank">here</a>.<br>
+        {%- endif %}
         <br>
         Otherwise, we also have temporary uploads feature, with which you can have your uploads be automatically deleted after a period of time.<br>
         It is disabled by default, but you can configure it through our homepage uploader's Config tab.
@@ -83,17 +85,19 @@
     <h2 class='subtitle is-brighter'>I saw something too illegal for my tastes here, what should I do?</h2>
     <article class="message">
       <div class="message-body">
-        Send a strongly worded email to <a href="mailto:bobby@fiery.me">bobby@fiery.me</a> and I will try to get back to you within <strong>48 hours</strong>.<br>
+        Send a strongly worded email to <a href="mailto:{{ globals.email }}">{{ globals.email }}</a> and I will try to get back to you within <strong>48 hours</strong>.<br>
         These include copyright takedown notices and reports about uploads violating banned categories.
       </div>
     </article>
 
-    <h2 class='subtitle is-brighter'>How can I support safe.fiery.me?</h2>
+    {% if globals.supportFaq -%}
+    <h2 class='subtitle is-brighter'>How can I support {{ globals.name }}?</h2>
     <article class="message">
       <div class="message-body">
-        Thanks! You can become a patron on my <a href="https://www.patreon.com/bobbywibowo" target="_blank" rel="noopener">Patreon</a>!
+        {{ globals.supportFaq | safe }}
       </div>
     </article>
+    {%- endif %}
   </div>
 </section>
 
@@ -127,21 +131,28 @@
       </div>
     </article>
 
+    {% if globals.serverLocation -%}
     <h2 class='subtitle is-brighter'>Where is the server located?</h2>
     <article class="message">
       <div class="message-body">
-        Paris, <strong>France</strong>.{#<br>
-        We are using <a href="https://www.cloudflare.com/cdn/" target="_blank" rel="noopener">Cloudflare</a> though, so you can expect your uploads to be delivered quickly all over the world after they have been cached.#}
+        {{ globals.serverLocation | safe }}.
+        {% if config.cloudflare.purgeCache -%}
+        <br>
+        We are using <a href="https://www.cloudflare.com/cdn/" target="_blank" rel="noopener">Cloudflare</a> though, so you can expect your uploads to be delivered quickly all over the world after they have been cached.
+        {%- endif %}
       </div>
     </article>
+    {%- endif %}
 
-    {#<h2 class='subtitle is-brighter'>Since my uploads are cached, what about after I delete them from the dashboard?</h2>
+    {% if config.cloudflare.purgeCache -%}
+    <h2 class='subtitle is-brighter'>Since my uploads are cached, what about after I delete them from the dashboard?</h2>
     <article class="message">
       <div class="message-body">
         We will send API requests to Cloudflare to purge their cache immediately after you delete your uploads from the dashboard.<br>
         Cache of their thumbnails will also be purged, if applicable.
       </div>
-    </article>#}
+    </article>
+    {%- endif %}
 
     <h2 class='subtitle is-brighter'>Are there any Desktop clients?</h2>
     <article class="message">
@@ -191,13 +202,15 @@
     </article>
     {%- endif %}
 
+    {% if globals.forkRepo -%}
     <h2 class='subtitle is-brighter'>I found a bug! -or- I want to request a feature!</h2>
     <article class="message">
       <div class="message-body">
-        Feel free to create a GitHub issue <a href="https://github.com/BobbyWibowo/lolisafe/issues/new/choose" target="_blank" rel="noopener">here</a>.</br>
-        If you do not have a GitHub account, you can also email <a href="mailto:bobby@fiery.me">bobby@fiery.me</a>.
+        Feel free to create a {{ globals.forkHost }} issue <a href="{{ globals.forkIssues }}" target="_blank" rel="noopener">here</a>.</br>
+        If you do not have a {{ globals.forkHost }} account, you can also email <a href="mailto:{{ globals.email }}">{{ globals.email }}</a>.
       </div>
     </article>
+    {%- endif %}
 
     <h2 class='subtitle is-brighter'>How do I delete my own account <strong>and</strong> all the uploads associated with it?</h2>
     <article class="message">
@@ -227,7 +240,7 @@
         Technically, <strong>none</strong>.<br>
         After all, not even an email address is required to register an account.<br>
         Anything will do as your usernames, and passwords are also encrypted.<br>
-        If a registered user has not uploaded anything even once, then I will not even have their IP address.
+        If a registered user has not uploaded anything even once, then I will not even be able to associate it to any specific IP address.
       </div>
     </article>
 
@@ -235,7 +248,7 @@
     <article class="message">
       <div class="message-body">
         <strong>Security purposes.</strong><br>
-        For example, in the case that it is necessary to purge uploads from a specific IP address due to abuse, it <i>will</i> help a lot to be able to find all uploads by that specific uploader.<br>
+        For instance, if it is necessary to purge uploads from a specific IP address due to abuse, it <i>will</i> help a lot to be able to find all uploads by that specific uploader.<br>
         My safe have been plagued by aplenty of abuse, so this policy will remain as long as the safe lives on.
       </div>
     </article>
@@ -253,7 +266,7 @@
     <h2 class='subtitle is-brighter'>I still have more unanswered questions!</h2>
     <article class="message">
       <div class="message-body">
-        Feel free to email <a href="mailto:bobby@fiery.me">bobby@fiery.me</a>.
+        Feel free to email <a href="mailto:{{ globals.email }}">{{ globals.email }}</a>.
       </div>
     </article>
   </div>

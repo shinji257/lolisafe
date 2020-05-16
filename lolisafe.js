@@ -158,6 +158,10 @@ safe.use('/api', api)
         utils.clientVersion = versions['1']
     }
 
+    // Cookie Policy
+    if (config.cookiePolicy)
+      config.pages.push('cookiepolicy')
+
     // Check for custom pages, otherwise fallback to Nunjucks templates
     for (const page of config.pages) {
       const customPage = path.join(paths.customPages, `${page}.html`)

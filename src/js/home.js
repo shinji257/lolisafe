@@ -1066,6 +1066,33 @@ window.addEventListener('paste', event => {
 })
 
 window.onload = () => {
+  if (window.cookieconsent)
+    window.cookieconsent.initialise({
+      cookie: {
+        name: 'cookieconsent_status',
+        expiryDays: 730,
+        secure: true
+      },
+      palette: {
+        popup: {
+          background: '#282828',
+          text: '#eff0f1'
+        },
+        button: {
+          background: '#209cee',
+          text: '#ffffff'
+        }
+      },
+      theme: 'classic',
+      position: 'bottom-left',
+      content: {
+        message: 'We use cookies to offer you a better browsing experience and to analyze our traffic. You consent to our cookies if you continue to use this website.',
+        dismiss: 'Got it!',
+        link: 'Details in our Cookie Policy',
+        href: 'cookiepolicy'
+      }
+    })
+
   page.checkIfPublic()
 
   page.clipboardJS = new ClipboardJS('.clipboard-js')

@@ -146,46 +146,6 @@ li[data-action="page-ellipsis"] {
   min-width: 0
 }
 
-.table {
-  color: #bdc3c7;
-  background-color: #000;
-  font-size: 0.75rem
-}
-
-.table.is-hoverable tbody tr:not(.is-selected):hover {
-  background-color: #2f2f2f
-}
-
-.table td,
-.table th {
-  white-space: nowrap;
-  vertical-align: middle;
-  border-bottom: 1px solid #585858
-}
-
-.table th {
-  color: #eff0f1;
-  height: 2.25em;
-  font-weight: normal
-}
-
-.table thead td,
-.table thead th {
-  color: #eff0f1;
-  background-color: #585858;
-  border-bottom: 0;
-  height: 31px
-}
-
-.table tbody tr:last-child td,
-.table tbody tr:last-child th {
-  border-bottom-width: 1px
-}
-
-.table .cell-indent {
-  padding-left: 2.25em
-}
-
 .is-linethrough {
   text-decoration: line-through
 }
