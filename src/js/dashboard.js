@@ -2567,7 +2567,7 @@ page.getStatistics = (params = {}) => {
 
             const string = valKeys[j]
               .replace(/([A-Z])/g, ' $1')
-              .replace(/(^|\s)(cpu|db)/gi, (match, p1, p2) => p1 + p2.toUpperCase())
+              .replace(/(^|\s)(cpu|db|zip)/gi, s => s.toUpperCase())
             rows += `
               <tr>
                 <th class="capitalize">${string}</th>

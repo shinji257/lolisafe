@@ -15,6 +15,7 @@
 {% block stylesheets %}
 <!-- Stylesheets -->
 <link rel="stylesheet" href="../libs/bulma/bulma.min.css{{ versions[3] }}">
+<link rel="stylesheet" href="../libs/fontello/fontello.css{{ versions[1] }}">
 <link rel="stylesheet" href="../css/style.css{{ versions[1] }}">
 <link rel="stylesheet" href="../css/thumbs.css{{ versions[1] }}">
 <link rel="stylesheet" href="../css/album.css{{ versions[1] }}">
@@ -41,7 +42,7 @@
 
 {% block content %}
 {{ super() }}
-<section class="section">
+<section class="section has-extra-bottom-padding">
   <div class="container">
     <nav class="level">
       <div class="level-left">
@@ -123,6 +124,12 @@
     {%- endif %}
   </div>
 </section>
+
+<a class="floating-home-button" title="Back to Safe" href="..">
+  <span class="icon is-medium">
+    <i class="icon-home icon-2x"></i>
+  </span>
+</a>
 
 {% if not nojs -%}
 <noscript>
