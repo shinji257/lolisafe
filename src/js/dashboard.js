@@ -229,9 +229,9 @@ page.prepareDashboard = () => {
         return page.warnSomethingLoading()
 
       // eslint-disable-next-line compat/compat
-      itemMenus[i].onclick.call(null, Object.assign({
+      itemMenus[i].onclick.call(null, Object.assign(itemMenus[i].params || {}, {
         trigger: event.currentTarget
-      }, itemMenus[i].params || {}))
+      }))
     })
 
     item.classList.remove('is-hidden')
@@ -421,9 +421,9 @@ page.switchPage = (action, element) => {
     return page.warnSomethingLoading()
 
   // eslint-disable-next-line compat/compat
-  const params = Object.assign({
+  const params = Object.assign(page.views[page.currentView], {
     trigger: element
-  }, page.views[page.currentView])
+  })
 
   const func = page.currentView === 'users' ? page.getUsers : page.getUploads
 
@@ -830,9 +830,9 @@ page.setUploadsView = (view, element) => {
   page.views[page.currentView].type = view
 
   // eslint-disable-next-line compat/compat
-  page.getUploads(Object.assign({
+  page.getUploads(Object.assign(page.views[page.currentView], {
     trigger: element
-  }, page.views[page.currentView]))
+  }))
 }
 
 page.displayPreview = id => {
@@ -1121,8 +1121,9 @@ page.filterUploads = element => {
   // eslint-disable-next-line compat/compat
   page.getUploads(Object.assign(page.views[page.currentView], {
     filters,
-    pageNum: 0
-  }), element)
+    pageNum: 0,
+    trigger: element
+  }))
 }
 
 page.viewUserUploads = (id, element) => {
