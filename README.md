@@ -10,7 +10,7 @@
 
 This fork is the one being used at [https://safe.fiery.me](https://safe.fiery.me). If you are looking for the original, head to [WeebDev/lolisafe](https://github.com/WeebDev/lolisafe).
 
-If you want to use an existing lolisafe database with this fork, run `node ./database/migration.js` at least once to create the new columns introduced in this branch (don't forget to make a backup).
+If you want to use an existing lolisafe database with this fork, run `node ./database/migration.js` (or `yarn migrate`) at least once to create the new columns introduced in this branch (don't forget to make a backup).
 
 Configuration file of lolisafe, `config.js`, is also NOT fully compatible with this fork. There are some options that had been renamed and/or restructured. Please make sure your config matches the sample in `config.sample.js` before starting.
 

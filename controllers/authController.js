@@ -101,7 +101,8 @@ self.register = async (req, res, next) => {
         password: hash,
         token,
         enabled: 1,
-        permission: perms.permissions.user
+        permission: perms.permissions.user,
+        registration: Math.floor(Date.now() / 1000)
       })
     utils.invalidateStatsCache('users')
     tokens.onHold.delete(token)
@@ -200,7 +201,8 @@ self.createUser = async (req, res, next) => {
         password: hash,
         token,
         enabled: 1,
-        permission
+        permission,
+        registration: Math.floor(Date.now() / 1000)
       })
     utils.invalidateStatsCache('users')
     tokens.onHold.delete(token)
@@ -377,7 +379,7 @@ self.listUsers = async (req, res, next) => {
     const users = await db.table('users')
       .limit(25)
       .offset(25 * offset)
-      .select('id', 'username', 'enabled', 'permission')
+      .select('id', 'username', 'enabled', 'timestamp', 'permission', 'registration')
 
     const pointers = {}
     for (const user of users) {

@@ -733,7 +733,7 @@ page.getUploads = (params = {}) => {
                 ${allAlbums ? '<th>Album</th>' : ''}
                 <th>Size</th>
                 ${params.all ? '<th>IP</th>' : ''}
-                <th>Date</th>
+                <th>Upload date</th>
                 ${hasExpiryDateColumn ? '<th>Expiry date</th>' : ''}
                 <th></th>
               </tr>
@@ -2044,6 +2044,8 @@ page.getUsers = (params = {}) => {
               <th>Uploads</th>
               <th>Usage</th>
               <th>Group</th>
+              <th>Registration date</th>
+              <th>Last token update</th>
               <th></th>
             </tr>
           </thead>
@@ -2079,6 +2081,13 @@ page.getUsers = (params = {}) => {
         displayGroup
       }
 
+      const prettyDate = user.registration
+        ? page.getPrettyDate(new Date(user.registration * 1000))
+        : '-'
+      const prettyTokenUpdate = user.timestamp
+        ? page.getPrettyDate(new Date(user.timestamp * 1000))
+        : '-'
+
       const tr = document.createElement('tr')
       tr.dataset.id = user.id
       tr.innerHTML = `
@@ -2087,6 +2096,8 @@ page.getUsers = (params = {}) => {
         <th>${user.uploads}</th>
         <td>${page.getPrettyBytes(user.usage)}</td>
         <td>${displayGroup}</td>
+        <td>${prettyDate}</td>
+        <td>${prettyTokenUpdate}</td>
         <td class="controls has-text-right">
           <a class="button is-small is-primary is-outlined" title="Edit user" data-action="edit-user">
             <span class="icon">
@@ -2223,6 +2234,9 @@ page.editUser = id => {
 
   const div = document.createElement('div')
   div.innerHTML = `
+    <div class="field">
+      <p>User ID: ${id}</p>
+    </div>
     <div class="field">
       <label class="label">Username</label>
       <div class="controls">
