@@ -1,7 +1,7 @@
-{
+module.exports = {
   "root": true,
   "parserOptions": {
-    "ecmaVersion": 6,
+    "ecmaVersion": 7, // 2016
     "sourceType": "script"
   },
   "env": {

@@ -1,7 +1,7 @@
-{
+module.exports = {
   "root": true,
   "parserOptions": {
-    "ecmaVersion": 9
+    "ecmaVersion": 9 // 2018
   },
   "env": {
     "node": true

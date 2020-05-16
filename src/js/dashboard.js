@@ -14,6 +14,8 @@ const lsKeys = {
 }
 
 const page = {
+  // #dashboard
+  section: null,
   // #page
   dom: null,
 
@@ -84,7 +86,7 @@ const page = {
   // TODO: Disable "Load original" button with non-streamable extensions
   videoExts: ['.webm', '.mp4', '.wmv', '.avi', '.mov', '.mkv', '.m4v', '.m2ts'],
 
-  isTriggerLoading: null,
+  isSomethingLoading: false,
   fadingIn: null,
 
   albumTitleMaxLength: 70,
@@ -93,7 +95,7 @@ const page = {
 
 page.unhide = () => {
   document.querySelector('#loader').classList.add('is-hidden')
-  document.querySelector('#dashboard').classList.remove('is-hidden')
+  page.section.classList.remove('is-hidden')
 }
 
 // Handler for regular JS errors
@@ -187,7 +189,8 @@ page.verifyToken = (token, reloadOnError) => {
 }
 
 page.prepareDashboard = () => {
-  page.dom = document.querySelector('#page')
+  page.section = document.querySelector('#dashboard')
+  page.dom = page.section.querySelector('#page')
 
   // Capture all click events
   page.dom.addEventListener('click', page.domClick, true)
@@ -222,9 +225,8 @@ page.prepareDashboard = () => {
     // Add onclick event listener
     const item = document.querySelector(itemMenus[i].selector)
     item.addEventListener('click', event => {
-      // TODO: This class name isn't actually being applied fast enough
-      if (page.menusContainer.classList.contains('is-loading'))
-        return
+      if (page.isSomethingLoading)
+        return page.warnSomethingLoading()
 
       // eslint-disable-next-line compat/compat
       itemMenus[i].onclick.call(null, Object.assign({
@@ -261,20 +263,23 @@ page.logout = params => {
   window.location = 'auth'
 }
 
+page.warnSomethingLoading = () => {
+  swal('Please wait!', 'Something else is still loading\u2026', 'warning', {
+    buttons: false,
+    timer: 3000
+  })
+}
+
 page.updateTrigger = (trigger, newState) => {
   if (!trigger) return
 
   // Disable menus container and pagination when loading
   if (newState === 'loading') {
-    page.menusContainer.classList.add('is-loading')
-    const paginations = page.dom.querySelectorAll('.pagination')
-    for (let i = 0; i < paginations.length; i++)
-      paginations[i].classList.add('is-loading')
+    page.isSomethingLoading = true
+    page.section.classList.add('is-loading')
   } else {
-    page.menusContainer.classList.remove('is-loading')
-    const paginations = page.dom.querySelectorAll('.pagination.is-loading')
-    for (let i = 0; i < paginations.length; i++)
-      paginations[i].classList.remove('is-loading')
+    page.section.classList.remove('is-loading')
+    page.isSomethingLoading = false
   }
 
   if (newState === 'loading') {
@@ -412,9 +417,8 @@ page.fadeAndScroll = disableFading => {
 }
 
 page.switchPage = (action, element) => {
-  // Skip if other pagination buttons are still loading
-  const isLoading = page.dom.querySelectorAll('.pagination.is-loading')
-  if (isLoading.length) return
+  if (page.isSomethingLoading)
+    return page.warnSomethingLoading()
 
   // eslint-disable-next-line compat/compat
   const params = Object.assign({
@@ -454,11 +458,11 @@ page.focusJumpToPage = element => {
 }
 
 page.getUploads = (params = {}) => {
-  if (params === undefined)
-    params = {}
-
-  if (params.all && !page.permissions.moderator)
+  if (params && params.all && !page.permissions.moderator)
     return swal('An error occurred!', 'You cannot do this!', 'error')
+
+  if (page.isSomethingLoading)
+    return page.warnSomethingLoading()
 
   page.updateTrigger(params.trigger, 'loading')
 
@@ -515,7 +519,7 @@ page.getUploads = (params = {}) => {
               <input id="filters" class="input is-small" type="text" placeholder="Filters" value="${page.escape(params.filters || '')}">
             </div>
             <div class="control">
-              <button type="button" class="button is-small is-primary is-outlined" title="Help?" data-action="upload-filters-help"${params.all ? ' data-all="true"' : ''}">
+              <button type="button" class="button is-small is-primary is-outlined" title="Help?" data-action="upload-filters-help"${params.all ? ' data-all="true"' : ''}>
                 <span class="icon">
                   <i class="icon-help-circled"></i>
                 </span>
@@ -569,7 +573,7 @@ page.getUploads = (params = {}) => {
             </span>
           </a>
         </div>
-        <div class="column has-text-right">
+        <div class="column bulk-operations has-text-right">
           <a class="button is-small is-info is-outlined" title="Clear selection" data-action="clear-selection">
             <span class="icon">
               <i class="icon-cancel"></i>
@@ -819,6 +823,9 @@ page.getUploads = (params = {}) => {
 }
 
 page.setUploadsView = (view, element) => {
+  if (page.isSomethingLoading)
+    return page.warnSomethingLoading()
+
   localStorage[lsKeys.viewType[page.currentView]] = view
   page.views[page.currentView].type = view
 
@@ -906,7 +913,7 @@ page.displayPreview = id => {
     content: div,
     buttons: false
   }).then(() => {
-    // Destroy video, if necessary
+  // Destroy video, if necessary
     const video = div.querySelector('#swalVideo')
     if (video) video.remove()
 
@@ -1222,6 +1229,9 @@ page.deleteUploadsByNames = (params = {}) => {
   page.updateTrigger(params.trigger, 'active')
 
   document.querySelector('#submitBulkDelete').addEventListener('click', () => {
+    if (page.isSomethingLoading)
+      return page.warnSomethingLoading()
+
     const textArea = document.querySelector('#bulkDeleteNames')
 
     // Clean up
@@ -1802,6 +1812,9 @@ page.changeToken = (params = {}) => {
   page.updateTrigger(params.trigger, 'active')
 
   document.querySelector('#getNewToken').addEventListener('click', event => {
+    if (page.isSomethingLoading)
+      return page.warnSomethingLoading()
+
     const trigger = event.currentTarget
     page.updateTrigger(trigger, 'loading')
     axios.post('api/tokens/change').then(response => {
@@ -1864,7 +1877,12 @@ page.changePassword = (params = {}) => {
   page.updateTrigger(params.trigger, 'active')
 
   document.querySelector('#sendChangePassword').addEventListener('click', event => {
-    if (!page.dom.querySelector('form').checkValidity()) return
+    if (page.isSomethingLoading)
+      return page.warnSomethingLoading()
+
+    if (!page.dom.querySelector('form').checkValidity())
+      return
+
     if (document.querySelector('#password').value === document.querySelector('#passwordConfirm').value)
       page.sendNewPassword(document.querySelector('#password').value, event.currentTarget)
     else
@@ -1905,13 +1923,16 @@ page.sendNewPassword = (pass, element) => {
 }
 
 page.getUsers = (params = {}) => {
+  if (page.isSomethingLoading)
+    return page.warnSomethingLoading()
+
+  if (!page.permissions.admin)
+    return swal('An error occurred!', 'You cannot do this!', 'error')
+
   page.updateTrigger(params.trigger, 'loading')
 
   if (params.pageNum === undefined)
     params.pageNum = 0
-
-  if (!page.permissions.admin)
-    return swal('An error occurred!', 'You cannot do this!', 'error')
 
   const url = `api/users/${params.pageNum}`
   axios.get(url).then(response => {
@@ -1988,15 +2009,15 @@ page.getUsers = (params = {}) => {
 
     const controls = `
       <div class="columns">
-        <div class="column has-text-left">
+        <div class="column exclusive-operations has-text-left">
           <a class="button is-small is-primary is-outlined" title="Create new user" data-action="create-user">
             <span class="icon">
               <i class="icon-plus"></i>
             </span>
             <span>Create new user</span>
-        </a>
+          </a>
         </div>
-        <div class="column has-text-right">
+        <div class="column bulk-operations has-text-right">
           <a class="button is-small is-info is-outlined" title="Clear selection" data-action="clear-selection">
             <span class="icon">
               <i class="icon-cancel"></i>
@@ -2081,10 +2102,10 @@ page.getUsers = (params = {}) => {
         displayGroup
       }
 
-      const prettyDate = user.registration
+      const prettyDate = user.registration !== undefined
         ? page.getPrettyDate(new Date(user.registration * 1000))
         : '-'
-      const prettyTokenUpdate = user.timestamp
+      const prettyTokenUpdate = user.timestamp !== undefined
         ? page.getPrettyDate(new Date(user.timestamp * 1000))
         : '-'
 
@@ -2496,6 +2517,9 @@ page.paginate = (totalItems, itemsPerPage, currentPage) => {
 page.getStatistics = (params = {}) => {
   if (!page.permissions.admin)
     return swal('An error occurred!', 'You cannot do this!', 'error')
+
+  if (page.isSomethingLoading)
+    return page.warnSomethingLoading()
 
   page.updateTrigger(params.trigger, 'loading')
 

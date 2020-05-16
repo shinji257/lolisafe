@@ -48,7 +48,7 @@
     "search-query-parser": "^1.5.5",
     "sharp": "^0.25.2",
     "sqlite3": "^4.2.0",
-    "systeminformation": "^4.23.9"
+    "systeminformation": "^4.26.1"
   },
   "devDependencies": {
     "browserslist": "^4.12.0",
@@ -56,7 +56,7 @@
     "del": "^5.1.0",
     "eslint": "^6.8.0",
     "eslint-config-standard": "^14.1.1",
-    "eslint-plugin-compat": "^3.5.1",
+    "eslint-plugin-compat": "^3.6.0",
     "eslint-plugin-import": "^2.20.2",
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-promise": "^4.2.1",
