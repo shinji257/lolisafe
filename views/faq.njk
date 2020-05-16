@@ -17,7 +17,7 @@
 {{ super() }}
 <section class="section">
   <div class="container has-text-left">
-    <h1 class='title is-spaced'>General</h1>
+    <h1 id="general" class='title is-spaced'>General</h1>
 
     <h2 class='subtitle is-brighter'>What is {{ globals.name }}?</h2>
     <article class="message">
@@ -103,7 +103,7 @@
 
 <section class="section">
   <div class="container has-text-left">
-    <h1 class='title is-spaced'>Technical</h1>
+    <h1 id="technical" class='title is-spaced'>Technical</h1>
 
     <h2 class='subtitle is-brighter'>What are the allowed extensions here?</h2>
     <article class="message">
@@ -225,7 +225,7 @@
 
 <section class="section has-extra-bottom-padding">
   <div class="container has-text-left">
-    <h1 class='title is-spaced'>Privacy</h1>
+    <h1 id="privacy" class='title is-spaced'>Privacy</h1>
 
     <h2 class='subtitle is-brighter'>What information is kept with uploads?</h2>
     <article class="message">
@@ -256,12 +256,24 @@
     <h2 class='subtitle is-brighter'>Does the server have some sort of access logs?</h2>
     <article class="message">
       <div class="message-body">
-        <strong>Yes.</strong> The logs will contain each visitor's IP address.<br>
-        This is required by our automated system, that checks both access and error logs in real time to detect and punish abuse, such as DDoS attempts, scanners, and so on.<br>
+        <strong>Yes.</strong><br>
+        The logs contain each visitor's IP address.<br>
+        This is required by our automated system, that checks logs in real time to detect and punish abuse, such as DDoS attempts, scanners, and so on.<br>
         Logs are rotated daily, and the server will only keep the last 10 logs.<br>
-        So you can be reassured that the logs will only be kept for 10 days at most.
+        So you can be reassured that the logs will only be kept for <strong>10 days at most</strong>.
       </div>
     </article>
+
+    {% if config.cookiePolicy -%}
+    <h2 class='subtitle is-brighter'>Cookies</h2>
+    <article class="message">
+      <div class="message-body">
+        We use cookies to offer you a better browsing experience and to analyze our traffic.<br>
+        You consent to our cookies if you continue to use this website.<br>
+        Details in our <a href="cookiepolicy">Cookie Policy</a>.
+      </div>
+    </article>
+    {%- endif %}
 
     <h2 class='subtitle is-brighter'>I still have more unanswered questions!</h2>
     <article class="message">
