@@ -1180,9 +1180,9 @@ self.list = async (req, res) => {
         if (typeof filterObj.queries.expiry.to === 'number')
           this.andWhereBetween('expirydate', [filterObj.queries.expiry.from, filterObj.queries.expiry.to])
         else
-          this.andWhere('expirydate', '>=', filterObj.queries.date.from)
+          this.andWhere('expirydate', '>=', filterObj.queries.expiry.from)
       else
-        this.andWhere('expirydate', '<=', filterObj.queries.date.to)
+        this.andWhere('expirydate', '<=', filterObj.queries.expiry.to)
     })
 
     // Then, refine using type-is flags
