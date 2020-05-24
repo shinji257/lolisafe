@@ -473,15 +473,19 @@ page.getUploads = (params = {}) => {
     ? `api/album/${params.album}/${params.pageNum}`
     : `api/uploads/${params.pageNum}`
 
-  const headers = {
-    all: params.all ? '1' : '',
-    filters: params.filters || ''
-  }
+  const headers = {}
 
-  // Send client timezone offset if using filters
-  // Server will pretend client is on UTC if missing
-  if (headers.filters)
-    headers.minOffset = new Date().getTimezoneOffset()
+  if (params.all)
+    headers.all = '1'
+
+  if (params.filters) {
+    headers.filters = params.filters
+
+    // Send client timezone offset if properly using date: and/or :expiry filters
+    // Server will pretend client is on UTC if unset
+    if (/(^|\s)(date|expiry):[\d"]/.test(params.filters))
+      headers.minoffset = new Date().getTimezoneOffset()
+  }
 
   axios.get(url, { headers }).then(response => {
     if (response.data.success === false)
@@ -1043,16 +1047,16 @@ page.uploadFiltersHelp = element => {
     Negation sign can also be used to exclude the special case mentioned above (i.e. <code>-albumid:-</code>).
     `}
     There are 2 range keys: <b>date</b> (upload date) and <b>expiry</b> (expiry date).
-    Their format is: <code>YYYY/MM/DD HH:MM:SS-YYYY/MM/DD HH:MM:SS</code> ("from" date and "to" date respectively).
+    Their format is: <code>"YYYY/MM/DD HH:MM:SS-YYYY/MM/DD HH:MM:SS"</code> ("from" date and "to" date respectively).
     You may specify only one of the dates.
-    If "to" date is missing, 'now' will be used.
-    If "from" date is missing, 'beginning of time' will be used.
+    If "to" date is missing, 'now' will be used. If "from" date is missing, 'beginning of time' will be used.
     If any of the subsequent date or time units are not specified, their first value will be used (e.g. January for month, 1 for day, and so on).
     If only time is specified, today's date will be used.
-    In conclusion, the following examples are all valid: <code>date:2020/01/01 01:23-2018/01/01 06</code>, <code>expiry:-2020/05</code>, <code>date:12:34:56</code>.
+    If you do not need to specify both date and time, you may omit the double quotes.
+    In conclusion, the following examples are all valid: <code>date:"2020/01/01 01:23-2018/01/01 06"</code>, <code>expiry:-2020/05</code>, <code>date:12:34:56</code>.
     These keys can only be specified once each.
 
-    <b>Timezone?</b> Don't fret, feel free to query the dates with your own timezone!
+    <b>Timezone?</b> Feel free to query the dates with your own timezone.
     API requests to the filter endpoint will attach your browser's timezone offset, so the server will automatically calculate timezone differences.
 
     Matches can also be sorted with <b>sort</b> keys.
@@ -1093,7 +1097,7 @@ page.uploadFiltersHelp = element => {
     - Uploads uploaded since "1 June 2019 00:00:00":
     <code>date:2019/06</code>
     - Uploads uploaded between "7 April 2020 12:00:00" and "7 April 2020 23:59:59":
-    <code>date:2020/04/07 12-2020/04/07 23:59:59</code>
+    <code>date:"2020/04/07 12-2020/04/07 23:59:59"</code>
     - Uploads uploaded before "5 February 2020 00:00:00":
     <code>date:-2020/02/05</code>
     - Uploads which file names match "*.gz" but NOT "*.tar.gz":
@@ -1117,7 +1121,10 @@ page.uploadFiltersHelp = element => {
 }
 
 page.filterUploads = element => {
-  const filters = document.querySelector(`#${element.dataset.filtersid || 'filters'}`).value.trim()
+  const filters = document.querySelector(`#${element.dataset.filtersid || 'filters'}`).value
+    .trim()
+    .replace(/\t/g, ' ')
+    .replace(/(^|\s)((albumid|ip|user|date|expiry|is|sort|orderby):)\s+/g, '$2')
   // eslint-disable-next-line compat/compat
   page.getUploads(Object.assign(page.views[page.currentView], {
     filters,

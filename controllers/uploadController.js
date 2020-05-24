@@ -757,9 +757,9 @@ self.list = async (req, res) => {
   const user = await utils.authorize(req, res)
   if (!user) return
 
-  const all = Boolean(req.headers.all)
+  const all = req.headers.all === '1'
   const filters = req.headers.filters
-  const minoffset = req.headers.minoffset
+  const minoffset = Number(req.headers.minoffset) || 0
   const ismoderator = perms.is(user, 'moderator')
   if (all && !ismoderator)
     return res.status(403).end()
@@ -947,7 +947,10 @@ self.list = async (req, res) => {
       const match = date.match(/^(\d{4})?(\/\d{2})?(\/\d{2})?\s?(\d{2})?(:\d{2})?(:\d{2})?$/)
 
       if (match) {
-        const offset = 60000 * (utils.timezoneOffset - minoffset)
+        let offset = 0
+        if (minoffset !== undefined)
+          offset = 60000 * (utils.timezoneOffset - minoffset)
+
         const dateObj = new Date(Date.now() + offset)
 
         if (match[1] !== undefined)
@@ -964,8 +967,7 @@ self.list = async (req, res) => {
           dateObj.setMilliseconds(0)
 
         // Calculate timezone differences
-        const newDateObj = new Date(dateObj.getTime() - offset)
-        return newDateObj
+        return new Date(dateObj.getTime() - offset)
       } else {
         return null
       }
@@ -1163,7 +1165,7 @@ self.list = async (req, res) => {
 
     // Then, refine using the supplied 'date' ranges
     this.andWhere(function () {
-      if (!filterObj.queries.date) return
+      if (!filterObj.queries.date || (!filterObj.queries.date.from && !filterObj.queries.date.to)) return
       if (typeof filterObj.queries.date.from === 'number')
         if (typeof filterObj.queries.date.to === 'number')
           this.andWhereBetween('timestamp', [filterObj.queries.date.from, filterObj.queries.date.to])
@@ -1175,7 +1177,7 @@ self.list = async (req, res) => {
 
     // Then, refine using the supplied 'expiry' ranges
     this.andWhere(function () {
-      if (!filterObj.queries.expiry) return
+      if (!filterObj.queries.expiry || (!filterObj.queries.expiry.from && !filterObj.queries.expiry.to)) return
       if (typeof filterObj.queries.expiry.from === 'number')
         if (typeof filterObj.queries.expiry.to === 'number')
           this.andWhereBetween('expirydate', [filterObj.queries.expiry.from, filterObj.queries.expiry.to])
