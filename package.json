@@ -27,7 +27,8 @@
     "delete-expired": "node ./scripts/delete-expired.js",
     "thumbs": "node ./scripts/thumbs.js",
     "pull": "git pull && yarn --production",
-    "stash": "(git stash && git stash drop) || true",
+    "stash": "git stash || true",
+    "stash-pop": "git stash pop || true",
     "full-upgrade": "rm -f ./yarn.lock && yarn"
   },
   "dependencies": {
