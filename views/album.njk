@@ -9,6 +9,7 @@
 
 {% extends "_layout.njk" %}
 
+{% set noJsUrl = '../' + album.url + '?nojs' %}
 {% set generateZips = config.uploads.generateZips %}
 {% set usingCdn = config.cloudflare and config.cloudflare.purgeCache %}
 
@@ -27,16 +28,13 @@
 <script src="../libs/lazyload/lazyload.min.js{{ versions[3] }}"></script>
 <script src="../js/album.js{{ versions[1] }}"></script>
 <script src="../js/misc/utils.js{{ versions[1] }}"></script>
-{% endif %}
+{%- endif %}
 {% endblock %}
 
 {% block endmeta %}
 {% if not nojs -%}
-<noscript>
-  <style>body > section:not(#noscript) { display: none !important; }</style>
-  <!-- Redirect after 3 seconds -->
-  <meta http-equiv="refresh" content="3;url=../{{ album.url }}?nojs">
-</noscript>
+{% set noscriptRefreshUrl = noJsUrl %}
+{% include "_partial/noscript-refresh.njk" %}
 {%- endif %}
 {% endblock %}
 
@@ -105,7 +103,7 @@
               <img alt="{{ file.name }}" data-src="{{ fileRoot }}/{{ file.thumb }}">
               {%- endif %}
             {%- else -%}
-            <h1 class="title">{{ file.extname | default('N/A') }}</h1>
+            <h1 class="title">{{ file.extname or 'N/A' }}</h1>
             {%- endif %}
           </a>
           <div class="details">
@@ -125,22 +123,10 @@
   </div>
 </section>
 
-<a class="floating-home-button" title="Back to Safe" href="..">
-  <span class="icon is-medium">
-    <i class="icon-home icon-2x"></i>
-  </span>
-</a>
-
+{% set floatingHomeHref = '..' %}
+{% include "_partial/floating-home.njk" %}
 {% if not nojs -%}
-<noscript>
-  <section id="noscript" class="hero is-fullheight">
-    <div class="hero-body">
-      <div class="container has-text-centered">
-        <p>This page requires JavaScript to function.</p>
-        <p>If you are not redirected to its No-JS version, please <a href="../{{ album.url }}?nojs">click here</a>.</p>
-      </div>
-    </div>
-  </section>
-</noscript>
+{% set noscriptMessage = 'If you are not redirected to its No-JS version, please <a href="' + noJsUrl + '">click here</a>.' %}
+{% include "_partial/noscript.njk" %}
 {%- endif %}
 {% endblock %}

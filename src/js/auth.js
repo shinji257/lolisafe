@@ -14,8 +14,17 @@ const page = {
 }
 
 page.unhide = () => {
-  document.querySelector('#loader').classList.add('is-hidden')
-  document.querySelector('#login').classList.remove('is-hidden')
+  const loaderSection = document.querySelector('#loader')
+  if (loaderSection)
+    loaderSection.classList.add('is-hidden')
+
+  const loginSection = document.querySelector('#login.is-hidden')
+  if (loginSection)
+    loginSection.classList.remove('is-hidden')
+
+  const floatingBtn = document.querySelector('.floating-home-button.is-hidden')
+  if (floatingBtn)
+    floatingBtn.classList.remove('is-hidden')
 }
 
 // Handler for Axios errors
