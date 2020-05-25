@@ -207,6 +207,11 @@ page.verifyToken = (token, reloadOnError) => {
 page.prepareUpload = () => {
   // I think this fits best here because we need to check for a valid token before we can get the albums
   if (page.token) {
+    // Change /auth link to /dashboard
+    const authLink = document.querySelector('#linksColumn a[href="auth"]')
+    if (authLink)
+      authLink.setAttribute('href', 'dashboard')
+
     // Display the album selection
     document.querySelector('#albumDiv').classList.remove('is-hidden')
 
@@ -221,6 +226,8 @@ page.prepareUpload = () => {
 
     // Fetch albums
     page.fetchAlbums()
+  } else if (page.enableUserAccounts) {
+    document.querySelector('#loginLinkText').innerHTML = 'Create an account and keep track of your uploads'
   }
 
   // Prepare & generate config tab
@@ -229,9 +236,6 @@ page.prepareUpload = () => {
   // Update elements wherever applicable
   document.querySelector('#maxSize > span').innerHTML = page.getPrettyBytes(page.maxSizeBytes)
   document.querySelector('#loginToUpload').classList.add('is-hidden')
-
-  if (!page.token && page.enableUserAccounts)
-    document.querySelector('#loginLinkText').innerHTML = 'Create an account and keep track of your uploads'
 
   // Prepare & generate files upload tab
   page.prepareDropzone()
