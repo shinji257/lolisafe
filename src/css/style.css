@@ -141,6 +141,11 @@ fieldset[disabled] .textarea {
   fill: #fff
 }
 
+.button.is-wrappable {
+  white-space: break-spaces;
+  height: auto
+}
+
 .checkbox:hover,
 .radio:hover {
   color: #7f8c8d

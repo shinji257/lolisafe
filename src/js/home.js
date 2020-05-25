@@ -177,9 +177,9 @@ page.preparePage = () => {
       button.href = 'auth'
       button.classList.remove('is-loading')
       if (page.enableUserAccounts)
-        button.innerText = 'Anonymous upload is disabled. Log in to upload.'
+        button.innerText = 'Anonymous upload is disabled.\nLog in or register to upload.'
       else
-        button.innerText = 'Running in private mode. Log in to upload.'
+        button.innerText = 'Running in private mode.\nLog in to upload.'
     }
   else
     return page.prepareUpload()

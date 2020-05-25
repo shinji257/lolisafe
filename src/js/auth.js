@@ -97,15 +97,19 @@ window.onload = () => {
     event.preventDefault()
   })
 
-  document.querySelector('#loginBtn').addEventListener('click', event => {
-    if (!form.checkValidity()) return
-    page.do('login', event.currentTarget)
-  })
+  const loginBtn = document.querySelector('#loginBtn')
+  if (loginBtn)
+    loginBtn.addEventListener('click', event => {
+      if (!form.checkValidity()) return
+      page.do('login', event.currentTarget)
+    })
 
-  document.querySelector('#registerBtn').addEventListener('click', event => {
-    if (!form.checkValidity()) return
-    page.do('register', event.currentTarget)
-  })
+  const registerBtn = document.querySelector('#registerBtn')
+  if (registerBtn)
+    registerBtn.addEventListener('click', event => {
+      if (!form.checkValidity()) return
+      page.do('register', event.currentTarget)
+    })
 
   if (page.token)
     page.verify()
