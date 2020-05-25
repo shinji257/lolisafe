@@ -143,6 +143,7 @@ fieldset[disabled] .textarea {
 
 .button.is-wrappable {
   white-space: break-spaces;
+  min-height: 2.25em;
   height: auto
 }
 
