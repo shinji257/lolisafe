@@ -18,7 +18,7 @@ page.prepareShareX = () => {
     // Pad by 4 space
     headers.push(`    "${keys[i]}": "${values[keys[i]]}"`)
 
-  const origin = (location.hostname + location.pathname).replace(/\/(dashboard)?$/, '')
+  const origin = (window.location.hostname + window.location.pathname).replace(/\/(dashboard)?$/, '')
   const originClean = origin.replace(/\//g, '_')
 
   const sharexElement = document.querySelector('#ShareX')
@@ -26,7 +26,7 @@ page.prepareShareX = () => {
   "Name": "${originClean}",
   "DestinationType": "ImageUploader, FileUploader",
   "RequestMethod": "POST",
-  "RequestURL": "${location.protocol}//${origin}/api/upload",
+  "RequestURL": "${window.location.protocol}//${origin}/api/upload",
   "Headers": {
 ${headers.join(',\n')}
   },

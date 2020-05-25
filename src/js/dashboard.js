@@ -158,7 +158,7 @@ page.checkClientVersion = apiVersion => {
         }
       }
     }).then(() => {
-      location.reload()
+      window.location.reload()
     })
 }
 

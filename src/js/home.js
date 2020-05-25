@@ -75,7 +75,7 @@ page.onInitError = error => {
   uploadButton.classList.remove('is-hidden')
 
   uploadButton.addEventListener('click', () => {
-    location.reload()
+    window.location.reload()
   })
 
   if (error.response)
@@ -137,7 +137,7 @@ page.checkClientVersion = apiVersion => {
         }
       }
     }).then(() => {
-      location.reload()
+      window.location.reload()
     })
 }
 
@@ -195,7 +195,7 @@ page.verifyToken = (token, reloadOnError) => {
       }).then(() => {
         if (!reloadOnError) return
         localStorage.removeItem('token')
-        location.reload()
+        window.location.reload()
       })
 
     localStorage[lsKeys.token] = token
@@ -1027,7 +1027,7 @@ page.prepareUploadConfig = () => {
       text: 'Configuration saved into this browser.',
       icon: 'success'
     }).then(() => {
-      location.reload()
+      window.location.reload()
     })
   })
 
