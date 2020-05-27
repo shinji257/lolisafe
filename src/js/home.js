@@ -1074,8 +1074,9 @@ window.onload = () => {
     window.cookieconsent.initialise({
       cookie: {
         name: 'cookieconsent_status',
+        path: window.location.pathname,
         expiryDays: 730,
-        secure: true
+        secure: window.location.protocol === 'https:'
       },
       palette: {
         popup: {

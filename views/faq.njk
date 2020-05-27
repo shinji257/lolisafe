@@ -23,33 +23,36 @@
     <article class="message">
       <div class="message-body">
         This is a fork of <a href="https://github.com/WeebDev/lolisafe" target="_blank" rel="noopener">lolisafe</a>.<br>
-        {{ globals.forkHost }} repository of the fork is located <a href="{{ globals.forkRepo }}" target="_blank" rel="noopener">here</a>.
+        {{ globals.fork_host }} repository of the fork is located <a href="{{ globals.fork_repo }}" target="_blank" rel="noopener">here</a>.
       </div>
     </article>
 
+    {% if globals.enable_faq_banned_categories -%}
     <h2 class='subtitle is-brighter'>Are there any <strong>banned categories</strong>?</h2>
     <article class="message">
       <div class="message-body">
         Banned categories are the following, <i>but not limited to</i>:<br>
         <strong>Child pornography.</strong><br>
         Virus/malware, or anything Google Safe Search would categorize as <i>unwanted software</i> *.<br>
-        Copyrighted content. Meaning I will respond to copyright takedown notices,... <i>if any</i>.<br>
-        <strong>Full-length episodes of anime or TV shows.</strong> These include <strong>audio files from CD dramas</strong>.<br>
+        Copyrighted content. Meaning I will respond to copyright takedown notices,.. if any.<br>
+        <strong>Full-length episodes of cartoons, TV shows or movies of any kind.</strong> Japanese, Chinese, Antarcticaness, I don't care.<br>
+        CD drama audio files. I only know of Japanese shows that have these, but regardless of nationality.<br>
         <br>
         Any of such uploads, when found, will be purged immediately without any prior notice.<br>
-        Repeat offenders will have their IPs permanently blocked from accessing {{ globals.wholeFaq }}.<br>
+        Repeat offenders will have their IPs permanently blocked from accessing {{ globals.whole_faq }}.<br>
         For child pornography specifically, first offenders will immediately be blocked permanently.<br>
         <br>
-        * When Google Safe Search detects <i>unwanted software</i>, Chrome's users will be alerted that anything they download from {{ globals.wholeFaq }} are <i>unsafe</i>.
+        * When Google Safe Search detects <i>unwanted software</i>, Chrome's users will be alerted that anything they download from {{ globals.whole_faq }} are <i>unsafe</i>.
       </div>
     </article>
+    {%- endif %}
 
     <h2 class='subtitle is-brighter'>Will you keep my uploads forever?</h2>
     <article class="message">
       <div class="message-body">
         Unless the uploads are included within the banned categories above, or some other bullshit, I will.<br>
-        {% if globals.takedownsUrl -%}
-        In case I have to take down any uploads, I will log their names and explanations in <a href="{{ globals.takedownsUrl }}" target="_blank">here</a>.<br>
+        {% if globals.takedowns_url -%}
+        In case I have to take down any uploads, I will log their names and explanations in <a href="{{ globals.takedowns_url }}" target="_blank">here</a>.<br>
         {%- endif %}
         <br>
         Otherwise, we also have temporary uploads feature, with which you can have your uploads be automatically deleted after a period of time.<br>
@@ -90,11 +93,11 @@
       </div>
     </article>
 
-    {% if globals.supportFaq -%}
+    {% if globals.support -%}
     <h2 class='subtitle is-brighter'>How can I support {{ globals.name }}?</h2>
     <article class="message">
       <div class="message-body">
-        {{ globals.supportFaq | safe }}
+        {{ globals.support | safe }}
       </div>
     </article>
     {%- endif %}
@@ -131,11 +134,11 @@
       </div>
     </article>
 
-    {% if globals.serverLocation -%}
+    {% if globals.server_location -%}
     <h2 class='subtitle is-brighter'>Where is the server located?</h2>
     <article class="message">
       <div class="message-body">
-        {{ globals.serverLocation | safe }}.
+        {{ globals.server_location | safe }}.
         {% if config.cloudflare.purgeCache -%}
         <br>
         We are using <a href="https://www.cloudflare.com/cdn/" target="_blank" rel="noopener">Cloudflare</a> though, so you can expect your uploads to be delivered quickly all over the world after they have been cached.
@@ -150,6 +153,18 @@
       <div class="message-body">
         We will send API requests to Cloudflare to purge their cache immediately after you delete your uploads from the dashboard.<br>
         Cache of their thumbnails will also be purged, if applicable.
+      </div>
+    </article>
+    {%- endif %}
+
+    {% if globals.enable_faq_tor -%}
+    <h2 class='subtitle is-brighter'>I cannot access this website with Tor and/or VPNs!?</h2>
+    <article class="message">
+      <div class="message-body">
+        My server is actively refreshing and blacklisting Tor exit nodes.<br>
+        There have been too many child pornography uploaders using Tor, that they simply didn't care about individual IPs being banned.<br>
+        Sometimes I might also end up blacklisting IP ranges that were known to come from VPNs, if there had been attempts with multiple of those IPs.<br>
+        Nothing much I can do about it. We live in a society.
       </div>
     </article>
     {%- endif %}
@@ -202,12 +217,12 @@
     </article>
     {%- endif %}
 
-    {% if globals.forkRepo -%}
+    {% if globals.fork_repo -%}
     <h2 class='subtitle is-brighter'>I found a bug! -or- I want to request a feature!</h2>
     <article class="message">
       <div class="message-body">
-        Feel free to create a {{ globals.forkHost }} issue <a href="{{ globals.forkIssues }}" target="_blank" rel="noopener">here</a>.</br>
-        If you do not have a {{ globals.forkHost }} account, you can also email <a href="mailto:{{ globals.email }}">{{ globals.email }}</a>.
+        Feel free to create a {{ globals.fork_host }} issue <a href="{{ globals.fork_issues }}" target="_blank" rel="noopener">here</a>.</br>
+        If you do not have a {{ globals.fork_host }} account, you can also email <a href="mailto:{{ globals.email }}">{{ globals.email }}</a>.
       </div>
     </article>
     {%- endif %}
