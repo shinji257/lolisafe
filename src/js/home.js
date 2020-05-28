@@ -19,7 +19,7 @@ const page = {
   private: null,
   enableUserAccounts: null,
   maxSize: null,
-  chunkSize: null,
+  chunkSizeConfig: null,
   temporaryUploadAges: null,
   fileIdentifierLength: null,
   stripTagsConfig: null,
@@ -27,14 +27,16 @@ const page = {
   // store album id that will be used with upload requests
   album: null,
 
-  parallelUploads: 2,
+  parallelUploads: null,
   previewImages: null,
   fileLength: null,
   uploadAge: null,
+  stripTags: null,
 
   maxSizeBytes: null,
   urlMaxSize: null,
   urlMaxSizeBytes: null,
+  chunkSize: null,
 
   tabs: [],
   activeTab: null,
@@ -157,9 +159,14 @@ page.checkIfPublic = () => {
 
     page.private = response.data.private
     page.enableUserAccounts = response.data.enableUserAccounts
+
     page.maxSize = parseInt(response.data.maxSize)
     page.maxSizeBytes = page.maxSize * 1e6
-    page.chunkSize = parseInt(response.data.chunkSize)
+    page.chunkSizeConfig = {
+      max: (response.data.chunkSize && parseInt(response.data.chunkSize.max)) || 95,
+      default: response.data.chunkSize && parseInt(response.data.chunkSize.default)
+    }
+
     page.temporaryUploadAges = response.data.temporaryUploadAges
     page.fileIdentifierLength = response.data.fileIdentifierLength
     page.stripTagsConfig = response.data.stripTags
@@ -754,11 +761,12 @@ page.createAlbum = () => {
 
 page.prepareUploadConfig = () => {
   const fallback = {
-    chunkSize: page.chunkSize,
-    parallelUploads: page.parallelUploads
+    chunkSize: page.chunkSizeConfig.default,
+    parallelUploads: 2
   }
 
-  const temporaryUploadAges = Array.isArray(page.temporaryUploadAges) && page.temporaryUploadAges.length
+  const temporaryUploadAges = Array.isArray(page.temporaryUploadAges) &&
+    page.temporaryUploadAges.length
   const fileIdentifierLength = page.fileIdentifierLength &&
     typeof page.fileIdentifierLength.min === 'number' &&
     typeof page.fileIdentifierLength.max === 'number'
@@ -802,11 +810,11 @@ page.prepareUploadConfig = () => {
       disabled: page.stripTagsConfig && page.stripTagsConfig.force
     },
     chunkSize: {
-      display: !isNaN(page.chunkSize),
+      display: Boolean(page.chunkSizeConfig.default),
       label: 'Upload chunk size (MB)',
       number: {
         min: 1,
-        max: 95,
+        max: page.chunkSizeConfig.max,
         suffix: ' MB',
         round: true
       },
@@ -895,7 +903,7 @@ page.prepareUploadConfig = () => {
         value = conf.value
       } else if (conf.number !== undefined) {
         const parsed = parseInt(localStorage[lsKeys[key]])
-        if (!isNaN(parsed))
+        if (!isNaN(parsed) && parsed <= conf.number.max && parsed >= conf.number.min)
           value = parsed
       } else {
         const stored = localStorage[lsKeys[key]]
@@ -911,6 +919,8 @@ page.prepareUploadConfig = () => {
         conf.valueHandler(value)
       else if (value !== undefined)
         page[key] = value
+      else if (fallback[key] !== undefined)
+        page[key] = fallback[key]
     }
 
     let control

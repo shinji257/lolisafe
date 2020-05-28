@@ -1,10 +1,11 @@
-const crypto = require('crypto')
+const blake3 = require('blake3')
 const fetch = require('node-fetch')
 const fs = require('fs')
 const multer = require('multer')
 const path = require('path')
 const randomstring = require('randomstring')
 const searchQuery = require('search-query-parser')
+const multerStorage = require('./multerStorageController')
 const paths = require('./pathsController')
 const perms = require('./permissionController')
 const utils = require('./utilsController')
@@ -25,7 +26,9 @@ const urlMaxSizeBytes = parseInt(config.uploads.urlMaxSize) * 1e6
 
 const maxFilesPerUpload = 20
 
-const chunkedUploads = Boolean(config.uploads.chunkSize)
+const chunkedUploads = config.uploads.chunkSize &&
+  typeof config.uploads.chunkSize === 'object' &&
+  config.uploads.chunkSize.default
 const chunksData = {}
 //  Hard-coded min chunk size of 1 MB (e.g. 50 MB = max 50 chunks)
 const maxChunksCount = maxSize
@@ -84,34 +87,35 @@ const executeMulter = multer({
     else
       return cb(null, true)
   },
-  storage: multer.diskStorage({
+  storage: multerStorage({
     destination (req, file, cb) {
-      // If chunked uploads is disabled or the uploaded file is not a chunk
-      if (!chunkedUploads || (req.body.uuid === undefined && req.body.chunkindex === undefined))
-        return cb(null, paths.uploads)
+      // Is file a chunk!?
+      file._ischunk = chunkedUploads && req.body.uuid !== undefined && req.body.chunkindex !== undefined
 
-      initChunks(req.body.uuid)
-        .then(uuidDir => cb(null, uuidDir))
-        .catch(error => {
-          logger.error(error)
-          return cb('Could not process the chunked upload. Try again?')
-        })
+      if (file._ischunk)
+        initChunks(req.body.uuid)
+          .then(uuidDir => cb(null, uuidDir))
+          .catch(error => {
+            logger.error(error)
+            return cb('Could not process the chunked upload. Try again?')
+          })
+      else
+        return cb(null, paths.uploads)
     },
 
     filename (req, file, cb) {
-      // If chunked uploads is disabled or the uploaded file is not a chunk
-      if (!chunkedUploads || (req.body.uuid === undefined && req.body.chunkindex === undefined)) {
+      if (file._ischunk) {
+        // index.extension (i.e. 0, 1, ..., n - will prepend zeros depending on the amount of chunks)
+        const digits = req.body.totalchunkcount !== undefined ? `${req.body.totalchunkcount - 1}`.length : 1
+        const zeros = new Array(digits + 1).join('0')
+        const name = (zeros + req.body.chunkindex).slice(-digits)
+        return cb(null, name)
+      } else {
         const length = self.parseFileIdentifierLength(req.headers.filelength)
         return self.getUniqueRandomName(length, file.extname)
           .then(name => cb(null, name))
           .catch(error => cb(error))
       }
-
-      // index.extension (i.e. 0, 1, ..., n - will prepend zeros depending on the amount of chunks)
-      const digits = req.body.totalchunkcount !== undefined ? `${req.body.totalchunkcount - 1}`.length : 1
-      const zeros = new Array(digits + 1).join('0')
-      const name = (zeros + req.body.chunkindex).slice(-digits)
-      return cb(null, name)
     }
   })
 }).array('files[]')
@@ -452,7 +456,7 @@ self.actuallyFinishChunks = async (req, res, user) => {
 
       // Combine chunks
       const destination = path.join(paths.uploads, name)
-      await self.combineChunks(destination, file.uuid)
+      const hash = await self.combineChunks(destination, file.uuid)
 
       // Continue even when encountering errors
       await self.cleanUpChunks(file.uuid).catch(logger.error)
@@ -472,6 +476,7 @@ self.actuallyFinishChunks = async (req, res, user) => {
         extname: file.extname,
         mimetype: file.type || '',
         size: file.size,
+        hash,
         albumid,
         age: file.age
       }
@@ -504,15 +509,22 @@ self.actuallyFinishChunks = async (req, res, user) => {
 self.combineChunks = async (destination, uuid) => {
   let errorObj
   const writeStream = fs.createWriteStream(destination, { flags: 'a' })
+  const hash = blake3.createHash()
 
   try {
     chunksData[uuid].chunks.sort()
     for (const chunk of chunksData[uuid].chunks)
       await new Promise((resolve, reject) => {
-        fs.createReadStream(path.join(chunksData[uuid].root, chunk))
-          .on('error', error => reject(error))
-          .on('end', () => resolve())
-          .pipe(writeStream, { end: false })
+        const stream = fs.createReadStream(path.join(chunksData[uuid].root, chunk))
+        stream.pipe(writeStream, { end: false })
+
+        stream.on('data', d => hash.update(d))
+        stream.on('error', error => {
+          hash.dispose()
+          reject(error)
+        })
+
+        stream.on('end', () => resolve())
       })
   } catch (error) {
     errorObj = error
@@ -523,6 +535,9 @@ self.combineChunks = async (destination, uuid) => {
 
   // Re-throw error
   if (errorObj) throw errorObj
+
+  // Return hash
+  return hash.digest('hex')
 }
 
 self.cleanUpChunks = async (uuid) => {
@@ -602,17 +617,8 @@ self.storeFilesToDb = async (req, res, user, infoMap) => {
   const albumids = []
 
   await Promise.all(infoMap.map(async info => {
-    // Create hash of the file
-    const hash = await new Promise((resolve, reject) => {
-      const result = crypto.createHash('md5')
-      fs.createReadStream(info.path)
-        .on('error', error => reject(error))
-        .on('end', () => resolve(result.digest('hex')))
-        .on('data', data => result.update(data, 'utf8'))
-    })
-
     // Check if the file exists by checking its hash and size
-    const dbFile = await db.table('files')
+    const dbFile = info.data.hash && await db.table('files')
       .where(function () {
         if (user === undefined)
           this.whereNull('userid')
@@ -620,7 +626,7 @@ self.storeFilesToDb = async (req, res, user, infoMap) => {
           this.where('userid', user.id)
       })
       .where({
-        hash,
+        hash: info.data.hash,
         size: info.data.size
       })
       // Select expirydate to display expiration date of existing files as well
@@ -646,7 +652,7 @@ self.storeFilesToDb = async (req, res, user, infoMap) => {
       original: info.data.originalname,
       type: info.data.mimetype,
       size: info.data.size,
-      hash,
+      hash: info.data.hash,
       // Only disable if explicitly set to false in config
       ip: config.uploads.storeIP !== false ? req.ip : null,
       timestamp
