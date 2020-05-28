@@ -51,7 +51,7 @@ const verify = [
 
 self.init = async () => {
   // Check & create directories
-  await Promise.all(verify.map(async p => {
+  for (const p of verify)
     try {
       await self.access(p)
     } catch (err) {
@@ -63,7 +63,6 @@ self.init = async () => {
           logger.log(`Created directory: ${p}`)
       }
     }
-  }))
 
   // Purge any leftover in chunks directory
   const uuidDirs = await self.readdir(self.chunks)
