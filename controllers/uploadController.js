@@ -618,7 +618,7 @@ self.storeFilesToDb = async (req, res, user, infoMap) => {
 
   await Promise.all(infoMap.map(async info => {
     // Check if the file exists by checking its hash and size
-    const dbFile = info.data.hash && await db.table('files')
+    const dbFile = await db.table('files')
       .where(function () {
         if (user === undefined)
           this.whereNull('userid')
