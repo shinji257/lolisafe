@@ -265,12 +265,12 @@ self.generateThumbs = async (name, extname, force) => {
       await new Promise((resolve, reject) => {
         ffmpeg(input)
           .inputOptions([
-              `-ss ${duration * 20 / 100}`
           ])
           .output(thumbname)
           .outputOptions([
+            `-ss ${duration * 20 / 100}`,
             '-vframes 1',
-            '-vf scale=200:200:force_original_aspect_ratio=decrease'
+            '-vf scale=600:600:force_original_aspect_ratio=decrease'
           ])
           .on('error', async error => {
             // Try to unlink thumbnail,
