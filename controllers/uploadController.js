@@ -1332,23 +1332,8 @@ self.list = async (req, res) => {
 
     return res.json({ success: true, files, count, users, albums, basedomain })
   } catch (error) {
-    // If moderator, capture SQLITE_ERROR and use its error message for the response's description
-    let errorString
-    if (ismoderator && error.code === 'SQLITE_ERROR') {
-      const match = error.message.match(/SQLITE_ERROR: .*$/)
-      errorString = match && match[0]
-    }
-
-    // If not proper SQLITE_ERROR, log to console
-    if (!errorString) {
-      logger.error(error)
-      res.status(500) // Use 500 status code
-    }
-
-    return res.json({
-      success: false,
-      description: errorString || 'An unexpected error occurred. Try again?'
-    })
+    logger.error(error)
+    return res.status(500).json({ success: false, description: 'An unexpected error occurred. Try again?' })
   }
 }
 

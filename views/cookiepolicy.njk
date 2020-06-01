@@ -54,7 +54,7 @@
     <h2 class='subtitle is-brighter'>What information do we know about you?</h2>
     <article class="message">
       <div class="message-body">
-        We don’t request or require you to provide personal information to access our web site.<br>
+        We don’t request or require you to provide personal information to access our website.<br>
         However, we may receive your IP address and user agent automatically.
       </div>
     </article>
@@ -125,21 +125,33 @@
                 <td>LocalStorage</td>
               </tr>
               <tr>
+                <th>selectedAlbums</th>
+                <td>{{ globals.root_domain }}</td>
+                <td>Personalization</td>
+                <td>LocalStorage</td>
+              </tr>
+              <tr>
+                <th>selectedAlbumsAll</th>
+                <td>{{ globals.root_domain }}</td>
+                <td>Personalization</td>
+                <td>LocalStorage</td>
+              </tr>
+              <tr>
                 <th>selectedUploads</th>
                 <td>{{ globals.root_domain }}</td>
-                <td>Necessary</td>
+                <td>Personalization</td>
                 <td>LocalStorage</td>
               </tr>
               <tr>
                 <th>selectedUploadsAll</th>
                 <td>{{ globals.root_domain }}</td>
-                <td>Necessary</td>
+                <td>Personalization</td>
                 <td>LocalStorage</td>
               </tr>
               <tr>
                 <th>selectedUsers</th>
                 <td>{{ globals.root_domain }}</td>
-                <td>Necessary</td>
+                <td>Personalization</td>
                 <td>LocalStorage</td>
               </tr>
               <tr>
@@ -175,18 +187,21 @@
               <tr>
                 <th>viewTypeUploads</th>
                 <td>{{ globals.root_domain }}</td>
-                <td>Necessary</td>
+                <td>Personalization</td>
                 <td>LocalStorage</td>
               </tr>
               <tr>
                 <th>viewTypeUploadsAll</th>
                 <td>{{ globals.root_domain }}</td>
-                <td>Necessary</td>
+                <td>Personalization</td>
                 <td>LocalStorage</td>
               </tr>
             </tbody>
           </table>
         </div>
+        Only Analytics keys will be set on first page load regardless of your consent.<br>
+        The rest will only be set as you use features of our website.<br>
+        However, all Personalization keys should delete themselves once you set back their default values.
       </div>
     </article>
 
