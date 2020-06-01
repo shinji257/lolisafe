@@ -508,30 +508,32 @@ self.actuallyFinishChunks = async (req, res, user) => {
 
 self.combineChunks = async (destination, uuid) => {
   let errorObj
-  const writeStream = fs.createWriteStream(destination, { flags: 'a' })
+  const outStream = fs.createWriteStream(destination, { flags: 'a' })
   const hash = blake3.createHash()
+
+  outStream.on('error', error => {
+    hash.dispose()
+    errorObj = error
+  })
 
   try {
     chunksData[uuid].chunks.sort()
     for (const chunk of chunksData[uuid].chunks)
       await new Promise((resolve, reject) => {
         const stream = fs.createReadStream(path.join(chunksData[uuid].root, chunk))
-        stream.pipe(writeStream, { end: false })
+        stream.pipe(outStream, { end: false })
 
         stream.on('data', d => hash.update(d))
-        stream.on('error', error => {
-          hash.dispose()
-          reject(error)
-        })
-
+        stream.on('error', reject)
         stream.on('end', () => resolve())
       })
   } catch (error) {
+    hash.dispose()
     errorObj = error
   }
 
   // Close stream
-  writeStream.end()
+  outStream.end()
 
   // Re-throw error
   if (errorObj) throw errorObj

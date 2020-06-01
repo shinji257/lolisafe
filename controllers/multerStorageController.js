@@ -44,13 +44,16 @@ DiskStorage.prototype._handleFile = function _handleFile (req, file, cb) {
       if (!file._ischunk) {
         hash = blake3.createHash()
         file.stream.on('data', d => hash.update(d))
-        file.stream.on('error', err => {
+        const onerror = function (err) {
           hash.dispose()
-          return cb(err)
-        })
+          cb(err)
+        }
+        file.stream.on('error', onerror)
+        outStream.on('error', onerror)
+      } else {
+        outStream.on('error', cb)
       }
 
-      outStream.on('error', cb)
       outStream.on('finish', function () {
         cb(null, {
           destination,
