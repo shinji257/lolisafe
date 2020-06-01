@@ -8,10 +8,7 @@ const db = require('knex')(config.database)
 routes.get('/a/:identifier', async (req, res, next) => {
   const identifier = req.params.identifier
   if (identifier === undefined)
-    return res.status(401).json({
-      success: false,
-      description: 'No identifier provided.'
-    })
+    res.status(404).sendFile(path.join(paths.errorRoot, config.errorPages[404]))
 
   const album = await db.table('albums')
     .where({
@@ -21,13 +18,8 @@ routes.get('/a/:identifier', async (req, res, next) => {
     .select('id', 'name', 'identifier', 'editedAt', 'download', 'public', 'description')
     .first()
 
-  if (!album)
+  if (!album || album.public === 0)
     return res.status(404).sendFile(path.join(paths.errorRoot, config.errorPages[404]))
-  else if (album.public === 0)
-    return res.status(403).json({
-      success: false,
-      description: 'This album is not available for public.'
-    })
 
   const nojs = req.query.nojs !== undefined
 
