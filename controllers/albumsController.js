@@ -262,6 +262,7 @@ self.disable = async (req, res, next) => {
       })
       .update('enabled', 0)
     utils.invalidateAlbumsCache([id])
+    utils.invalidateStatsCache('albums')
 
     const identifier = await db.table('albums')
       .select('identifier')
@@ -325,7 +326,6 @@ self.edit = async (req, res, next) => {
 
     const update = {
       name,
-      editedAt: Math.floor(Date.now() / 1000),
       download: Boolean(req.body.download),
       public: Boolean(req.body.public),
       description: typeof req.body.description === 'string'
@@ -343,6 +343,7 @@ self.edit = async (req, res, next) => {
       .where(filter)
       .update(update)
     utils.invalidateAlbumsCache([id])
+    utils.invalidateStatsCache('albums')
 
     if (req.body.requestLink) {
       self.onHold.delete(update.identifier)
@@ -459,10 +460,6 @@ self.generateZip = async (req, res, next) => {
     if ((isNaN(versionString) || versionString <= 0) && album.editedAt)
       return res.redirect(`${album.identifier}?v=${album.editedAt}`)
 
-    // TODO: editedAt column will now be updated whenever
-    // a user is simply editing the album's name/description.
-    // Perhaps add a new timestamp column that will only be updated
-    // when the files in the album are actually modified?
     if (album.zipGeneratedAt > album.editedAt)
       try {
         const filePath = path.join(paths.zips, `${identifier}.zip`)
@@ -607,6 +604,7 @@ self.addFiles = async (req, res, next) => {
     await db.table('albums')
       .whereIn('id', albumids)
       .update('editedAt', Math.floor(Date.now() / 1000))
+    utils.invalidateAlbumsCache(albumids)
 
     return res.json({ success: true, failed })
   } catch (error) {

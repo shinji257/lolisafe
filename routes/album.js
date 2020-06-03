@@ -31,24 +31,20 @@ routes.get('/a/:identifier', async (req, res, next) => {
     if (!utils.albumsCache[cacheid])
       utils.albumsCache[cacheid] = {
         cache: null,
-        generating: false,
-        // Cache will actually be deleted after the album has been updated,
-        // so storing this timestamp may be redundant, but just in case.
-        generatedAt: 0
+        generating: false
       }
 
     if (!utils.albumsCache[cacheid].cache && utils.albumsCache[cacheid].generating)
-      return res.json({
-        success: false,
-        description: 'This album is still generating its public page.'
+      return res.render('album-notice', {
+        config,
+        versions: utils.versionStrings,
+        album,
+        notice: 'This album\'s public page is still being generated. Please try again later.'
       })
-    else if ((album.editedAt < utils.albumsCache[cacheid].generatedAt) || utils.albumsCache[cacheid].generating)
+    else if (utils.albumsCache[cacheid].cache)
       return res.send(utils.albumsCache[cacheid].cache)
 
-    // Use current timestamp to make sure cache is invalidated
-    // when an album is edited during this generation process.
     utils.albumsCache[cacheid].generating = true
-    utils.albumsCache[cacheid].generatedAt = Math.floor(Date.now() / 1000)
   }
 
   const files = await db.table('files')
