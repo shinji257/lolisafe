@@ -1730,7 +1730,7 @@ page.getAlbums = (params = {}) => {
         ${params.all ? `<th>${album.userid ? (users[album.userid] || '') : ''}</th>` : ''}
         <th>${album.uploads}</th>
         <td>${album.prettyDate}</td>
-        <td><a ${album.public ? '' : 'class="is-linethrough" '}href="${albumUrl}" target="_blank">${albumUrl}</a></td>
+        <td><a ${enabled && album.public ? '' : 'class="is-linethrough" '}href="${albumUrl}" target="_blank">${albumUrl}</a></td>
         <td class="has-text-right" data-id="${album.id}">
           <a class="button is-small is-primary is-outlined" title="Edit album" data-action="edit-album">
             <span class="icon is-small">
@@ -1747,12 +1747,12 @@ page.getAlbums = (params = {}) => {
               <i class="icon-clipboard"></i>
             </span>
           </a>
-          <a class="button is-small is-warning is-outlined" title="Download album" ${album.download ? `href="api/album/zip/${album.identifier}?v=${album.editedAt}"` : 'disabled'}>
+          <a class="button is-small is-warning is-outlined" title="Download album" ${enabled && album.download ? `href="api/album/zip/${album.identifier}?v=${album.editedAt}"` : 'disabled'}>
             <span class="icon is-small">
               <i class="icon-download"></i>
             </span>
           </a>
-          <a class="button is-small is-dangerish is-outlined" title="Disable album" data-action="disable-album">
+          <a class="button is-small is-dangerish is-outlined" title="Disable album" data-action="disable-album"${enabled ? '' : ' disabled'}>
             <span class="icon is-small">
               <i class="icon-trash"></i>
             </span>
