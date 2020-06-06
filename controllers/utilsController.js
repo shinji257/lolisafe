@@ -222,8 +222,8 @@ self.generateThumbs = async (name, extname, force) => {
     // If image extension
     if (self.imageExts.includes(extname)) {
       const resizeOptions = {
-        width: ${config.uploads.generateThumbs.size},
-        height: ${config.uploads.generateThumbs.size},
+        width: ${self.thumbSize},
+        height: ${self.thumbSize},
         fit: 'contain',
         background: {
           r: 0,
@@ -270,7 +270,7 @@ self.generateThumbs = async (name, extname, force) => {
           .outputOptions([
             `-ss ${duration * 20 / 100}`,
             '-vframes 1',
-            `-vf scale=${config.uploads.generateThumbs.size}:${config.uploads.generateThumbs.size}:force_original_aspect_ratio=decrease`
+            `-vf scale=${self.thumbSize}:${self.thumbSize}:force_original_aspect_ratio=decrease`
           ])
           .on('error', async error => {
             // Try to unlink thumbnail,
