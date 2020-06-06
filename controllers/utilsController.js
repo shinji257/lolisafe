@@ -261,14 +261,19 @@ self.generateThumbs = async (name, extname, force) => {
 
       await new Promise((resolve, reject) => {
         ffmpeg(input)
-          .inputOptions([
-              `-ss ${duration * 20 / 100}`
+          .seekInput(duration * 20 / 100)
+          .frames(1)
+          .videoFilters([
+            {
+              filter: 'select',
+              options: 'eq(pict_type\\,I)'
+            },
+            {
+              filter: 'scale',
+              options: '200:200:force_original_aspect_ratio=decrease'
+            }
           ])
           .output(thumbname)
-          .outputOptions([
-            '-vframes 1',
-            '-vf scale=200:200:force_original_aspect_ratio=decrease'
-          ])
           .on('error', async error => {
             // Try to unlink thumbnail,
             // since ffmpeg may have created an incomplete thumbnail
