@@ -418,7 +418,8 @@ module.exports = {
     generateThumbs: {
       image: true,
       video: false,
-      placeholder: null
+      placeholder: null,
+      size: 200
     },
 
     /*

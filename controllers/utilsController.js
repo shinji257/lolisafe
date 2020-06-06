@@ -29,6 +29,7 @@ const self = {
   imageExts: ['.gif', '.jpeg', '.jpg', '.png', '.svg', '.tif', '.tiff', '.webp'],
   videoExts: ['.3g2', '.3gp', '.asf', '.avchd', '.avi', '.divx', '.evo', '.flv', '.h264', '.h265', '.hevc', '.m2p', '.m2ts', '.m4v', '.mk3d', '.mkv', '.mov', '.mp4', '.mpeg', '.mpg', '.mxf', '.ogg', '.ogv', '.ps', '.qt', '.rmvb', '.ts', '.vob', '.webm', '.wmv'],
 
+  thumbsSize: config.uploads.generateThumbs.size || 200,
   ffprobe: promisify(ffmpeg.ffprobe),
 
   albumsCache: {},
@@ -219,8 +220,8 @@ self.generateThumbs = async (name, extname, force) => {
     // If image extension
     if (self.imageExts.includes(extname)) {
       const resizeOptions = {
-        width: 200,
-        height: 200,
+        width: self.thumbsSize,
+        height: self.thumbsSize,
         fit: 'contain',
         background: {
           r: 0,
@@ -270,7 +271,7 @@ self.generateThumbs = async (name, extname, force) => {
             },
             {
               filter: 'scale',
-              options: '200:200:force_original_aspect_ratio=decrease'
+              options: `${self.thumbsSize}:${self.thumbsSize}:force_original_aspect_ratio=decrease`
             }
           ])
           .output(thumbname)
