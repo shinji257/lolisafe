@@ -12,6 +12,10 @@ const lsKeys = {
     albums: 'selectedAlbums',
     albumsAll: 'selectedAlbumsAll',
     users: 'selectedUsers'
+  },
+  originalNames: {
+    uploads: 'originalNames',
+    uploadsAll: 'originalNamesAll'
   }
 }
 
@@ -37,12 +41,14 @@ const page = {
     // params of uploads view
     uploads: {
       type: localStorage[lsKeys.viewType.uploads],
+      originalNames: localStorage[lsKeys.originalNames.uploads] === '1',
       album: null, // album's id
       pageNum: null
     },
     // params of uploads view (all)
     uploadsAll: {
       type: localStorage[lsKeys.viewType.uploadsAll],
+      originalNames: localStorage[lsKeys.originalNames.uploadsAll] === '1',
       filters: null,
       pageNum: null,
       all: true
@@ -341,6 +347,8 @@ page.domClick = event => {
       return page.setUploadsView('list', element)
     case 'view-thumbs':
       return page.setUploadsView('thumbs', element)
+    case 'toggle-original-names':
+      return page.toggleOriginalNames(element)
     case 'add-to-album':
       return page.addToAlbum(id)
     case 'delete-upload':
@@ -590,7 +598,14 @@ page.getUploads = (params = {}) => {
 
     const controls = `
       <div class="columns">
-        <div class="column is-hidden-mobile"></div>
+        <div class="column exclusive-operations has-text-left">
+          <a class="button is-small is-primary is-outlined" title="Toggle original names" data-action="toggle-original-names">
+            <span class="icon">
+              <i class="icon-exchange"></i>
+            </span>
+            <span>Toggle original names</span>
+          </a>
+        </div>
         <div class="column has-text-centered">
           <a class="button is-small is-danger is-outlined" title="List view" data-action="view-list">
             <span class="icon">
@@ -639,6 +654,7 @@ page.getUploads = (params = {}) => {
     // Whether there are any unselected items
     let unselected = false
 
+    const showOriginalNames = page.views[page.currentView].originalNames
     const hasExpiryDateColumn = files.some(file => {
       return file.expirydate !== undefined
     })
@@ -661,8 +677,9 @@ page.getUploads = (params = {}) => {
       // Cache bare minimum data for thumbnails viewer
       page.cache[files[i].id] = {
         name: files[i].name,
+        original: files[i].original,
         thumb: files[i].thumb,
-        original: files[i].file,
+        file: files[i].file,
         type: files[i].type
       }
 
@@ -741,10 +758,11 @@ page.getUploads = (params = {}) => {
             </a>
           </div>
           <div class="details">
-            <p><span class="name">${upload.name}</span></p>
-            <p>${upload.appendix ? `<span>${upload.appendix}</span> – ` : ''}${upload.prettyBytes}</p>
+            <p class="name" title="${upload.file}">${upload.name}</p>
+            ${showOriginalNames ? `<p class="originalname" title="${upload.original}">${upload.original}</p>` : ''}
+            <p class="prettybytes">${upload.appendix ? `<span>${upload.appendix}</span> – ` : ''}${upload.prettyBytes}</p>
             ${hasExpiryDateColumn && upload.prettyExpiryDate ? `
-            <p class="expirydate">EXP: ${upload.prettyExpiryDate}</p>` : ''}
+            <p class="prettyexpirydate">EXP: ${upload.prettyExpiryDate}</p>` : ''}
           </div>
         `
 
@@ -761,8 +779,9 @@ page.getUploads = (params = {}) => {
           <table class="table is-narrow is-fullwidth is-hoverable">
             <thead>
               <tr>
-                <th><input id="selectAll" class="checkbox" type="checkbox" title="Select all" data-action="select-all"></th>
+                <th class="controls"><input id="selectAll" class="checkbox" type="checkbox" title="Select all" data-action="select-all"></th>
                 <th title="Key: name">File name</th>
+                ${showOriginalNames ? '<th title="Key: original">Original name</th>' : ''}
                 ${params.album === undefined ? `<th title="Key: ${params.all ? 'userid">User' : 'albumid">Album'}</th>` : ''}
                 ${allAlbums ? '<th title="Key: albumid">Album</th>' : ''}
                 <th title="Key: size">Size</th>
@@ -789,13 +808,14 @@ page.getUploads = (params = {}) => {
         tr.dataset.id = upload.id
         tr.innerHTML = `
           <td class="controls"><input type="checkbox" class="checkbox" title="Select" data-index="${i}" data-action="select"${upload.selected ? ' checked' : ''}></td>
-          <th><a href="${upload.file}" target="_blank" title="${upload.file}">${upload.name}</a></th>
-          ${params.album === undefined ? `<th>${upload.appendix}</th>` : ''}
-          ${allAlbums ? `<th>${upload.albumid ? (albums[upload.albumid] || '') : ''}</th>` : ''}
-          <td>${upload.prettyBytes}</td>
-          ${params.all ? `<td>${upload.ip || ''}</td>` : ''}
-          <td>${upload.prettyDate}</td>
-          ${hasExpiryDateColumn ? `<td>${upload.prettyExpiryDate || '-'}</td>` : ''}
+          <th class="name"><a href="${upload.file}" target="_blank" title="${upload.file}">${upload.name}</a></th>
+          ${showOriginalNames ? `<th class="originalname" title="${upload.original}">${upload.original}</th>` : ''}
+          ${params.album === undefined ? `<th class="appendix">${upload.appendix}</th>` : ''}
+          ${allAlbums ? `<th class="album">${upload.albumid ? (albums[upload.albumid] || '') : ''}</th>` : ''}
+          <td class="prettybytes">${upload.prettyBytes}</td>
+          ${params.all ? `<td class="ip">${upload.ip || ''}</td>` : ''}
+          <td class="prettydate">${upload.prettyDate}</td>
+          ${hasExpiryDateColumn ? `<td class="prettyexpirydate">${upload.prettyExpiryDate || '-'}</td>` : ''}
           <td class="controls has-text-right">
             <a class="button is-small is-primary is-outlined" title="${upload.thumb ? 'Display preview' : 'File can\'t be previewed'}" data-action="display-preview"${upload.thumb ? '' : ' disabled'}>
               <span class="icon">
@@ -870,22 +890,43 @@ page.setUploadsView = (view, element) => {
   }))
 }
 
+page.toggleOriginalNames = element => {
+  if (page.isSomethingLoading)
+    return page.warnSomethingLoading()
+
+  if (page.views[page.currentView].originalNames) {
+    delete localStorage[lsKeys.originalNames[page.currentView]]
+    page.views[page.currentView].originalNames = false
+  } else {
+    localStorage[lsKeys.originalNames[page.currentView]] = '1'
+    page.views[page.currentView].originalNames = true
+  }
+
+  // eslint-disable-next-line compat/compat
+  page.getUploads(Object.assign(page.views[page.currentView], {
+    trigger: element
+  }))
+}
+
 page.displayPreview = id => {
   const file = page.cache[id]
   if (!file.thumb) return
 
   const div = document.createElement('div')
   div.innerHTML = `
-    <div class="field has-text-centered">
-      <label class="label">${file.name}</label>
-      <div class="controls swal-display-thumb-container">
+    <div class="content has-text-centered">
+      <p>
+        <div class="has-text-weight-bold">${file.name}</div>
+        <div>${file.original}</div>
+      </p>
+      <p class="swal-display-thumb-container">
         <img id="swalThumb" src="${file.thumb}">
-      </div>
+      </p>
     </div>
   `
 
-  if (file.original) {
-    const exec = /.[\w]+(\?|$)/.exec(file.original)
+  if (file.file) {
+    const exec = /.[\w]+(\?|$)/.exec(file.file)
     const extname = exec && exec[0] ? exec[0].toLowerCase() : null
     const isimage = page.imageExts.includes(extname)
     const isvideo = !isimage && page.videoExts.includes(extname)
@@ -894,7 +935,7 @@ page.displayPreview = id => {
       div.innerHTML += `
         <div class="field has-text-centered">
           <div class="controls">
-            <a id="swalOriginal" type="button" class="button is-info is-outlined is-fullwidth" data-original="${file.original}">
+            <a id="swalOriginal" type="button" class="button is-info is-outlined is-fullwidth" data-original="${file.file}">
               <span class="icon">
                 <i class="icon-arrows-cw"></i>
               </span>
@@ -913,7 +954,7 @@ page.displayPreview = id => {
         const thumb = div.querySelector('#swalThumb')
 
         if (isimage) {
-          thumb.src = file.original
+          thumb.src = file.file
           thumb.onload = () => {
             trigger.classList.add('is-hidden')
             document.body.querySelector('.swal-overlay .swal-modal:not(.is-expanded)').classList.add('is-expanded')
@@ -934,7 +975,7 @@ page.displayPreview = id => {
           video.id = 'swalVideo'
           video.controls = true
           video.autoplay = true
-          video.src = file.original
+          video.src = file.file
           thumb.insertAdjacentElement('afterend', video)
 
           trigger.classList.add('is-hidden')

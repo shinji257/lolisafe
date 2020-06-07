@@ -1235,15 +1235,19 @@ self.list = async (req, res) => {
     // Then, refine using the supplied keywords against their file names
     this.andWhere(function () {
       if (!filterObj.queries.text) return
-      for (const pattern of filterObj.queries.text)
+      for (const pattern of filterObj.queries.text) {
         this.orWhere('name', 'like', pattern)
+        this.orWhere('original', 'like', pattern)
+      }
     })
 
     // Finally, refine using the supplied exclusions against their file names
     this.andWhere(function () {
       if (!filterObj.queries.exclude.text) return
-      for (const pattern of filterObj.queries.exclude.text)
+      for (const pattern of filterObj.queries.exclude.text) {
         this.andWhere('name', 'not like', pattern)
+        this.andWhere('original', 'not like', pattern)
+      }
     })
   }
 
@@ -1260,7 +1264,7 @@ self.list = async (req, res) => {
     if (isNaN(offset)) offset = 0
     else if (offset < 0) offset = Math.max(0, Math.ceil(count / 25) + offset)
 
-    const columns = ['id', 'name', 'userid', 'size', 'timestamp']
+    const columns = ['id', 'name', 'original', 'userid', 'size', 'timestamp']
     if (temporaryUploads)
       columns.push('expirydate')
     if (!all || filterObj.queries.albumid || filterObj.queries.exclude.albumid ||

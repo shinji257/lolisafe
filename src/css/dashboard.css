@@ -169,3 +169,9 @@ li[data-action="page-ellipsis"] {
 .expirydate {
   color: #bdc3c7
 }
+
+.table .originalname {
+  max-width: 200px;
+  text-overflow: ellipsis;
+  overflow: hidden
+}

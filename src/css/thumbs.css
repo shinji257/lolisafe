@@ -47,6 +47,6 @@
   overflow: hidden
 }
 
-.image-container .details p span {
+.image-container .details p.name {
   font-weight: bold
 }
