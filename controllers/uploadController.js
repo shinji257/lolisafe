@@ -1236,8 +1236,8 @@ self.list = async (req, res) => {
     this.andWhere(function () {
       if (!filterObj.queries.text) return
       for (const pattern of filterObj.queries.text) {
-        this.orWhere('name', 'like', pattern)
-        this.orWhere('original', 'like', pattern)
+        this.orWhereRaw('?? like ? escape ?', ['name', pattern, '\\'])
+        this.orWhereRaw('?? like ? escape ?', ['original', pattern, '\\'])
       }
     })
 
@@ -1245,8 +1245,8 @@ self.list = async (req, res) => {
     this.andWhere(function () {
       if (!filterObj.queries.exclude.text) return
       for (const pattern of filterObj.queries.exclude.text) {
-        this.andWhere('name', 'not like', pattern)
-        this.andWhere('original', 'not like', pattern)
+        this.andWhereRaw('?? not like ? escape ?', ['name', pattern, '\\'])
+        this.andWhereRaw('?? not like ? escape ?', ['original', pattern, '\\'])
       }
     })
   }
