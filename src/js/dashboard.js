@@ -530,14 +530,15 @@ page.getUploads = (params = {}) => {
 
     const pages = Math.ceil(response.data.count / 25)
     const files = response.data.files
-    if (params.pageNum && (files.length === 0))
+    if (params.pageNum && (files.length === 0)) {
+      page.updateTrigger(params.trigger)
       if (params.autoPage) {
         params.pageNum = pages - 1
         return page.getUploads(params)
       } else {
-        page.updateTrigger(params.trigger)
         return swal('An error occurred!', `There are no more uploads to populate page ${params.pageNum + 1}.`, 'error')
       }
+    }
 
     page.currentView = params.all ? 'uploadsAll' : 'uploads'
     page.cache = {}
@@ -1577,14 +1578,15 @@ page.getAlbums = (params = {}) => {
 
     const pages = Math.ceil(response.data.count / 25)
     const albums = response.data.albums
-    if (params.pageNum && (albums.length === 0))
+    if (params.pageNum && (albums.length === 0)) {
+      page.updateTrigger(params.trigger)
       if (params.autoPage) {
         params.pageNum = pages - 1
         return page.getAlbums(params)
       } else {
-        page.updateTrigger(params.trigger)
         return swal('An error occurred!', `There are no more albums to populate page ${params.pageNum + 1}.`, 'error')
       }
+    }
 
     page.currentView = params.all ? 'albumsAll' : 'albums'
     page.cache = {}
@@ -2241,14 +2243,15 @@ page.getUsers = (params = {}) => {
 
     const pages = Math.ceil(response.data.count / 25)
     const users = response.data.users
-    if (params.pageNum && (users.length === 0))
+    if (params.pageNum && (users.length === 0)) {
+      page.updateTrigger(params.trigger)
       if (params.autoPage) {
         params.pageNum = pages - 1
         return page.getUsers(params)
       } else {
-        page.updateTrigger(params.trigger)
         return swal('An error occurred!', `There are no more users to populate page ${params.pageNum + 1}.`, 'error')
       }
+    }
 
     page.currentView = 'users'
     page.cache = {}
