@@ -100,8 +100,9 @@ page.onError = error => {
 }
 
 // Handler for Axios errors
-page.onAxiosError = error => {
-  console.error(error)
+page.onAxiosError = (error, cont) => {
+  if (!cont)
+    console.error(error)
 
   // Better Cloudflare errors
   const cloudflareErrors = {
@@ -117,11 +118,20 @@ page.onAxiosError = error => {
   }
 
   const statusText = cloudflareErrors[error.response.status] || error.response.statusText
-  const description = error.response.data && error.response.data.description
-    ? error.response.data.description
-    : 'There was an error with the request, please check the console for more information.'
 
-  return swal(`${error.response.status} ${statusText}`, description, 'error')
+  if (!cont) {
+    const description = error.response.data && error.response.data.description
+      ? error.response.data.description
+      : 'There was an error with the request, please check the console for more information.'
+    return swal(`${error.response.status} ${statusText}`, description, 'error')
+  } else if (error.response.data && error.response.data.description) {
+    return error.response
+  } else {
+    const description = error.response
+      ? `${error.response.status} ${statusText}`
+      : error.toString()
+    return { data: { success: false, description } }
+  }
 }
 
 page.checkClientVersion = apiVersion => {
@@ -482,17 +492,30 @@ page.prepareDropzone = () => {
           page.updateTemplate(file, data.files[0])
       })
 
-      this.on('error', (file, error) => {
+      this.on('error', (file, error, xhr) => {
+        let err = error
+        if (typeof error === 'object' && error.description)
+          err = error.description
+        else if (xhr)
+          // Formatting the Object is necessary since the function expect Axios errors
+          err = page.onAxiosError({
+            response: {
+              status: xhr.status,
+              statusText: xhr.statusText
+            }
+          }, true).data.description
+        else if (error instanceof Error)
+          err = error.toString()
+
         // Clean up file size errors
-        if ((typeof error === 'string' && /^File is too big/.test(error)) ||
-          (typeof error === 'object' && /File too large/.test(error.description)))
-          error = `File too large (${page.getPrettyBytes(file.size)}).`
+        if (/^File is too big/.test(err) && /File too large/.test(err))
+          err = `File too large (${page.getPrettyBytes(file.size)}).`
 
         page.updateTemplateIcon(file.previewElement, 'icon-block')
 
         file.previewElement.querySelector('.descriptive-progress').classList.add('is-hidden')
 
-        file.previewElement.querySelector('.error').innerHTML = error.description || error
+        file.previewElement.querySelector('.error').innerHTML = err
         file.previewElement.querySelector('.error').classList.remove('is-hidden')
       })
     },
@@ -518,15 +541,7 @@ page.prepareDropzone = () => {
           // strip tags cannot yet be configured per file with this API
           striptags: page.stripTags
         }
-      }).catch(error => {
-        // Format error for display purpose
-        return error.response.data ? error.response : {
-          data: {
-            success: false,
-            description: error.toString()
-          }
-        }
-      }).then(response => {
+      }).catch(error => page.onAxiosError(error, true)).then(response => {
         file.previewElement.querySelector('.descriptive-progress').classList.add('is-hidden')
 
         if (response.data.success === false) {
@@ -612,15 +627,7 @@ page.processUrlsQueue = () => {
         age: page.uploadAge,
         filelength: page.fileLength
       }
-    }).catch(error => {
-      // Format error for display purpose
-      return error.response.data ? error.response : {
-        data: {
-          success: false,
-          description: error.toString()
-        }
-      }
-    }).then(response => {
+    }).catch(error => page.onAxiosError(error, true)).then(response => {
       return finishedUrlUpload(file, response.data)
     })
   }
