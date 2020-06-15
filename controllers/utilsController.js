@@ -254,59 +254,49 @@ self.generateThumbs = async (name, extname, force) => {
       }
     } else if (self.videoExts.includes(extname)) {
       const metadata = await self.ffprobe(input)
-      const duration = parseInt(metadata.format.duration)
 
-      // Skip files that have neither video streams/channels nor valid duration metadata
-      if (!metadata.streams || !metadata.streams.some(s => s.codec_type === 'video') || isNaN(duration))
-        throw 'File does not have valid required data'
+      const duration = parseInt(metadata.format.duration)
+      if (isNaN(duration))
+        throw 'Warning: File does not have valid duration metadata'
+
+      const videoStream = metadata.streams && metadata.streams.find(s => s.codec_type === 'video')
+      if (!videoStream || !videoStream.width || !videoStream.height)
+        throw 'Warning: File does not have valid video stream metadata'
 
       await new Promise((resolve, reject) => {
         ffmpeg(input)
-          .seekInput(duration * 20 / 100)
-          .frames(1)
-          .videoFilters([
-            {
-              filter: 'select',
-              options: 'eq(pict_type\\,I)'
-            },
-            {
-              filter: 'scale',
-              options: `${self.thumbsSize}:${self.thumbsSize}:force_original_aspect_ratio=decrease`
-            }
-          ])
-          .output(thumbname)
-          .on('error', async error => {
-            // Try to unlink thumbnail,
-            // since ffmpeg may have created an incomplete thumbnail
-            try {
-              await paths.unlink(thumbname)
-            } catch (err) {
-              if (err && err.code !== 'ENOENT')
-                logger.error(`[${name}]: ${err.toString()}`)
-            }
-            return reject(error)
+          .on('error', error => reject(error))
+          .on('end', () => resolve())
+          .screenshots({
+            folder: paths.thumbs,
+            filename: name.slice(0, -extname.length) + '.png',
+            timestamps: ['20%'],
+            size: videoStream.width >= videoStream.height
+              ? `${self.thumbsSize}x?`
+              : `?x${self.thumbsSize}`
           })
-          .on('end', () => resolve(true))
-          .run()
       })
+        .catch(error => error) // Error passthrough
+        .then(async error => {
+          // FFMPEG would just warn instead of exiting with errors when dealing with incomplete files
+          // Sometimes FFMPEG would throw errors but actually somehow succeeded in making the thumbnails
+          // (this could be a fallback mechanism of fluent-ffmpeg library instead)
+          // So instead we check if the thumbnail exists to really make sure
+          try {
+            await paths.lstat(thumbname)
+            return true
+          } catch (err) {
+            if (err.code === 'ENOENT')
+              throw error || 'Warning: FFMPEG exited with empty output file'
+            else
+              throw error || err
+          }
+        })
     } else {
       return false
     }
   } catch (error) {
-    // TODO: Parse ffmpeg/ffprobe errors into concise error messages (get rid of versions info)
-    // Suppress error logging for errors matching these patterns
-    const errorString = error.toString()
-    const suppress = [
-      /Input file contains unsupported image format/,
-      /Invalid data found when processing input/,
-      /File does not have valid required data/,
-      /Could not find codec parameters/,
-      /Duplicate element/
-    ]
-
-    if (!suppress.some(t => t.test(errorString)))
-      logger.error(`[${name}]: ${errorString}`)
-
+    logger.error(`[${name}]: ${error.toString().trim()}`)
     try {
       await paths.symlink(paths.thumbPlaceholder, thumbname)
       return true
