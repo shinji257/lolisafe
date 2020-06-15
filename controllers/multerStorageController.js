@@ -37,32 +37,53 @@ DiskStorage.prototype._handleFile = function _handleFile (req, file, cb) {
       if (err) return cb(err)
 
       const finalPath = path.join(destination, filename)
-      const outStream = fs.createWriteStream(finalPath)
-
-      let hash = null
-      if (!file._ischunk) {
-        hash = blake3.createHash()
-        const onerror = function (err) {
-          hash.dispose()
-          cb(err)
-        }
-        outStream.on('error', onerror)
-        file.stream.on('error', onerror)
-        file.stream.on('data', d => hash.update(d))
-      } else {
-        outStream.on('error', cb)
+      const onerror = err => {
+        hash.dispose()
+        cb(err)
       }
 
-      file.stream.pipe(outStream)
-      outStream.on('finish', function () {
-        cb(null, {
-          destination,
-          filename,
-          path: finalPath,
-          size: outStream.bytesWritten,
-          hash: hash && hash.digest('hex')
+      let outStream
+      let hash
+      if (file._isChunk) {
+        if (!file._chunksData.stream) {
+          file._chunksData.stream = fs.createWriteStream(finalPath, { flags: 'a' })
+          file._chunksData.stream.on('error', onerror)
+        }
+        if (!file._chunksData.hasher)
+          file._chunksData.hasher = blake3.createHash()
+
+        outStream = file._chunksData.stream
+        hash = file._chunksData.hasher
+      } else {
+        outStream = fs.createWriteStream(finalPath)
+        outStream.on('error', onerror)
+        hash = blake3.createHash()
+      }
+
+      file.stream.on('error', onerror)
+      file.stream.on('data', d => hash.update(d))
+
+      if (file._isChunk) {
+        file.stream.on('end', () => {
+          cb(null, {
+            destination,
+            filename,
+            path: finalPath
+          })
         })
-      })
+        file.stream.pipe(outStream, { end: false })
+      } else {
+        outStream.on('finish', () => {
+          cb(null, {
+            destination,
+            filename,
+            path: finalPath,
+            size: outStream.bytesWritten,
+            hash: hash.digest('hex')
+          })
+        })
+        file.stream.pipe(outStream)
+      }
     })
   })
 }
