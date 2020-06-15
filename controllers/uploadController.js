@@ -692,7 +692,7 @@ self.storeFilesToDb = async (req, res, user, infoMap) => {
 
     // Generate thumbs, but do not wait
     if (utils.mayGenerateThumb(info.data.extname))
-      utils.generateThumbs(info.data.filename, info.data.extname).catch(logger.error)
+      utils.generateThumbs(info.data.filename, info.data.extname, true).catch(logger.error)
   }))
 
   if (files.length) {
