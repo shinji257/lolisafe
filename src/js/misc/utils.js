@@ -4,6 +4,9 @@
 lsKeys.siBytes = 'siBytes'
 
 page.prepareShareX = () => {
+  const sharexElement = document.querySelector('#ShareX')
+  if (!sharexElement) return
+
   const values = page.token ? {
     token: page.token || '',
     albumid: page.album || ''
@@ -21,7 +24,6 @@ page.prepareShareX = () => {
   const origin = (window.location.hostname + window.location.pathname).replace(/\/(dashboard)?$/, '')
   const originClean = origin.replace(/\//g, '_')
 
-  const sharexElement = document.querySelector('#ShareX')
   const sharexFile = `{
   "Name": "${originClean}",
   "DestinationType": "ImageUploader, FileUploader",
