@@ -52,7 +52,7 @@ class ChunksData {
   }
 
   onTimeout () {
-    if (this.stream)
+    if (this.stream && !this.stream.writableEnded)
       this.stream.end()
     if (this.hasher)
       this.hasher.dispose()
