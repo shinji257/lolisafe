@@ -29,6 +29,7 @@ const maxFilesPerUpload = 20
 const chunkedUploads = config.uploads.chunkSize &&
   typeof config.uploads.chunkSize === 'object' &&
   config.uploads.chunkSize.default
+const chunkedUploadsTimeout = config.uploads.chunkSize.timeout || 1800000
 const chunksData = {}
 //  Hard-coded min chunk size of 1 MB (e.g. 50 MB = max 50 chunks)
 const maxChunksCount = maxSize
@@ -39,6 +40,35 @@ const urlExtensionsFilter = Array.isArray(config.uploads.urlExtensionsFilter) &&
   config.uploads.urlExtensionsFilter.length
 const temporaryUploads = Array.isArray(config.uploads.temporaryUploadAges) &&
   config.uploads.temporaryUploadAges.length
+
+class ChunksData {
+  constructor (uuid, root) {
+    this.uuid = uuid
+    this.root = root
+    this.filename = 'tmp'
+    this.chunks = 0
+    this.stream = null
+    this.hasher = null
+  }
+
+  onTimeout () {
+    if (this.stream)
+      this.stream.end()
+    if (this.hasher)
+      this.hasher.dispose()
+    self.cleanUpChunks(this.uuid, true)
+  }
+
+  setTimeout (delay) {
+    this.clearTimeout()
+    this._timeout = setTimeout(this.onTimeout.bind(this), delay)
+  }
+
+  clearTimeout () {
+    if (this._timeout)
+      clearTimeout(this._timeout)
+  }
+}
 
 const initChunks = async uuid => {
   if (chunksData[uuid] === undefined) {
@@ -51,14 +81,9 @@ const initChunks = async uuid => {
         throw err
       await paths.mkdir(root)
     }
-    chunksData[uuid] = {
-      root,
-      filename: 'tmp',
-      chunks: 0,
-      stream: null,
-      hasher: null
-    }
+    chunksData[uuid] = new ChunksData(uuid, root)
   }
+  chunksData[uuid].setTimeout(chunkedUploadsTimeout)
   return chunksData[uuid]
 }
 
@@ -539,7 +564,7 @@ self.actuallyFinishChunks = async (req, res, user) => {
   }
 }
 
-self.cleanUpChunks = async (uuid) => {
+self.cleanUpChunks = async (uuid, onTimeout) => {
   // Remove tmp file
   await paths.unlink(path.join(chunksData[uuid].root, chunksData[uuid].filename))
     .catch(error => {
@@ -549,6 +574,7 @@ self.cleanUpChunks = async (uuid) => {
   // Remove UUID dir
   await paths.rmdir(chunksData[uuid].root)
   // Delete cached chunks data
+  if (!onTimeout) chunksData[uuid].clearTimeout()
   delete chunksData[uuid]
 }
 

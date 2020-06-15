@@ -208,23 +208,32 @@ module.exports = {
 
     /*
       Chunk size for chunked uploads. Needs to be in MB.
+
       If this is enabled, every files uploaded from the homepage uploader
       will forcibly be chunked by the size specified in "default".
       Users can configure the chunk size they want from the homepage uploader,
       but you can force allowed max size of each chunk with "max".
       Min size will always be 1MB.
+
       Users will still be able to upload bigger files with the API
       as long as they don't surpass the limit specified in the "maxSize" option above.
       Once all chunks have been uploads, their total size
       will be tested against the "maxSize" option again.
+
+      With "timeout", you can specify how long a particular chunked upload attempt
+      can remain inactive before their temporary data gets cleared out
+      (partially uploaded files or other internal data).
+
       This option is mainly useful for hosters that use Cloudflare,
       since Cloudflare limits upload size to 100MB on their Free plan.
       https://support.cloudflare.com/hc/en-us/articles/200172516#h_51422705-42d0-450d-8eb1-5321dcadb5bc
-      NOTE: Set to falsy value to disable chunked uploads.
+
+      NOTE: Set "default" or the option itself to falsy value to disable chunked uploads.
     */
     chunkSize: {
       max: '95MB',
-      default: '25MB'
+      default: '25MB',
+      timeout: 30 * 60 * 1000 // 30 minutes
     },
 
     /*
