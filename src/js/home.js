@@ -158,7 +158,7 @@ page.checkIfPublic = () => {
   return axios.get('api/check', {
     onDownloadProgress: () => {
       // Only load render after this request has been initiated to avoid blocking
-      if (render !== undefined && !render.triggered)
+      if (typeof render !== 'undefined' && !render.done)
         render.do()
       else if (!page.apiChecked)
         page.apiChecked = true

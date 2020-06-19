@@ -56,7 +56,7 @@ const render = {
   },
   config: null,
   selected: null,
-  triggered: false
+  done: false
 }
 
 // miku: Generate an array of file names from 001.png to 050.png
@@ -117,11 +117,12 @@ render.parseVersion = () => {
 }
 
 render.do = reload => {
-  if (!render.triggered)
-    render.triggered = true
+  if (!render.done)
+    render.done = true
 
   render.config = render.configs[render.type]
-  if (!render.config || !render.config.array.length) return
+  if (!render.config || !render.config.array.length)
+    return
 
   const previousElement = document.querySelector('body > .render')
   if (previousElement)
@@ -154,9 +155,14 @@ render.do = reload => {
   document.body.appendChild(element)
 }
 
-window.addEventListener('DOMContentLoaded', () => {
+render.onloaded = () => {
   // If the main script had already done its API check, yet render haven't been triggered, do it
   // This would only happen if this render script only gets loaded after the main script's API check
-  if (page !== undefined && page.apiChecked && !render.triggered)
+  if (typeof page !== 'undefined' && page.apiChecked && !render.done)
     render.do()
-})
+}
+
+if (document.readyState === 'interactive' || document.readyState === 'complete')
+  render.onloaded()
+else
+  window.addEventListener('DOMContentLoaded', () => render.onloaded())
