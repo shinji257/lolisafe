@@ -934,9 +934,9 @@ page.displayPreview = id => {
 
     if (isimage || isvideo) {
       div.innerHTML += `
-        <div class="field has-text-centered">
+        <div class="field has-text-right">
           <div class="controls">
-            <a id="swalOriginal" type="button" class="button is-info is-outlined is-fullwidth" data-original="${file.file}">
+            <a id="swalOriginal" type="button" class="button is-info" data-original="${file.file}">
               <span class="icon">
                 <i class="icon-arrows-cw"></i>
               </span>
@@ -2909,7 +2909,7 @@ page.getStatistics = (params = {}) => {
   })
 }
 
-window.onload = () => {
+window.addEventListener('DOMContentLoaded', () => {
   // Polyfill Object.assign()
   // eslint-disable-next-line compat/compat
   if (typeof Object.assign !== 'function')
@@ -2958,4 +2958,4 @@ window.onload = () => {
   page.clipboardJS.on('error', page.onError)
 
   page.lazyLoad = new LazyLoad()
-}
+})

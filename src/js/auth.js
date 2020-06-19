@@ -96,7 +96,7 @@ page.verify = () => {
   })
 }
 
-window.onload = () => {
+window.addEventListener('DOMContentLoaded', () => {
   page.user = document.querySelector('#user')
   page.pass = document.querySelector('#pass')
 
@@ -124,4 +124,4 @@ window.onload = () => {
     page.verify()
   else
     page.unhide()
-}
+})

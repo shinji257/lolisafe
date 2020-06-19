@@ -1,4 +1,4 @@
-/* global swal, axios, Dropzone, ClipboardJS, LazyLoad */
+/* global render, swal, axios, Dropzone, ClipboardJS, LazyLoad */
 
 const lsKeys = {
   token: 'token',
@@ -16,6 +16,7 @@ const page = {
   token: localStorage[lsKeys.token],
 
   // configs from api/check
+  apiChecked: false,
   private: null,
   enableUserAccounts: null,
   maxSize: null,
@@ -154,14 +155,13 @@ page.checkClientVersion = apiVersion => {
 }
 
 page.checkIfPublic = () => {
-  let renderShown = false
   return axios.get('api/check', {
     onDownloadProgress: () => {
-      // Only show render after this request has been initiated to avoid blocking
-      if (!renderShown && typeof page.doRender === 'function') {
-        page.doRender()
-        renderShown = true
-      }
+      // Only load render after this request has been initiated to avoid blocking
+      if (render !== undefined && !render.triggered)
+        render.do()
+      else if (!page.apiChecked)
+        page.apiChecked = true
     }
   }).then(response => {
     if (response.data.version)
@@ -1092,7 +1092,7 @@ window.addEventListener('paste', event => {
   }
 })
 
-window.onload = () => {
+window.addEventListener('DOMContentLoaded', () => {
   if (window.cookieconsent)
     window.cookieconsent.initialise({
       cookie: {
@@ -1141,4 +1141,4 @@ window.onload = () => {
   document.querySelector('#createAlbum').addEventListener('click', () => {
     page.createAlbum()
   })
-}
+})
