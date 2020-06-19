@@ -7,38 +7,37 @@ page.prepareShareX = () => {
   const sharexElement = document.querySelector('#ShareX')
   if (!sharexElement) return
 
-  const values = page.token ? {
-    token: page.token || '',
-    albumid: page.album || ''
-  } : {}
-  values.filelength = page.fileLength || ''
-  values.age = page.uploadAge || ''
-  values.striptags = page.stripTags || ''
+  const headers = {}
 
-  const headers = []
-  const keys = Object.keys(values)
-  for (let i = 0; i < keys.length; i++)
-    // Pad by 4 space
-    headers.push(`    "${keys[i]}": "${values[keys[i]]}"`)
+  if (page.token) {
+    headers.token = page.token || ''
+    headers.albumid = page.album || ''
+  }
+
+  headers.filelength = page.fileLength || ''
+  headers.age = page.uploadAge || ''
+  headers.striptags = page.stripTags || ''
 
   const origin = (window.location.hostname + window.location.pathname).replace(/\/(dashboard)?$/, '')
   const originClean = origin.replace(/\//g, '_')
 
-  const sharexFile = `{
-  "Name": "${originClean}",
-  "DestinationType": "ImageUploader, FileUploader",
-  "RequestMethod": "POST",
-  "RequestURL": "${window.location.protocol}//${origin}/api/upload",
-  "Headers": {
-${headers.join(',\n')}
-  },
-  "Body": "MultipartFormData",
-  "FileFormName": "files[]",
-  "URL": "$json:files[0].url$",
-  "ThumbnailURL": "$json:files[0].url$"
-}`
+  const sharexConfObj = {
+    Name: originClean,
+    DestinationType: 'ImageUploader, FileUploader',
+    RequestMethod: 'POST',
+    RequestURL: `${window.location.protocol}//${origin}/api/upload`,
+    Headers: headers,
+    Body: 'MultipartFromData',
+    FileFormName: 'files[]',
+    URL: '$json:files[0].url$',
+    ThumbnailURL: '$json:files[0].url$'
+  }
 
-  const sharexBlob = new Blob([sharexFile], { type: 'application/octet-binary' })
+  if (page.token)
+    sharexConfObj.DeletionURL = '$json:files[0].deleteUrl$'
+
+  const sharexConfStr = JSON.stringify(sharexConfObj, null, 2)
+  const sharexBlob = new Blob([sharexConfStr], { type: 'application/octet-binary' })
   /* eslint-disable-next-line compat/compat */
   sharexElement.setAttribute('href', URL.createObjectURL(sharexBlob))
   sharexElement.setAttribute('download', `${originClean}.sxcu`)

@@ -767,6 +767,10 @@ page.createAlbum = () => {
 }
 
 page.prepareUploadConfig = () => {
+  // This object should only be used to set fallback values for page[key]
+  // (essentially for page[key] properties that explicitly need to be set as something)
+  // As for default values in the Config tab (which will not set page[key]),
+  // check out number.default property of each config
   const fallback = {
     chunkSize: page.chunkSizeConfig.default,
     parallelUploads: 2
@@ -794,6 +798,7 @@ page.prepareUploadConfig = () => {
       number: fileIdentifierLength ? {
         min: page.fileIdentifierLength.min,
         max: page.fileIdentifierLength.max,
+        default: page.fileIdentifierLength.default,
         round: true
       } : undefined,
       help: true, // true means auto-generated, for number-based configs only
@@ -822,6 +827,7 @@ page.prepareUploadConfig = () => {
       number: {
         min: 1,
         max: page.chunkSizeConfig.max,
+        default: fallback.chunkSize,
         suffix: ' MB',
         round: true
       },
@@ -832,6 +838,7 @@ page.prepareUploadConfig = () => {
       number: {
         min: 1,
         max: 10,
+        default: fallback.parallelUploads,
         round: true
       },
       help: true
@@ -879,7 +886,6 @@ page.prepareUploadConfig = () => {
   }
 
   if (fileIdentifierLength) {
-    fallback.fileLength = page.fileIdentifierLength.default || undefined
     const stored = parseInt(localStorage[lsKeys.fileLength])
     if (!page.fileIdentifierLength.force &&
       !isNaN(stored) &&
@@ -952,7 +958,7 @@ page.prepareUploadConfig = () => {
           ${opts.join('\n')}
         </select>
       `
-    } else if (conf.number !== undefined) {
+    } else if (conf.number) {
       control = document.createElement('input')
       control.id = control.name = key
       control.className = 'input is-fullwidth'
@@ -964,8 +970,8 @@ page.prepareUploadConfig = () => {
         control.max = conf.number.max
       if (typeof value === 'number')
         control.value = value
-      else if (fallback[key] !== undefined)
-        control.value = fallback[key]
+      else if (conf.number.default !== undefined)
+        control.value = conf.number.default
     }
 
     let help
@@ -980,8 +986,8 @@ page.prepareUploadConfig = () => {
     } else if (conf.help === true && conf.number !== undefined) {
       const tmp = []
 
-      if (fallback[key] !== undefined)
-        tmp.push(`Default is ${fallback[key]}${conf.number.suffix || ''}.`)
+      if (conf.number.default !== undefined)
+        tmp.push(`Default is ${conf.number.default}${conf.number.suffix || ''}.`)
       if (conf.number.min !== undefined)
         tmp.push(`Min is ${conf.number.min}${conf.number.suffix || ''}.`)
       if (conf.number.max !== undefined)
@@ -1037,7 +1043,7 @@ page.prepareUploadConfig = () => {
           value = Math.min(Math.max(parsed, config[key].number.min), config[key].number.max)
       }
 
-      if (value !== undefined && value !== fallback[key])
+      if (value !== undefined && config[key].number && value !== config[key].number.default)
         localStorage[lsKeys[key]] = value
       else
         localStorage.removeItem(lsKeys[key])

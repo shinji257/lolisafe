@@ -320,7 +320,7 @@ self.actuallyUploadFiles = async (req, res, user, albumid, age) => {
   await self.stripTags(req, infoMap)
 
   const result = await self.storeFilesToDb(req, res, user, infoMap)
-  await self.sendUploadResponse(req, res, result)
+  await self.sendUploadResponse(req, res, user, result)
 }
 
 self.actuallyUploadUrls = async (req, res, user, albumid, age) => {
@@ -418,7 +418,7 @@ self.actuallyUploadUrls = async (req, res, user, albumid, age) => {
     }
 
     const result = await self.storeFilesToDb(req, res, user, infoMap)
-    await self.sendUploadResponse(req, res, result)
+    await self.sendUploadResponse(req, res, user, result)
   } catch (error) {
     // Unlink all downloaded files when at least one file threw an error from the for-loop
     // Should continue even when encountering errors
@@ -544,7 +544,7 @@ self.actuallyFinishChunks = async (req, res, user) => {
     await self.stripTags(req, infoMap)
 
     const result = await self.storeFilesToDb(req, res, user, infoMap)
-    await self.sendUploadResponse(req, res, result)
+    await self.sendUploadResponse(req, res, user, result)
   } catch (error) {
     // Dispose unfinished hasher and clean up leftover chunks
     // Should continue even when encountering errors
@@ -733,7 +733,7 @@ self.storeFilesToDb = async (req, res, user, infoMap) => {
   return files.concat(exists)
 }
 
-self.sendUploadResponse = async (req, res, result) => {
+self.sendUploadResponse = async (req, res, user, result) => {
   // Send response
   res.json({
     success: true,
@@ -751,18 +751,35 @@ self.sendUploadResponse = async (req, res, result) => {
       if (req.path === '/nojs')
         map.original = file.original
 
+      // If uploaded by user, add delete URL (intended for ShareX and its derivatives)
+      // Homepage uploader will not use this (use dashboard instead)
+      if (user)
+        map.deleteUrl = `${config.homeDomain}/api/upload/delete/${file.name}`
+
       return map
     })
   })
 }
 
 self.delete = async (req, res) => {
-  // Map /delete requests to /bulkdelete route
-  const id = parseInt(req.body.id)
-  const body = {
-    field: 'id',
-    values: isNaN(id) ? undefined : [id]
+  // Map /api/delete requests to /api/bulkdelete
+  let body
+  if (req.method === 'POST') {
+    // Original lolisafe API (this fork uses /api/bulkdelete immediately)
+    const id = parseInt(req.body.id)
+    body = {
+      field: 'id',
+      values: isNaN(id) ? undefined : [id]
+    }
+  } else if (req.method === 'GET') {
+    // ShareX-compatible API (or other clients that require basic GET-based API)
+    const name = req.params.name
+    body = {
+      field: 'name',
+      values: name ? [name] : undefined
+    }
   }
+
   req.body = body
   return self.bulkDelete(req, res)
 }
