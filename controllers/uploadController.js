@@ -776,14 +776,14 @@ self.delete = async (req, res) => {
       field: 'id',
       values: isNaN(id) ? undefined : [id]
     }
-  } else if (req.method === 'GET') {
+  } /* else if (req.method === 'GET') {
     // ShareX-compatible API (or other clients that require basic GET-based API)
     const name = req.params.name
     body = {
       field: 'name',
       values: name ? [name] : undefined
     }
-  }
+  } */
 
   req.body = body
   return self.bulkDelete(req, res)
