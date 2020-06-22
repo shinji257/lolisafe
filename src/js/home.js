@@ -1039,11 +1039,11 @@ page.prepareUploadConfig = () => {
           value = form.elements[key].value
       } else if (config[key].number !== undefined) {
         const parsed = parseInt(form.elements[key].value)
-        if (!isNaN(parsed))
+        if (!isNaN(parsed) && parsed !== config[key].number.default)
           value = Math.min(Math.max(parsed, config[key].number.min), config[key].number.max)
       }
 
-      if (value !== undefined && config[key].number && value !== config[key].number.default)
+      if (value !== undefined)
         localStorage[lsKeys[key]] = value
       else
         localStorage.removeItem(lsKeys[key])
