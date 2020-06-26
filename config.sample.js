@@ -49,7 +49,7 @@ module.exports = {
     This will load public/libs/cookieconsent/cookieconsent.min.{css,js} on homepage (configured from home.js).
     You may use this if you have some specific needs, since lolisafe by itself will not use Cookies at all.
     Instead it will use Local Storage for both authentication and preferences/states in Dashboard.
-    I'm not sure if Cookies Laws apply to Local Storage as well, although I supppose it makes sense if they do.
+    I'm not sure if Cookies Laws apply to Local Storage as well, although I suppose it makes sense if they do.
     NOTE: Enabling this will automatically push 'cookiepolicy' to pages array above.
   */
   cookiePolicy: false,
@@ -333,7 +333,7 @@ module.exports = {
       https://github.com/NingLin-P/clamdjs#scannerscanfilepath-timeout-chunksize
 
       groupBypass: Name of the lowest ranked group whose files will not be scanned.
-      Lowest ranked meanning that group AND any groups higher than it are included.
+      Lowest ranked meaning that group AND any groups higher than it are included.
       Example: 'moderator' = moderators, admins & superadmins.
     */
     scan: {
@@ -493,7 +493,7 @@ module.exports = {
       maximum total size of files in an album that can be zipped.
       It's worth nothing that Cloudflare will not cache files bigger than 512MB.
       However, it's not recommended to do that in high-bandwidth sites anyway,
-      since long-caching of such huge files are aganst Cloudflare's Terms of Service.
+      since long-caching of such huge files are against Cloudflare's Terms of Service.
       NOTE: Set to falsy value to disable max total size.
     */
     zipMaxTotalSize: '512MB',
