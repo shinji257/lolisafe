@@ -489,22 +489,35 @@ module.exports = {
 
     /*
       If you have a Page Rule in Cloudflare to cache everything in the album zip
-      API route (homeDomain/api/album/zip/*), with this option you can limit the
+      API route (e.g. homeDomain/api/album/zip/*), with this option you can limit the
       maximum total size of files in an album that can be zipped.
-      Cloudflare will not cache files bigger than 512MB.
+      It's worth nothing that Cloudflare will not cache files bigger than 512MB.
+      However, it's not recommended to do that in high-bandwidth sites anyway,
+      since long-caching of such huge files are aganst Cloudflare's Terms of Service.
       NOTE: Set to falsy value to disable max total size.
     */
     zipMaxTotalSize: '512MB',
 
     /*
-      If you want to make it automatically call Cloudflare's API to purge cache on file delete,
-      fill your API key, email and your site's zone ID below, then set "purgeCache" to true.
-      This will only purge cache of the deleted file and its associated thumb.
+      If you want the service to automatically use Cloudflare API to purge cache on file deletion,
+      fill your zone ID below. It will only purge cache of the deleted file, and its thumbs if applicable.
+      Afterwards, you will have to choose any of the supported auth methods, which are:
+      API token, user service key, OR API key + email.
+      If more than one are provided, it will use the first one from left to right, but it will NOT
+      attempt to use the next methods even if the selected one fails (meaning there's no fallback mechanism).
+      Consult https://api.cloudflare.com/#getting-started-requests for differences.
+      API token configuration example: https://github.com/BobbyWibowo/lolisafe/pull/216#issue-440389284.
+      After everything is ready, you can then set "purgeCache" to true.
     */
-    apiKey: '',
-    email: '',
     zoneId: '',
-    purgeCache: false
+    purgeCache: false,
+
+    apiToken: '',
+
+    userServiceKey: '',
+
+    apiKey: '',
+    email: ''
   },
 
   /*

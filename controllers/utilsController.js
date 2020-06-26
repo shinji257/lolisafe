@@ -64,8 +64,9 @@ const statsCache = {
   }
 }
 
-const cloudflareAuth = config.cloudflare && config.cloudflare.apiKey &&
-  config.cloudflare.email && config.cloudflare.zoneId
+const cloudflareAuth = config.cloudflare && config.cloudflare.zoneId &&
+  (config.cloudflare.apiToken || config.cloudflare.userServiceKey ||
+  (config.cloudflare.apiKey && config.cloudflare.email))
 
 self.mayGenerateThumb = extname => {
   return (config.uploads.generateThumbs.image && self.imageExts.includes(extname)) ||
@@ -478,12 +479,13 @@ self.bulkDeleteFromDb = async (field, values, user) => {
 }
 
 self.purgeCloudflareCache = async (names, uploads, thumbs) => {
-  if (!Array.isArray(names) || !names.length || !cloudflareAuth)
-    return [{
-      success: false,
-      files: [],
-      errors: ['An unexpected error occured.']
-    }]
+  const errors = []
+  if (!cloudflareAuth)
+    errors.push('Cloudflare auth is incomplete or missing')
+  if (!Array.isArray(names) || !names.length)
+    errors.push('Names array is invalid or empty')
+  if (errors.length)
+    return [{ success: false, files: [], errors }]
 
   let domain = config.domain
   if (!uploads) domain = config.homeDomain
@@ -521,15 +523,24 @@ self.purgeCloudflareCache = async (names, uploads, thumbs) => {
     }
 
     try {
+      const headers = {
+        'Content-Type': 'application/json'
+      }
+      if (config.cloudflare.apiToken) {
+        headers.Authorization = `Bearer ${config.cloudflare.apiToken}`
+      } else if (config.cloudflare.userServiceKey) {
+        headers['X-Auth-User-Service-Key'] = config.cloudflare.userServiceKey
+      } else if (config.cloudflare.apiKey && config.cloudflare.email) {
+        headers['X-Auth-Key'] = config.cloudflare.apiKey
+        headers['X-Auth-Email'] = config.cloudflare.email
+      }
+
       const purge = await fetch(url, {
         method: 'POST',
         body: JSON.stringify({ files: chunk }),
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Auth-Email': config.cloudflare.email,
-          'X-Auth-Key': config.cloudflare.apiKey
-        }
+        headers
       })
+
       const response = await purge.json()
       result.success = response.success
       if (Array.isArray(response.errors) && response.errors.length)
