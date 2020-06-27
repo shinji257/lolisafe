@@ -116,7 +116,9 @@ window.addEventListener('DOMContentLoaded', () => {
   const registerBtn = document.querySelector('#registerBtn')
   if (registerBtn)
     registerBtn.addEventListener('click', event => {
-      if (!form.checkValidity()) return
+      if (!form.checkValidity())
+        // Workaround for browsers to display native form error messages
+        return loginBtn.click()
       page.do('register', event.currentTarget)
     })
 
