@@ -18,7 +18,7 @@ page.prepareShareX = () => {
   headers.age = page.uploadAge || ''
   headers.striptags = page.stripTags || ''
 
-  const origin = (window.location.hostname + window.location.pathname).replace(/\/(dashboard)?$/, '')
+  const origin = (window.location.host + window.location.pathname).replace(/\/(dashboard)?$/, '')
   const originClean = origin.replace(/\//g, '_')
 
   const sharexConfObj = {
