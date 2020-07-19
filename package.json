@@ -77,5 +77,8 @@
     "postcss-preset-env": "~6.7.0",
     "stylelint": "~13.6.1",
     "stylelint-config-standard": "~20.0.0"
+  },
+  "resolutions": {
+    "sqlite3/node-addon-api": "2.0.1"
   }
 }
