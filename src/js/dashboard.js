@@ -864,8 +864,7 @@ page.getUploads = (params = {}) => {
 
     if (page.currentView === 'uploads')
       page.views.uploads.album = params.album
-    if (page.currentView === 'uploadsAll')
-      page.views.uploadsAll.filters = params.filters
+    page.views[page.currentView].filters = params.filters
     page.views[page.currentView].pageNum = files.length ? params.pageNum : 0
   }).catch(error => {
     page.updateTrigger(params.trigger)
