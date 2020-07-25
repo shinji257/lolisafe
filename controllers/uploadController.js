@@ -848,7 +848,8 @@ self.list = async (req, res) => {
     // Columns mapping
     maps: {
       date: 'timestamp',
-      expiry: 'expirydate'
+      expiry: 'expirydate',
+      originalname: 'original'
     },
     // Columns with which to use SQLite's NULLS LAST option
     nullsLast: [
@@ -1080,6 +1081,7 @@ self.list = async (req, res) => {
         'expirydate',
         'id',
         'name',
+        'original',
         'size',
         'timestamp'
       ]
