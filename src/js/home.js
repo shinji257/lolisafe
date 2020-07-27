@@ -1,4 +1,4 @@
-/* global render, swal, axios, Dropzone, ClipboardJS, LazyLoad */
+/* global swal, axios, Dropzone, ClipboardJS, LazyLoad */
 
 const lsKeys = {
   token: 'token',
@@ -157,10 +157,17 @@ page.checkClientVersion = apiVersion => {
 page.checkIfPublic = () => {
   return axios.get('api/check', {
     onDownloadProgress: () => {
-      // Only load render after this request has been initiated to avoid blocking
+      // Only do render and/or newsfeed after this request has been initiated to avoid blocking
+
+      /* global render */
       if (typeof render !== 'undefined' && !render.done)
         render.do()
-      else if (!page.apiChecked)
+
+      /* global newsfeed */
+      if (typeof newsfeed !== 'undefined' && !newsfeed.done)
+        newsfeed.do()
+
+      if (!page.apiChecked)
         page.apiChecked = true
     }
   }).then(response => {
