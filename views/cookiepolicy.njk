@@ -4,8 +4,9 @@
 {% extends "_layout.njk" %}
 
 {% block stylesheets %}
-{{ super() }}
+<!-- Libs stylesheets -->
 <link rel="stylesheet" href="libs/fontello/fontello.css{{ versions[1] }}">
+{{ super() }}
 {% endblock %}
 
 {% block content %}
@@ -18,7 +19,7 @@
     </p>
     <hr>
 
-    <h3 class="subtitle is-brighter">What are cookies? -or- How to disable cookies?</h3>
+    <h3 class="subtitle has-text-white-ter">What are cookies? -or- How to disable cookies?</h3>
     <article class="message">
       <div class="message-body">
         <strong>Simply put, a cookie is a technology for remembering something about you.</strong><br>
@@ -26,7 +27,7 @@
       </div>
     </article>
 
-    <h3 class="subtitle is-brighter">How We Use Cookies</h3>
+    <h3 class="subtitle has-text-white-ter">How We Use Cookies</h3>
     <article class="message">
       <div class="message-body">
         We use cookies for a variety of reasons detailed below.<br>
@@ -35,14 +36,14 @@
       </div>
     </article>
 
-    <h3 class="subtitle is-brighter">Account related cookies</h3>
+    <h3 class="subtitle has-text-white-ter">Account related cookies</h3>
     <article class="message">
       <div class="message-body">
         If you create an account with us, then we will use cookies for the management of the signup process and general administration.
       </div>
     </article>
 
-    <h3 class="subtitle is-brighter">Login related cookies</h3>
+    <h3 class="subtitle has-text-white-ter">Login related cookies</h3>
     <article class="message">
       <div class="message-body">
         We use cookies when you are logged in so that we can remember that you are logged in.<br>
@@ -51,7 +52,7 @@
       </div>
     </article>
 
-    <h3 class="subtitle is-brighter">What information do we know about you?</h3>
+    <h3 class="subtitle has-text-white-ter">What information do we know about you?</h3>
     <article class="message">
       <div class="message-body">
         We don’t request or require you to provide personal information to access our website.<br>
@@ -59,14 +60,14 @@
       </div>
     </article>
 
-    <h3 class="subtitle is-brighter">What about cookies?</h3>
+    <h3 class="subtitle has-text-white-ter">What about cookies?</h3>
     <article class="message">
       <div class="message-body">
         {{ globals.whole_cookie }} may place cookies on your browser in order to identify you when you return to our website.
       </div>
     </article>
 
-    <h3 class="subtitle is-brighter">Cookies We May Use</h3>
+    <h3 class="subtitle has-text-white-ter">Cookies We May Use</h3>
     <article class="message">
       <div class="message-body">
         We may use the following cookies:<br>
@@ -223,7 +224,7 @@
       </div>
     </article>
 
-    <h3 class="subtitle is-brighter">Questions?</h3>
+    <h3 class="subtitle has-text-white-ter">Questions?</h3>
     <article class="message">
       <div class="message-body">
         For more information, email <a href="mailto:{{ globals.email }}">{{ globals.email }}</a>.

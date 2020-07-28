@@ -776,7 +776,7 @@ page.getUploads = (params = {}) => {
         ${pagination}
         ${extraControls}
         ${controls}
-        <div class="table-container">
+        <div class="table-container has-text-left">
           <table class="table is-narrow is-fullwidth is-hoverable">
             <thead>
               <tr>
@@ -933,7 +933,7 @@ page.displayPreview = id => {
 
     if (isimage || isvideo) {
       div.innerHTML += `
-        <div class="field has-text-right">
+        <div class="field has-text-centered">
           <div class="controls">
             <a id="swalOriginal" type="button" class="button is-info" data-original="${file.file}">
               <span class="icon">
@@ -1718,7 +1718,7 @@ page.getAlbums = (params = {}) => {
       ${pagination}
       ${extraControls}
       ${controls}
-      <div class="table-container">
+      <div class="table-container has-text-left">
         <table class="table is-narrow is-fullwidth is-hoverable">
           <thead>
             <tr>
@@ -2354,7 +2354,7 @@ page.getUsers = (params = {}) => {
       ${pagination}
       ${extraControls}
       ${controls}
-      <div class="table-container">
+      <div class="table-container has-text-left">
         <table class="table is-narrow is-fullwidth is-hoverable">
           <thead>
             <tr>
@@ -2883,7 +2883,7 @@ page.getStatistics = (params = {}) => {
         }
 
       content += `
-        <div class="table-container">
+        <div class="table-container has-text-left">
           <table id="statistics" class="table is-narrow is-fullwidth is-hoverable">
             <thead>
               <tr>

@@ -6,8 +6,9 @@
 {% set enableUserAccounts = config.enableUserAccounts %}
 
 {% block stylesheets %}
-{{ super() }}
+<!-- Libs stylesheets -->
 <link rel="stylesheet" href="libs/fontello/fontello.css{{ versions[1] }}">
+{{ super() }}
 <link rel="stylesheet" href="css/sweetalert.css{{ versions[1] }}">
 {% endblock %}
 

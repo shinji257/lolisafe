@@ -10,11 +10,12 @@
 {% set cookiePolicy = config.cookiePolicy %}
 
 {% block stylesheets %}
-{{ super() }}
+<!-- Libs stylesheets -->
 <link rel="stylesheet" href="libs/fontello/fontello.css{{ versions[1] }}">
 {% if cookiePolicy -%}
 <link rel="stylesheet" href="libs/cookieconsent/cookieconsent.min.css{{ versions[3] }}">
 {%- endif %}
+{{ super() }}
 <link rel="stylesheet" href="css/sweetalert.css{{ versions[1] }}">
 <link rel="stylesheet" href="css/home.css{{ versions[1] }}">
 {% endblock %}
