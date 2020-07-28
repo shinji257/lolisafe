@@ -1,12 +1,4 @@
-html {
-  background-color: #000;
-  overflow-y: auto
-}
-
-body {
-  color: #eff0f1;
-  animation: fadeInOpacity 0.5s
-}
+/** Animations **/
 
 @-webkit-keyframes fadeInOpacity {
   0% {
@@ -26,6 +18,56 @@ body {
   100% {
     opacity: 1
   }
+}
+
+@-webkit-keyframes floatUp {
+  0% {
+    opacity: 0;
+    transform: scale(0.86)
+  }
+
+  25% {
+    opacity: 100
+  }
+
+  67% {
+    transform: scale(1)
+  }
+
+  100% {
+    transform: scale(1)
+  }
+}
+
+@keyframes floatUp {
+  0% {
+    opacity: 0;
+    transform: scale(0.86)
+  }
+
+  25% {
+    opacity: 100
+  }
+
+  67% {
+    transform: scale(1)
+  }
+
+  100% {
+    transform: scale(1)
+  }
+}
+
+/** General **/
+
+html {
+  background-color: #000;
+  overflow-y: auto
+}
+
+body {
+  color: #eff0f1;
+  animation: fadeInOpacity 0.5s
 }
 
 a {

@@ -61,24 +61,24 @@ newsfeed.formatNotification = item => {
   const dateDelta = Math.round((+new Date() - parsedDate) / 1000)
   const isRecentWeek = dateDelta <= 604800
 
-  const element = document.createElement('div')
+  const element = document.createElement('a')
   element.dataset.identifier = item.identifier
   element.className = 'notification is-info'
+  element.href = item.link
+  element.target = '_blank'
   element.innerHTML = `
     <button class="delete" title="Dismiss"></button>
     <div class="content">
       <div class="news-title">
-        <a href="${item.link}" target="_blank">${item.title || 'Untitled'}</a>
+        ${item.title || 'Untitled'}
       </div>
       <div class="news-excerpt">
         ${item.description
-          ? `${item.description.slice(-1) === '…'
-            ? `${item.description.slice(0, -1)} <a href="${item.link}" target="_blank">[…]</a>`
-            : item.description}`
+          ? `${item.description.slice(-1) === '…' ? `${item.description.slice(0, -1)} […]` : item.description}`
           : 'N/A'}
       </div>
-      <div class="news-date${isRecentWeek ? ' is-recent-week' : ''}" title="${parsedDate.toLocaleString()}">
-        ${newsfeed.formatRelativeDate(dateDelta)}
+      <div class="news-date${isRecentWeek ? ' is-recent-week' : ''}">
+        <span title="${parsedDate.toLocaleString()}">${newsfeed.formatRelativeDate(dateDelta)}</span>
       </div>
     <div>
   `
@@ -118,7 +118,7 @@ newsfeed.do = () => {
           <div class="columns is-gapless">
             <div class="column is-hidden-mobile"></div>
             <div class="column is-hidden-mobile"></div>
-            <div class="column"></div>
+            <div class="column has-text-right"></div>
           </div>
         `
         const column = element.querySelector('.columns > .column:last-child')
@@ -141,9 +141,12 @@ newsfeed.do = () => {
               title, description, pubDate, link, identifier
             })
 
-            notificationElement.querySelector('.delete').addEventListener('click', function () {
-              newsfeed.dismissNotification(event.target.parentNode)
-            })
+            const dismissTrigger = notificationElement.querySelector('.delete')
+            if (dismissTrigger)
+              dismissTrigger.addEventListener('click', function () {
+                event.preventDefault()
+                newsfeed.dismissNotification(event.target.parentNode)
+              })
 
             column.appendChild(notificationElement)
           }
