@@ -47,6 +47,9 @@ During development, the rebuilt files will be saved in `dist-dev` directory inst
 
 Once you feel like your modifications are ready for production usage, you can then run `yarn build` to build production-ready files that will actually go to `dist` directory.
 
+> If you are submitting a Pull Request, running `yarn build` before pushing the commit is NOT necessary. As long as the changes already work well in development mode, you may push the commit as-is.  
+> This fork uses GitHub Actions to automatically rebuild client assets after every commit that modifies the source files in `src` directory.
+
 ## Failing to build dependencies
 
 Some dependencies may fail to build with Python 2.x, in particular `sqlite3` package.
