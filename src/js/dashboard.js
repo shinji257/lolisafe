@@ -2861,7 +2861,7 @@ page.getStatistics = (params = {}) => {
               parsed = page.getPrettyBytes(value)
             if ((types.byteUsage || []).includes(valKeys[j]))
               parsed = `${page.getPrettyBytes(value.used)} / ${page.getPrettyBytes(value.total)} (${Math.round(value.used / value.total * 100)}%)`
-            if ((types.hhmmss || []).includes(valKeys[j]))
+            if ((types.uptime || []).includes(valKeys[j]))
               parsed = page.getPrettyUptime(value)
 
             const string = valKeys[j]

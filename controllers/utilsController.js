@@ -618,7 +618,7 @@ self.stats = async (req, res, next) => {
         _types: {
           byte: ['memoryUsage'],
           byteUsage: ['systemMemory'],
-          hhmmss: ['systemUptime', 'nodeUptime']
+          uptime: ['systemUptime', 'nodeUptime']
         },
         platform: `${os.platform} ${os.arch}`,
         distro: `${os.distro} ${os.release}`,
