@@ -30,6 +30,7 @@ const nojs = require('./routes/nojs')
 const db = require('knex')(config.database)
 
 safe.use(helmet({
+  contentSecurityPolicy: false,
   hsts: false
 }))
 

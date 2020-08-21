@@ -611,11 +611,14 @@ self.stats = async (req, res, next) => {
 
       const currentLoad = await si.currentLoad()
       const mem = await si.mem()
+      const time = si.time()
+      const nodeUptime = process.uptime()
 
       stats.system = {
         _types: {
           byte: ['memoryUsage'],
-          byteUsage: ['systemMemory']
+          byteUsage: ['systemMemory'],
+          hhmmss: ['systemUptime', 'nodeUptime']
         },
         platform: `${os.platform} ${os.arch}`,
         distro: `${os.distro} ${os.release}`,
@@ -627,7 +630,9 @@ self.stats = async (req, res, next) => {
           total: mem.total
         },
         memoryUsage: process.memoryUsage().rss,
-        nodeVersion: `${process.versions.node}`
+        systemUptime: time.uptime,
+        nodeVersion: `${process.versions.node}`,
+        nodeUptime: Math.floor(nodeUptime)
       }
 
       // Update cache
