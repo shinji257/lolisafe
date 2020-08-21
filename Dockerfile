@@ -8,16 +8,17 @@ WORKDIR /usr/src/lolisafe
 
 COPY package.json yarn.lock ./
 
-RUN apk add --no-cache --virtual build-dependencies python make g++ && apk add --no-cache ffmpeg
+RUN apk --no-cache update \
+&& apk add --no-cache --virtual build-dependencies python make g++ \
+&& apk add --no-cache ffmpeg \
+&& apk del build-dependencies \
+&& yarn install --production \
+&& yarn cache clean
 
 ADD config.sample.js config.js
 
-RUN yarn install
-
-RUN apk update
-
-RUN apk del build-dependencies
-
 COPY . .
+
 EXPOSE 9999
+
 CMD ["node", "lolisafe.js"]
