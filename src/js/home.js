@@ -140,7 +140,7 @@ page.checkClientVersion = apiVersion => {
   const match = self.src.match(/\?_=(\d+)$/)
   if (match && match[1] && match[1] !== apiVersion)
     return swal({
-      title: 'Updated detected!',
+      title: 'Update detected!',
       text: 'Client assets have been updated. Reload to display the latest version?',
       icon: 'info',
       buttons: {
