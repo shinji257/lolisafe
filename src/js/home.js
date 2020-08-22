@@ -856,7 +856,7 @@ page.prepareUploadConfig = () => {
         { value: 'default', text: 'Older files on top' },
         { value: '0', text: 'Newer files on top' }
       ],
-      help: `"Newer files on top" will use a CSS technique, which unfortunately come with <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/flex-direction#Accessibility_Concerns" target="_blank" rel="noopener">some undesirable side effects</a>.<br>
+      help: `"Newer files on top" will use a CSS technique, which unfortunately come with <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/flex-direction#Accessibility_concerns" target="_blank" rel="noopener">some undesirable side effects</a>.<br>
         This also affects text selection, such as when trying to select text from top to bottom will result in them being selected from bottom to top instead, and vice versa.`,
       valueHandler (value) {
         if (value === '0') {
