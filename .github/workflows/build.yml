@@ -8,6 +8,7 @@ on:
       - 'src/**/*.css'
       - 'src/**/*.js'
       - 'src/**/*.scss'
+      - 'src/versions.json'
 
 jobs:
   build:
@@ -41,7 +42,7 @@ jobs:
 
       - uses: stefanzweifel/git-auto-commit-action@v4
         with:
-          commit_message: AUTO: Rebuilt client assets and bumped v1 version string
+          commit_message: 'AUTO: Rebuilt client assets and bumped v1 version string'
           commit_user_name: loli-bot
           commit_user_email: hi@fiery.me
         env:
