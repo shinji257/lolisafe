@@ -2901,6 +2901,15 @@ page.getStatistics = (params = {}) => {
       `
     }
 
+    if (Array.isArray(response.data.hrtime))
+      content += `
+        <article class="message is-size-7">
+          <div class="message-body has-text-left">
+            Time taken: ${response.data.hrtime[0]}s ${Math.ceil(response.data.hrtime[1] / 1000000)}ms.
+          </div>
+        </article>
+      `
+
     page.dom.innerHTML = content
     page.fadeAndScroll()
     page.updateTrigger(params.trigger, 'active')

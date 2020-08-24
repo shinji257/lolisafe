@@ -596,6 +596,7 @@ self.stats = async (req, res, next) => {
   if (!isadmin) return res.status(403).end()
 
   try {
+    const hrstart = process.hrtime()
     const stats = {}
     const os = await si.osInfo()
 
@@ -933,7 +934,7 @@ self.stats = async (req, res, next) => {
       statsCache.albums.generating = false
     }
 
-    return res.json({ success: true, stats })
+    return res.json({ success: true, stats, hrtime: process.hrtime(hrstart) })
   } catch (error) {
     logger.error(error)
     // Reset generating state when encountering any errors
