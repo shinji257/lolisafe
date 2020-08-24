@@ -295,7 +295,7 @@ page.updateTrigger = (trigger, newState) => {
   if (newState === 'loading') {
     trigger.classList.add('is-loading')
   } else if (newState === 'active') {
-    if (trigger.parentNode.tagName !== 'LI')
+    if (!trigger.id.startsWith('item'))
       return
     for (let i = 0; i < page.menus.length; i++)
       page.menus[i].classList.remove('is-active')
