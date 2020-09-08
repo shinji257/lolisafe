@@ -2860,7 +2860,7 @@ page.getStatistics = (params = {}) => {
             if ((types.byte || []).includes(valKeys[j]))
               parsed = page.getPrettyBytes(value)
             if ((types.byteUsage || []).includes(valKeys[j]))
-              parsed = `${page.getPrettyBytes(value.used)} / ${page.getPrettyBytes(value.total)} (${Math.round(value.used / value.total * 100)}%)`
+              parsed = `${page.getPrettyBytes(value.used)} / ${page.getPrettyBytes(value.total)} (${Math.floor(value.used / value.total * 100)}%)`
             if ((types.uptime || []).includes(valKeys[j]))
               parsed = page.getPrettyUptime(value)
 

@@ -746,7 +746,7 @@ self.stats = async (req, res, next) => {
         await new Promise((resolve, reject) => {
           const proc = spawn('df', [
             '--block-size=1',
-            '--output=used,size',
+            '--output=size,avail',
             paths.uploads
           ])
 
@@ -764,9 +764,11 @@ self.stats = async (req, res, next) => {
               // Skip lines that have non-number chars
               if (columns.some(w => !/^\d+$/.test(w))) continue
 
+              const total = parseInt(columns[0])
+              const avail = parseInt(columns[1])
               stats.disk.drive = {
-                used: parseInt(columns[0]),
-                total: parseInt(columns[1])
+                total,
+                used: total - avail
               }
             }
           })
