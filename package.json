@@ -36,6 +36,7 @@
     "blake3": "~2.1.4",
     "body-parser": "~1.19.0",
     "clamdjs": "~1.0.2",
+    "content-disposition": "~0.5.3",
     "express": "~4.17.1",
     "express-rate-limit": "~5.1.3",
     "fluent-ffmpeg": "~2.1.2",
@@ -48,6 +49,7 @@
     "randomstring": "~1.1.5",
     "readline": "~1.3.0",
     "search-query-parser": "~1.5.5",
+    "serve-static": "git+https://git@github.com/BobbyWibowo/serve-static#60049dec396615ab738d29576a65432e4f9d7d4a",
     "sharp": "~0.26.0",
     "sqlite3": "~5.0.0",
     "systeminformation": "~4.27.3"

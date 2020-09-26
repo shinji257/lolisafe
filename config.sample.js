@@ -31,6 +31,12 @@ module.exports = {
   domain: 'https://lolisafe.moe',
 
   /*
+    If you serve files with node, you can optionally choose to set Content-Disposition header
+    into their original file names. This allows users to save files into their original file names.
+  */
+  setContentDisposition: false,
+
+  /*
     If you are serving your files with a different domain than your lolisafe homepage,
     then fill this option with your lolisafe homepage, otherwise any falsy value.
     This will be used when listing album links in the dashboard.

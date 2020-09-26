@@ -1,11 +1,13 @@
 const bodyParser = require('body-parser')
 const clamd = require('clamdjs')
+const contentDisposition = require('content-disposition')
 const express = require('express')
 const helmet = require('helmet')
 const nunjucks = require('nunjucks')
 const path = require('path')
 const RateLimit = require('express-rate-limit')
 const readline = require('readline')
+const serveStatic = require('serve-static')
 const config = require('./config')
 const logger = require('./logger')
 const versions = require('./src/versions')
@@ -65,6 +67,33 @@ let setHeaders = res => {
   res.set('Access-Control-Allow-Origin', '*')
 }
 
+const initServeStaticUploads = (opts = {}) => {
+  if (config.setContentDisposition) {
+    opts.preSetHeaders = async (res, path) => {
+      // Do only if accessing files from uploads' root directory (i.e. not thumbs, etc.)
+      // and only if they're GET requests
+      if (path.indexOf('/', 1) === -1 && res.req.method === 'GET') {
+        const name = path.substring(1)
+        try {
+          const file = await db.table('files')
+            .where('name', name)
+            .select('original')
+            .first()
+          res.set('Content-Disposition', contentDisposition(file.original, { type: 'inline' }))
+        } catch (error) {
+          logger.error(error)
+        }
+      }
+    }
+    // serveStatic is just a modified express/serve-static module that allows specifying
+    // an async setHeaders function by the name preSetHeaders.
+    // The module will wait for the said function before creating send stream to client.
+    safe.use('/', serveStatic(paths.uploads, opts))
+  } else {
+    safe.use('/', express.static(paths.uploads, opts))
+  }
+}
+
 // Cache control (safe.fiery.me)
 if (config.cacheControl) {
   const cacheControls = {
@@ -96,7 +125,7 @@ if (config.cacheControl) {
 
   // If serving uploads with node
   if (config.serveFilesWithNode)
-    safe.use('/', express.static(paths.uploads, {
+    initServeStaticUploads({
       setHeaders: res => {
         res.set('Access-Control-Allow-Origin', '*')
         // If using CDN, cache uploads in CDN as well
@@ -104,7 +133,7 @@ if (config.cacheControl) {
         if (config.cacheControl !== 2)
           res.set('Cache-Control', cacheControls.cdn)
       }
-    }))
+    })
 
   // Function for static assets.
   // This requires the assets to use version in their query string,
@@ -125,8 +154,7 @@ if (config.cacheControl) {
     next()
   })
 } else if (config.serveFilesWithNode) {
-  // If serving uploads with node
-  safe.use('/', express.static(paths.uploads))
+  initServeStaticUploads()
 }
 
 // Static assets
