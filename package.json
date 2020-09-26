@@ -40,7 +40,7 @@
     "express": "~4.17.1",
     "express-rate-limit": "~5.1.3",
     "fluent-ffmpeg": "~2.1.2",
-    "helmet": "~4.1.0",
+    "helmet": "~4.1.1",
     "jszip": "~3.5.0",
     "knex": "~0.21.5",
     "multer": "~1.4.2",
@@ -50,15 +50,15 @@
     "readline": "~1.3.0",
     "search-query-parser": "~1.5.5",
     "serve-static": "git+https://git@github.com/BobbyWibowo/serve-static#60049dec396615ab738d29576a65432e4f9d7d4a",
-    "sharp": "~0.26.0",
+    "sharp": "~0.26.1",
     "sqlite3": "~5.0.0",
-    "systeminformation": "~4.27.3"
+    "systeminformation": "~4.27.5"
   },
   "devDependencies": {
-    "browserslist": "~4.14.1",
+    "browserslist": "~4.14.5",
     "bulma": "~0.9.0",
     "cssnano": "~4.1.10",
-    "del": "~5.1.0",
+    "del": "~6.0.0",
     "eslint": "~6.8.0",
     "eslint-config-standard": "~14.1.1",
     "eslint-plugin-compat": "~3.8.0",
@@ -80,7 +80,7 @@
     "gulp-terser": "~1.4.0",
     "node-sass": "~4.14.1",
     "postcss-preset-env": "~6.7.0",
-    "stylelint": "~13.7.0",
+    "stylelint": "~13.7.2",
     "stylelint-config-standard": "~20.0.0"
   },
   "resolutions": {
