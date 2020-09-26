@@ -413,7 +413,7 @@ module.exports = {
 
       Unless you do not use thumbnails, it is highly recommended to enable this feature.
     */
-    cacheFileIdentifiers: true,
+    cacheFileIdentifiers: false,
 
     /*
       An alternative to caching file identifiers.
