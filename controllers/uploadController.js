@@ -13,7 +13,9 @@ const config = require('./../config')
 const logger = require('./../logger')
 const db = require('knex')(config.database)
 
-const self = {}
+const self = {
+  onHold: new Set()
+}
 
 const fileIdentifierLengthFallback = 32
 const fileIdentifierLengthChangeable = !config.uploads.fileIdentifierLength.force &&
@@ -191,6 +193,22 @@ self.getUniqueRandomName = async (length, extension) => {
       }
       utils.idSet.add(identifier)
       // logger.log(`Added ${identifier} to identifiers cache`)
+    } else if (config.uploads.queryDbForFileCollisions) {
+      if (self.onHold.has(identifier))
+        continue
+
+      // Put token on-hold (wait for it to be inserted to DB)
+      self.onHold.add(identifier)
+
+      const file = await db.table('files')
+        .where('name', 'like', 'identifier.%')
+        .select('id')
+        .first()
+      if (file) {
+        self.onHold.delete(identifier)
+        logger.log(`Identifier ${identifier} is already in use (${i + 1}/${utils.idMaxTries}).`)
+        continue
+      }
     } else {
       try {
         await paths.access(path.join(paths.uploads, name))
@@ -720,6 +738,13 @@ self.storeFilesToDb = async (req, res, user, infoMap) => {
     // Insert new files to DB
     await db.table('files').insert(files)
     utils.invalidateStatsCache('uploads')
+
+    if (config.uploads.queryDbForFileCollisions)
+      for (const file of files) {
+        const extname = utils.extname(file.name)
+        const identifier = file.name.slice(0, -(extname.length))
+        self.onHold.delete(identifier)
+      }
 
     // Update albums' timestamp
     if (authorizedIds.length) {

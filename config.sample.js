@@ -416,6 +416,20 @@ module.exports = {
     cacheFileIdentifiers: true,
 
     /*
+      An alternative to caching file identifiers.
+
+      Basically the service will instead query the database for stricter collision checks.
+      Right off the bat this has the disadvantage of adding one or more SQL queries on every
+      new uploads, but it has the advantage of not having to pre-cache anything.
+      Essentially this reduces the service's startup time and memory usage, but slows down new uploads.
+
+      As this is an alternative, you need to disable cacheFileIdentifiers to use this.
+
+      You'll have to figure out which method suits your use case best.
+    */
+    queryDbForFileCollisions: true,
+
+    /*
       The length of the randomly generated identifier for albums.
     */
     albumIdentifierLength: 8,
