@@ -1,29 +1,16 @@
 const fs = require('fs')
-const os = require('os')
 const path = require('path')
-const crypto = require('crypto')
 const blake3 = require('blake3')
 const mkdirp = require('mkdirp')
 
-function getFilename (req, file, cb) {
-  // This won't be used since we use our own filename function.
-  crypto.randomBytes(16, function (err, raw) {
-    cb(err, err ? undefined : raw.toString('hex'))
-  })
-}
-
-function getDestination (req, file, cb) {
-  cb(null, os.tmpdir())
-}
-
 function DiskStorage (opts) {
-  this.getFilename = (opts.filename || getFilename)
+  this.getFilename = opts.filename
 
   if (typeof opts.destination === 'string') {
     mkdirp.sync(opts.destination)
     this.getDestination = function ($0, $1, cb) { cb(null, opts.destination) }
   } else {
-    this.getDestination = (opts.destination || getDestination)
+    this.getDestination = opts.destination
   }
 }
 
