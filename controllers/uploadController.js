@@ -201,7 +201,7 @@ self.getUniqueRandomName = async (length, extension) => {
       self.onHold.add(identifier)
 
       const file = await db.table('files')
-        .where('name', 'like', 'identifier.%')
+        .whereRaw('?? like ?', ['name', `${identifier}.%`])
         .select('id')
         .first()
       if (file) {
