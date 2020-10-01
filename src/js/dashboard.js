@@ -295,12 +295,14 @@ page.updateTrigger = (trigger, newState) => {
   if (newState === 'loading') {
     trigger.classList.add('is-loading')
   } else if (newState === 'active') {
-    if (!trigger.id.startsWith('item'))
-      return
-    for (let i = 0; i < page.menus.length; i++)
-      page.menus[i].classList.remove('is-active')
-    trigger.classList.remove('is-loading')
-    trigger.classList.add('is-active')
+    if (trigger.parentNode.tagName === 'LI' && !trigger.className.includes('pagination-link')) {
+      for (let i = 0; i < page.menus.length; i++)
+        page.menus[i].classList.remove('is-active')
+      trigger.classList.remove('is-loading')
+      trigger.classList.add('is-active')
+    } else {
+      trigger.classList.remove('is-loading')
+    }
   } else {
     trigger.classList.remove('is-loading')
     trigger.classList.remove('is-active')
