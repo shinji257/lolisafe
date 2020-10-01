@@ -33,6 +33,8 @@ module.exports = {
   /*
     If you serve files with node, you can optionally choose to set Content-Disposition header
     into their original file names. This allows users to save files into their original file names.
+
+    This will query the DB every time users access uploaded files as there's no caching mechanism.
   */
   setContentDisposition: false,
 

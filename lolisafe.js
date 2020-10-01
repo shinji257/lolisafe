@@ -69,20 +69,21 @@ let setHeaders = res => {
 
 const initServeStaticUploads = (opts = {}) => {
   if (config.setContentDisposition) {
-    opts.preSetHeaders = async (res, path) => {
-      // Do only if accessing files from uploads' root directory (i.e. not thumbs, etc.)
-      // and only if they're GET requests
-      if (path.indexOf('/', 1) === -1 && res.req.method === 'GET') {
-        const name = path.substring(1)
-        try {
+    opts.preSetHeaders = async (res, req, path, stat) => {
+      try {
+        // Do only if accessing files from uploads' root directory (i.e. not thumbs, etc.)
+        // and only if they are GET requests
+        const relpath = path.replace(paths.uploads, '')
+        if (relpath.indexOf('/', 1) === -1 && req.method === 'GET') {
+          const name = relpath.substring(1)
           const file = await db.table('files')
             .where('name', name)
             .select('original')
             .first()
           res.set('Content-Disposition', contentDisposition(file.original, { type: 'inline' }))
-        } catch (error) {
-          logger.error(error)
         }
+      } catch (error) {
+        logger.error(error)
       }
     }
     // serveStatic is just a modified express/serve-static module that allows specifying
