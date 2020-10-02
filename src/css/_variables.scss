@@ -1,7 +1,7 @@
 @charset "utf-8";
 
 /* stylelint-disable-next-line value-keyword-case */
-$family-sans-serif: BlinkMacSystemFont, -apple-system, "Segoe UI", "Ubuntu", "Roboto", "Oxygen", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
+$family-sans-serif: blinkmacsystemfont, -apple-system, "Segoe UI", "Ubuntu", "Roboto", "Oxygen", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
 
 $black: hsl(0, 0%, 0%);
 $green: hsl(141, 42%, 53%);
@@ -12,7 +12,7 @@ $red: hsl(348, 100%, 61%);
 /** Bulma: Variables **/
 @import "../../node_modules/bulma/sass/utilities/initial-variables.sass";
 @import "../../node_modules/bulma/sass/utilities/functions.sass";
-@import "../../node_modules/bulma/sass/utilities/derived-variables.scss";
+@import "../../node_modules/bulma/sass/utilities/derived-variables.sass";
 
 $scheme-main: $black;
 $text: $white-ter;
