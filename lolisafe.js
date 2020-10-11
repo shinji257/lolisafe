@@ -62,7 +62,7 @@ if (Array.isArray(config.rateLimits) && config.rateLimits.length)
 safe.use(bodyParser.urlencoded({ extended: true }))
 safe.use(bodyParser.json())
 
-let cdnPages
+const cdnPages = [...config.pages]
 let setHeaders = res => {
   res.set('Access-Control-Allow-Origin', '*')
 }
@@ -116,7 +116,7 @@ if (config.cacheControl) {
 
   // If using CDN, cache public pages in CDN
   if (config.cacheControl !== 2) {
-    cdnPages = config.pages.concat(['api/check'])
+    cdnPages.push('api/check')
     for (const page of cdnPages)
       safe.use(`/${page === 'home' ? '' : page}`, (req, res, next) => {
         res.set('Cache-Control', cacheControls.cdn)

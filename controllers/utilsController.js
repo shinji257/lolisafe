@@ -396,11 +396,11 @@ self.bulkDeleteFromDb = async (field, values, user) => {
   while (values.length)
     chunks.push(values.splice(0, MAX_VARIABLES_CHUNK_SIZE))
 
-  let failed = []
+  const failed = []
   const ismoderator = perms.is(user, 'moderator')
 
   try {
-    let unlinkeds = []
+    const unlinkeds = []
     const albumids = []
 
     await Promise.all(chunks.map(async chunk => {
@@ -412,7 +412,7 @@ self.bulkDeleteFromDb = async (field, values, user) => {
         })
 
       // Push files that could not be found in db
-      failed = failed.concat(chunk.filter(value => !files.find(file => file[field] === value)))
+      failed.push(...chunk.filter(value => !files.find(file => file[field] === value)))
 
       // Unlink all found files
       const unlinked = []
@@ -449,7 +449,7 @@ self.bulkDeleteFromDb = async (field, values, user) => {
       })
 
       // Push unlinked files
-      unlinkeds = unlinkeds.concat(unlinked)
+      unlinkeds.push(...unlinked)
     }))
 
     if (unlinkeds.length) {
@@ -502,7 +502,7 @@ self.purgeCloudflareCache = async (names, uploads, thumbs) => {
       return name === 'home' ? domain : `${domain}/${name}`
     }
   })
-  names = names.concat(thumbNames)
+  names.push(...thumbNames)
 
   // Split array into multiple arrays with max length of 30 URLs
   // https://api.cloudflare.com/#zone-purge-files-by-url

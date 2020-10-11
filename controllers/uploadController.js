@@ -755,7 +755,7 @@ self.storeFilesToDb = async (req, res, user, infoMap) => {
     }
   }
 
-  return files.concat(exists)
+  return [...files, ...exists]
 }
 
 self.sendUploadResponse = async (req, res, user, result) => {
@@ -911,31 +911,23 @@ self.list = async (req, res) => {
   }
 
   if (filters) {
-    let keywords = []
+    const keywords = []
 
     if (req.params.id === undefined)
-      keywords = keywords.concat([
-        'albumid'
-      ])
+      keywords.push('albumid')
 
     // Only allow filtering by 'ip' and 'user' keys when listing all uploads
     if (all)
-      keywords = keywords.concat([
-        'ip',
-        'user'
-      ])
+      keywords.push('ip', 'user')
 
     const ranges = [
       'date',
       'expiry'
     ]
 
+    keywords.push('is', 'sort', 'orderby')
     filterObj.queries = searchQuery.parse(filters, {
-      keywords: keywords.concat([
-        'is',
-        'sort',
-        'orderby'
-      ]),
+      keywords,
       ranges,
       tokenize: true,
       alwaysArray: true,
@@ -945,7 +937,7 @@ self.list = async (req, res) => {
     // Accept orderby as alternative for sort
     if (filterObj.queries.orderby) {
       if (!filterObj.queries.sort) filterObj.queries.sort = []
-      filterObj.queries.sort = filterObj.queries.sort.concat(filterObj.queries.orderby)
+      filterObj.queries.sort.push(...filterObj.queries.orderby)
       delete filterObj.queries.orderby
     }
 
@@ -1070,8 +1062,10 @@ self.list = async (req, res) => {
     // Query users table for user IDs
     if (filterObj.queries.user || filterObj.queries.exclude.user) {
       const usernames = []
-        .concat(filterObj.queries.user || [])
-        .concat(filterObj.queries.exclude.user || [])
+      if (filterObj.queries.user)
+        usernames.push(...filterObj.queries.user)
+      if (filterObj.queries.exclude.user)
+        usernames.push(...filterObj.queries.exclude.user)
 
       const uploaders = await db.table('users')
         .whereIn('username', usernames)
@@ -1102,7 +1096,7 @@ self.list = async (req, res) => {
 
     // Parse sort keys
     if (filterObj.queries.sort) {
-      let allowed = [
+      const allowed = [
         'expirydate',
         'id',
         'name',
@@ -1113,16 +1107,11 @@ self.list = async (req, res) => {
 
       // Only allow sorting by 'albumid' when not listing album's uploads
       if (req.params.id === undefined)
-        allowed = allowed.concat([
-          'albumid'
-        ])
+        allowed.push('albumid')
 
       // Only allow sorting by 'ip' and 'userid' columns when listing all uploads
       if (all)
-        allowed = allowed.concat([
-          'ip',
-          'userid'
-        ])
+        allowed.push('ip', 'userid')
 
       for (const obQuery of filterObj.queries.sort) {
         const tmp = obQuery.toLowerCase().split(':')
@@ -1193,7 +1182,7 @@ self.list = async (req, res) => {
         // Prioritze exclude keys when both types found
         this.orWhere(function () {
           if (filterObj.excludeUploaders.length)
-            this.orWhereNotIn('userid', filterObj.excludeUploaders.map(v => v.id))
+            this.whereNotIn('userid', filterObj.excludeUploaders.map(v => v.id))
           else if (filterObj.uploaders.length)
             this.orWhereIn('userid', filterObj.uploaders.map(v => v.id))
           // Such overbearing logic for NULL values, smh...
@@ -1202,14 +1191,14 @@ self.list = async (req, res) => {
             (!filterObj.excludeUploaders.length && !filterObj.uploaders.length && filterObj.flags.userNull))
             this.orWhereNull('userid')
           else if (filterObj.flags.userNull === false)
-            this.orWhereNotNull('userid')
+            this.whereNotNull('userid')
         })
 
         // Filter uploads matching any of the supplied 'ip' keys and/or NULL flag
         // Same prioritization logic as above
         this.orWhere(function () {
           if (filterObj.queries.exclude.ip)
-            this.orWhereNotIn('ip', filterObj.queries.exclude.ip)
+            this.whereNotIn('ip', filterObj.queries.exclude.ip)
           else if (filterObj.queries.ip)
             this.orWhereIn('ip', filterObj.queries.ip)
           // ...
@@ -1218,7 +1207,7 @@ self.list = async (req, res) => {
             (!filterObj.queries.exclude.ip && !filterObj.queries.ip && filterObj.flags.ipNull))
             this.orWhereNull('ip')
           else if (filterObj.flags.ipNull === false)
-            this.orWhereNotNull('ip')
+            this.whereNotNull('ip')
         })
       })
     else
@@ -1230,7 +1219,7 @@ self.list = async (req, res) => {
     if (req.params.id === undefined)
       this.andWhere(function () {
         if (filterObj.queries.exclude.albumid)
-          this.orWhereNotIn('albumid', filterObj.queries.exclude.albumid)
+          this.whereNotIn('albumid', filterObj.queries.exclude.albumid)
         else if (filterObj.queries.albumid)
           this.orWhereIn('albumid', filterObj.queries.albumid)
         // ...
@@ -1239,7 +1228,7 @@ self.list = async (req, res) => {
               (!filterObj.queries.exclude.albumid && !filterObj.queries.albumid && filterObj.flags.albumidNull))
           this.orWhereNull('albumid')
         else if (filterObj.flags.albumidNull === false)
-          this.orWhereNotNull('albumid')
+          this.whereNotNull('albumid')
       })
     else if (!all)
       // If not listing all uploads, list uploads from user's album

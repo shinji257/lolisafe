@@ -100,7 +100,7 @@ self.list = async (req, res, next) => {
     if (!count)
       return res.json({ success: true, albums: [], count })
 
-    let fields = ['id', 'name']
+    const fields = ['id', 'name']
 
     let albums
     if (sidebar) {
@@ -115,7 +115,7 @@ self.list = async (req, res, next) => {
       if (isNaN(offset)) offset = 0
       else if (offset < 0) offset = Math.max(0, Math.ceil(count / 25) + offset)
 
-      fields = fields.concat(['identifier', 'enabled', 'timestamp', 'editedAt', 'download', 'public', 'description'])
+      fields.push('identifier', 'enabled', 'timestamp', 'editedAt', 'download', 'public', 'description')
       if (all)
         fields.push('userid')
 
