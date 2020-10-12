@@ -99,9 +99,9 @@ const initServeStaticUploads = (opts = {}) => {
 if (config.cacheControl) {
   const cacheControls = {
     // max-age: 6 months
-    static: 'public, max-age=15778800, must-revalidate, proxy-revalidate, immutable, stale-while-revalidate=86400, stale-if-error=604800',
+    static: 'public, max-age=15778800, immutable',
     // s-max-age: 6 months (only cache in CDN)
-    cdn: 's-max-age=15778800, proxy-revalidate, stale-while-revalidate=86400, stale-if-error=604800',
+    cdn: 's-max-age=15778800, proxy-revalidate',
     // validate cache's validity before using them (soft cache)
     validate: 'no-cache',
     // do not use cache at all
