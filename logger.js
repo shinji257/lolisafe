@@ -54,8 +54,9 @@ self.debug = (...args) => {
     Object.assign(options, args[args.length - 1])
     args.splice(args.length - 1, 1)
   }
-  for (const arg of args)
+  for (const arg of args) {
     console.log(inspect(arg, options))
+  }
 }
 
 module.exports = self

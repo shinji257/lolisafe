@@ -36,11 +36,13 @@ safe.use(helmet({
   hsts: false
 }))
 
-if (config.hsts instanceof Object && Object.keys(config.hsts).length)
+if (config.hsts instanceof Object && Object.keys(config.hsts).length) {
   safe.use(helmet.hsts(config.hsts))
+}
 
-if (config.trustProxy)
+if (config.trustProxy) {
   safe.set('trust proxy', 1)
+}
 
 // https://mozilla.github.io/nunjucks/api.html#configure
 nunjucks.configure('views', {
@@ -52,12 +54,14 @@ safe.set('view engine', 'njk')
 safe.enable('view cache')
 
 // Configure rate limits
-if (Array.isArray(config.rateLimits) && config.rateLimits.length)
+if (Array.isArray(config.rateLimits) && config.rateLimits.length) {
   for (const rateLimit of config.rateLimits) {
     const limiter = new RateLimit(rateLimit.config)
-    for (const route of rateLimit.routes)
+    for (const route of rateLimit.routes) {
       safe.use(route, limiter)
+    }
   }
+}
 
 safe.use(bodyParser.urlencoded({ extended: true }))
 safe.use(bodyParser.json())
@@ -117,24 +121,27 @@ if (config.cacheControl) {
   // If using CDN, cache public pages in CDN
   if (config.cacheControl !== 2) {
     cdnPages.push('api/check')
-    for (const page of cdnPages)
+    for (const page of cdnPages) {
       safe.use(`/${page === 'home' ? '' : page}`, (req, res, next) => {
         res.set('Cache-Control', cacheControls.cdn)
         next()
       })
+    }
   }
 
   // If serving uploads with node
-  if (config.serveFilesWithNode)
+  if (config.serveFilesWithNode) {
     initServeStaticUploads({
       setHeaders: res => {
         res.set('Access-Control-Allow-Origin', '*')
         // If using CDN, cache uploads in CDN as well
         // Use with cloudflare.purgeCache enabled in config file
-        if (config.cacheControl !== 2)
+        if (config.cacheControl !== 2) {
           res.set('Cache-Control', cacheControls.cdn)
+        }
       }
     })
+  }
 
   // Function for static assets.
   // This requires the assets to use version in their query string,
@@ -148,10 +155,11 @@ if (config.cacheControl) {
   safe.use(['/api/album/zip'], (req, res, next) => {
     res.set('Access-Control-Allow-Origin', '*')
     const versionString = parseInt(req.query.v)
-    if (versionString > 0)
+    if (versionString > 0) {
       res.set('Cache-Control', cacheControls.static)
-    else
+    } else {
       res.set('Cache-Control', cacheControls.disable)
+    }
     next()
   })
 } else if (config.serveFilesWithNode) {
@@ -182,32 +190,36 @@ safe.use('/api', api)
     // Re-map version strings if cache control is enabled (safe.fiery.me)
     utils.versionStrings = {}
     if (config.cacheControl) {
-      for (const type in versions)
+      for (const type in versions) {
         utils.versionStrings[type] = `?_=${versions[type]}`
-      if (versions['1'])
+      }
+      if (versions['1']) {
         utils.clientVersion = versions['1']
+      }
     }
 
     // Cookie Policy
-    if (config.cookiePolicy)
+    if (config.cookiePolicy) {
       config.pages.push('cookiepolicy')
+    }
 
     // Check for custom pages, otherwise fallback to Nunjucks templates
     for (const page of config.pages) {
       const customPage = path.join(paths.customPages, `${page}.html`)
-      if (!await paths.access(customPage).catch(() => true))
+      if (!await paths.access(customPage).catch(() => true)) {
         safe.get(`/${page === 'home' ? '' : page}`, (req, res, next) => res.sendFile(customPage))
-      else if (page === 'home')
+      } else if (page === 'home') {
         safe.get('/', (req, res, next) => res.render(page, {
           config,
           versions: utils.versionStrings,
           gitHash: utils.gitHash
         }))
-      else
+      } else {
         safe.get(`/${page}`, (req, res, next) => res.render(page, {
           config,
           versions: utils.versionStrings
         }))
+      }
     }
 
     // Error pages
@@ -240,8 +252,9 @@ safe.use('/api', api)
       logger.log(`${ip}:${port} ${version}`)
 
       utils.clamd.scanner = clamd.createScanner(ip, port)
-      if (!utils.clamd.scanner)
+      if (!utils.clamd.scanner) {
         throw 'Could not create clamd scanner'
+      }
     }
 
     // Cache file identifiers
@@ -260,7 +273,7 @@ safe.use('/api', api)
 
     // Cache control (safe.fiery.me)
     // Purge Cloudflare cache
-    if (config.cacheControl && config.cacheControl !== 2)
+    if (config.cacheControl && config.cacheControl !== 2) {
       if (config.cloudflare.purgeCache) {
         logger.log('Cache control enabled, purging Cloudflare\'s cache...')
         const results = await utils.purgeCloudflareCache(cdnPages)
@@ -274,11 +287,13 @@ safe.use('/api', api)
           }
           succeeded += result.files.length
         }
-        if (!errored)
+        if (!errored) {
           logger.log(`Successfully purged ${succeeded} cache`)
+        }
       } else {
         logger.log('Cache control enabled without Cloudflare\'s cache purging')
       }
+    }
 
     // Temporary uploads (only check for expired uploads if config.uploads.temporaryUploadsInterval is also set)
     if (Array.isArray(config.uploads.temporaryUploadAges) &&
@@ -286,8 +301,7 @@ safe.use('/api', api)
       config.uploads.temporaryUploadsInterval) {
       let temporaryUploadsInProgress = false
       const temporaryUploadCheck = async () => {
-        if (temporaryUploadsInProgress)
-          return
+        if (temporaryUploadsInProgress) return
 
         temporaryUploadsInProgress = true
         try {
@@ -295,8 +309,9 @@ safe.use('/api', api)
 
           if (result.expired.length) {
             let logMessage = `Expired uploads: ${result.expired.length} deleted`
-            if (result.failed.length)
+            if (result.failed.length) {
               logMessage += `, ${result.failed.length} errored`
+            }
 
             logger.log(logMessage)
           }
@@ -321,10 +336,8 @@ safe.use('/api', api)
         prompt: ''
       }).on('line', line => {
         try {
-          if (line === 'rs')
-            return
-          if (line === '.exit')
-            return process.exit(0)
+          if (line === 'rs') return
+          if (line === '.exit') return process.exit(0)
           // eslint-disable-next-line no-eval
           logger.log(eval(line))
         } catch (error) {

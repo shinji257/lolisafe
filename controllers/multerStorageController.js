@@ -36,8 +36,9 @@ DiskStorage.prototype._handleFile = function _handleFile (req, file, cb) {
           file._chunksData.stream = fs.createWriteStream(finalPath, { flags: 'a' })
           file._chunksData.stream.on('error', onerror)
         }
-        if (!file._chunksData.hasher)
+        if (!file._chunksData.hasher) {
           file._chunksData.hasher = blake3.createHash()
+        }
 
         outStream = file._chunksData.stream
         hash = file._chunksData.hasher

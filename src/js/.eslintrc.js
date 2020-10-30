@@ -12,11 +12,6 @@ module.exports = {
     'plugin:compat/recommended'
   ],
   rules: {
-    curly: [
-      'error',
-      'multi',
-      'consistent'
-    ],
     'object-shorthand': [
       'error',
       'always'

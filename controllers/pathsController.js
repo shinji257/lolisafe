@@ -20,8 +20,9 @@ const fsFuncs = [
   'writeFile'
 ]
 
-for (const fsFunc of fsFuncs)
+for (const fsFunc of fsFuncs) {
   self[fsFunc] = promisify(fs[fsFunc])
+}
 
 self.uploads = path.resolve(config.uploads.folder)
 self.chunks = path.join(self.uploads, 'chunks')
@@ -51,7 +52,7 @@ const verify = [
 
 self.init = async () => {
   // Check & create directories
-  for (const p of verify)
+  for (const p of verify) {
     try {
       await self.access(p)
     } catch (err) {
@@ -59,10 +60,10 @@ self.init = async () => {
         throw err
       } else {
         const mkdir = await self.mkdir(p)
-        if (mkdir)
-          logger.log(`Created directory: ${p}`)
+        if (mkdir) logger.log(`Created directory: ${p}`)
       }
     }
+  }
 
   // Purge any leftover in chunks directory
   const uuidDirs = await self.readdir(self.chunks)
@@ -74,8 +75,7 @@ self.init = async () => {
     ))
     await self.rmdir(root)
   }))
-  if (uuidDirs.length)
-    logger.log(`Purged ${uuidDirs.length} unfinished chunks`)
+  if (uuidDirs.length) logger.log(`Purged ${uuidDirs.length} unfinished chunks`)
 }
 
 module.exports = self

@@ -84,17 +84,15 @@ page.getPrettyUptime = seconds => {
   let minutes = Math.floor(seconds / 60)
   seconds %= 60
 
-  if (hours < 10)
-    hours = '0' + hours
-  if (minutes < 10)
-    minutes = '0' + minutes
-  if (seconds < 10)
-    seconds = '0' + seconds
+  if (hours < 10) hours = '0' + hours
+  if (minutes < 10) minutes = '0' + minutes
+  if (seconds < 10) seconds = '0' + seconds
 
-  if (days > 0)
+  if (days > 0) {
     return days + 'd ' + hours + ':' + minutes + ':' + seconds
-  else
+  } else {
     return hours + ':' + minutes + ':' + seconds
+  }
 }
 
 page.escape = string => {
@@ -103,14 +101,12 @@ page.escape = string => {
   // Copyright(c) 2015 Andreas Lubbe
   // Copyright(c) 2015 Tiancheng "Timothy" Gu
 
-  if (!string)
-    return string
+  if (!string) return string
 
   const str = String(string)
   const match = /["'&<>]/.exec(str)
 
-  if (!match)
-    return str
+  if (!match) return str
 
   let escape
   let html = ''
@@ -138,8 +134,9 @@ page.escape = string => {
         continue
     }
 
-    if (lastIndex !== index)
+    if (lastIndex !== index) {
       html += str.substring(lastIndex, index)
+    }
 
     lastIndex = index + 1
     html += escape

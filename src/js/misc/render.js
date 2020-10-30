@@ -60,8 +60,7 @@ const render = {
 }
 
 // miku: Generate an array of file names from 001.png to 050.png
-for (let i = 1; i <= 50; i++)
-  render.configs.miku.array.push(`${('00' + i).slice(-3)}.png`)
+for (let i = 1; i <= 50; i++) render.configs.miku.array.push(`${('00' + i).slice(-3)}.png`)
 
 render.showTogglePrompt = () => {
   const renderEnabled = !(localStorage[render.lsKey] === '0')
@@ -79,11 +78,12 @@ render.showTogglePrompt = () => {
   `
 
   const buttons = {}
-  if (renderEnabled)
+  if (renderEnabled) {
     buttons.reload = {
       text: 'Nah fam, show me a different render',
       className: 'swal-button--cancel'
     }
+  }
   buttons.confirm = true
 
   swal({
@@ -95,10 +95,8 @@ render.showTogglePrompt = () => {
     } else if (value) {
       const newValue = div.querySelector('#swalRender').checked ? undefined : '0'
       if (newValue !== localStorage[render.lsKey]) {
-        if (newValue)
-          localStorage[render.lsKey] = newValue
-        else
-          localStorage.removeItem(render.lsKey)
+        if (newValue) localStorage[render.lsKey] = newValue
+        else localStorage.removeItem(render.lsKey)
         swal('', `Random render is now ${newValue ? 'disabled' : 'enabled'}.`, 'success', {
           buttons: false,
           timer: 1500
@@ -111,26 +109,23 @@ render.showTogglePrompt = () => {
 
 render.parseVersion = () => {
   const renderScript = document.querySelector('#renderScript')
-  if (renderScript && renderScript.dataset.version)
-    return `?v=${renderScript.dataset.version}`
-  return ''
+  if (renderScript && renderScript.dataset.version) return `?v=${renderScript.dataset.version}`
+  else return ''
 }
 
 render.do = reload => {
-  if (!render.done)
-    render.done = true
+  if (!render.done) render.done = true
 
   render.config = render.configs[render.type]
-  if (!render.config || !render.config.array.length)
-    return
+  if (!render.config || !render.config.array.length) return
 
   const previousElement = document.querySelector('body > .render')
-  if (previousElement)
-    previousElement.remove()
+  if (previousElement) previousElement.remove()
 
   const doRender = () => {
-    if (render.version === undefined)
+    if (render.version === undefined) {
       render.version = render.parseVersion()
+    }
 
     // Let us just allow people to get new render when toggling the option
     render.selected = render.config.array[Math.floor(Math.random() * render.config.array.length)]
@@ -158,11 +153,13 @@ render.do = reload => {
 render.onloaded = () => {
   // If the main script had already done its API check, yet render haven't been triggered, do it
   // This would only happen if this render script only gets loaded after the main script's API check
-  if (typeof page !== 'undefined' && page.apiChecked && !render.done)
+  if (typeof page !== 'undefined' && page.apiChecked && !render.done) {
     render.do()
+  }
 }
 
-if (document.readyState === 'interactive' || document.readyState === 'complete')
+if (document.readyState === 'interactive' || document.readyState === 'complete') {
   render.onloaded()
-else
+} else {
   window.addEventListener('DOMContentLoaded', () => render.onloaded())
+}

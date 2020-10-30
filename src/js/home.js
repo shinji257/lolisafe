@@ -81,10 +81,8 @@ page.onInitError = error => {
     window.location.reload()
   })
 
-  if (error.response)
-    page.onAxiosError(error)
-  else
-    page.onError(error)
+  if (error.response) page.onAxiosError(error)
+  else page.onError(error)
 }
 
 // Handler for regular JS errors
@@ -102,8 +100,7 @@ page.onError = error => {
 
 // Handler for Axios errors
 page.onAxiosError = (error, cont) => {
-  if (!cont)
-    console.error(error)
+  if (!cont) console.error(error)
 
   // Better Cloudflare errors
   const cloudflareErrors = {
@@ -138,7 +135,7 @@ page.onAxiosError = (error, cont) => {
 page.checkClientVersion = apiVersion => {
   const self = document.querySelector('#mainScript')
   const match = self.src.match(/\?_=(\d+)$/)
-  if (match && match[1] && match[1] !== apiVersion)
+  if (match && match[1] && match[1] !== apiVersion) {
     return swal({
       title: 'Update detected!',
       text: 'Client assets have been updated. Reload to display the latest version?',
@@ -152,27 +149,23 @@ page.checkClientVersion = apiVersion => {
     }).then(() => {
       window.location.reload()
     })
+  }
 }
 
 page.checkIfPublic = () => {
   return axios.get('api/check', {
     onDownloadProgress: () => {
       // Only do render and/or newsfeed after this request has been initiated to avoid blocking
-
       /* global render */
-      if (typeof render !== 'undefined' && !render.done)
-        render.do()
-
+      if (typeof render !== 'undefined' && !render.done) render.do()
       /* global newsfeed */
-      if (typeof newsfeed !== 'undefined' && !newsfeed.done)
-        newsfeed.do()
-
-      if (!page.apiChecked)
-        page.apiChecked = true
+      if (typeof newsfeed !== 'undefined' && !newsfeed.done) newsfeed.do()
+      if (!page.apiChecked) page.apiChecked = true
     }
   }).then(response => {
-    if (response.data.version)
+    if (response.data.version) {
       page.checkClientVersion(response.data.version)
+    }
 
     page.private = response.data.private
     page.enableUserAccounts = response.data.enableUserAccounts
@@ -193,25 +186,27 @@ page.checkIfPublic = () => {
 }
 
 page.preparePage = () => {
-  if (page.private)
+  if (page.private) {
     if (page.token) {
       return page.verifyToken(page.token, true)
     } else {
       const button = document.querySelector('#loginToUpload')
       button.href = 'auth'
       button.classList.remove('is-loading')
-      if (page.enableUserAccounts)
+      if (page.enableUserAccounts) {
         button.innerText = 'Anonymous upload is disabled.\nLog in or register to upload.'
-      else
+      } else {
         button.innerText = 'Running in private mode.\nLog in to upload.'
+      }
     }
-  else
+  } else {
     return page.prepareUpload()
+  }
 }
 
 page.verifyToken = (token, reloadOnError) => {
   return axios.post('api/tokens/verify', { token }).then(response => {
-    if (response.data.success === false)
+    if (response.data.success === false) {
       return swal({
         title: 'An error occurred!',
         text: response.data.description,
@@ -221,6 +216,7 @@ page.verifyToken = (token, reloadOnError) => {
         localStorage.removeItem('token')
         window.location.reload()
       })
+    }
 
     localStorage[lsKeys.token] = token
     page.token = token
@@ -233,8 +229,7 @@ page.prepareUpload = () => {
   if (page.token) {
     // Change /auth link to /dashboard
     const authLink = document.querySelector('#linksColumn a[href="auth"]')
-    if (authLink)
-      authLink.setAttribute('href', 'dashboard')
+    if (authLink) authLink.setAttribute('href', 'dashboard')
 
     // Display the album selection
     document.querySelector('#albumDiv').classList.remove('is-hidden')
@@ -243,8 +238,7 @@ page.prepareUpload = () => {
     page.albumSelectOnChange = () => {
       page.album = parseInt(page.albumSelect.value)
       // Re-generate ShareX config file
-      if (typeof page.prepareShareX === 'function')
-        page.prepareShareX()
+      if (typeof page.prepareShareX === 'function') page.prepareShareX()
     }
     page.albumSelect.addEventListener('change', page.albumSelectOnChange)
 
@@ -265,8 +259,7 @@ page.prepareUpload = () => {
   page.prepareDropzone()
 
   // Generate ShareX config file
-  if (typeof page.prepareShareX === 'function')
-    page.prepareShareX()
+  if (typeof page.prepareShareX === 'function') page.prepareShareX()
 
   // Prepare urls upload tab
   const urlMaxSize = document.querySelector('#urlMaxSize')
@@ -301,7 +294,7 @@ page.prepareUpload = () => {
 }
 
 page.setActiveTab = index => {
-  for (let i = 0; i < page.tabs.length; i++)
+  for (let i = 0; i < page.tabs.length; i++) {
     if (i === index) {
       page.tabs[i].tab.classList.add('is-active')
       page.tabs[i].content.classList.remove('is-hidden')
@@ -310,15 +303,17 @@ page.setActiveTab = index => {
       page.tabs[i].tab.classList.remove('is-active')
       page.tabs[i].content.classList.add('is-hidden')
     }
+  }
 }
 
 page.fetchAlbums = () => {
   return axios.get('api/albums', { headers: { token: page.token } }).then(response => {
-    if (response.data.success === false)
+    if (response.data.success === false) {
       return swal('An error occurred!', response.data.description, 'error')
+    }
 
     // Create an option for each album
-    if (Array.isArray(response.data.albums) && response.data.albums.length)
+    if (Array.isArray(response.data.albums) && response.data.albums.length) {
       for (let i = 0; i < response.data.albums.length; i++) {
         const album = response.data.albums[i]
         const option = document.createElement('option')
@@ -326,6 +321,7 @@ page.fetchAlbums = () => {
         option.innerHTML = album.name
         page.albumSelect.appendChild(option)
       }
+    }
   }).catch(page.onInitError)
 }
 
@@ -371,8 +367,7 @@ page.prepareDropzone = () => {
     init () {
       this.on('addedfile', file => {
         // Set active tab to file uploads, if necessary
-        if (page.activeTab !== 0)
-          page.setActiveTab(0)
+        if (page.activeTab !== 0) page.setActiveTab(0)
 
         // Add file entry
         tabDiv.querySelector('.uploads').classList.remove('is-hidden')
@@ -383,19 +378,21 @@ page.prepareDropzone = () => {
 
       this.on('sending', (file, xhr) => {
         // Add timeout listener (hacky method due to lack of built-in timeout handler)
-        if (!xhr.ontimeout)
+        if (!xhr.ontimeout) {
           xhr.ontimeout = () => {
             const instances = page.dropzone.getUploadingFiles()
               .filter(instance => instance.xhr === xhr)
             page.dropzone._handleUploadError(instances, xhr, 'Connection timed out. Try to reduce upload chunk size.')
           }
+        }
 
         // Attach necessary data for initial upload speed calculation
-        if (xhr._uplSpeedCalc === undefined)
+        if (xhr._uplSpeedCalc === undefined) {
           xhr._uplSpeedCalc = {
             lastSent: 0,
             data: [{ timestamp: Date.now(), bytes: 0 }]
           }
+        }
 
         // If not chunked uploads, add extra headers
         if (!file.upload.chunked) {
@@ -405,10 +402,11 @@ page.prepareDropzone = () => {
           if (page.stripTags !== null) xhr.setRequestHeader('striptags', page.stripTags)
         }
 
-        if (!file.upload.chunked)
+        if (!file.upload.chunked) {
           file.previewElement.querySelector('.descriptive-progress').innerHTML = 'Uploading\u2026'
-        else if (file.upload.chunks.length === 1)
+        } else if (file.upload.chunks.length === 1) {
           file.previewElement.querySelector('.descriptive-progress').innerHTML = `Uploading chunk 1/${file.upload.totalChunkCount}\u2026`
+        }
       })
 
       // Update descriptive progress
@@ -474,8 +472,7 @@ page.prepareDropzone = () => {
             }
 
             // If not enough data
-            if (!fullSec)
-              bytesPerSec = 1000 / elapsed * bytesPerSec
+            if (!fullSec) bytesPerSec = 1000 / elapsed * bytesPerSec
 
             // Get pretty bytes
             prettyBytesPerSec = page.getPrettyBytes(bytesPerSec)
@@ -495,15 +492,16 @@ page.prepareDropzone = () => {
           file.previewElement.querySelector('.error').classList.remove('is-hidden')
         }
 
-        if (Array.isArray(data.files) && data.files[0])
+        if (Array.isArray(data.files) && data.files[0]) {
           page.updateTemplate(file, data.files[0])
+        }
       })
 
       this.on('error', (file, error, xhr) => {
         let err = error
-        if (typeof error === 'object' && error.description)
+        if (typeof error === 'object' && error.description) {
           err = error.description
-        else if (xhr)
+        } else if (xhr) {
           // Formatting the Object is necessary since the function expect Axios errors
           err = page.onAxiosError({
             response: {
@@ -511,12 +509,14 @@ page.prepareDropzone = () => {
               statusText: xhr.statusText
             }
           }, true).data.description
-        else if (error instanceof Error)
+        } else if (error instanceof Error) {
           err = error.toString()
+        }
 
         // Clean up file size errors
-        if (/^File is too big/.test(err) && /File too large/.test(err))
+        if (/^File is too big/.test(err) && /File too large/.test(err)) {
           err = `File too large (${page.getPrettyBytes(file.size)}).`
+        }
 
         page.updateTemplateIcon(file.previewElement, 'icon-block')
 
@@ -556,8 +556,9 @@ page.prepareDropzone = () => {
           file.previewElement.querySelector('.error').classList.remove('is-hidden')
         }
 
-        if (response.data.files && response.data.files[0])
+        if (response.data.files && response.data.files[0]) {
           page.updateTemplate(file, response.data.files[0])
+        }
 
         return done()
       })
@@ -572,8 +573,9 @@ page.addUrlsToQueue = () => {
       return url.trim().length
     })
 
-  if (!urls.length)
+  if (!urls.length) {
     return swal('An error occurred!', 'You have not entered any URLs.', 'error')
+  }
 
   const tabDiv = document.querySelector('#tab-urls')
   tabDiv.querySelector('.uploads').classList.remove('is-hidden')
@@ -607,15 +609,17 @@ page.processUrlsQueue = () => {
 
     if (data.success === false) {
       const match = data.description.match(/ over limit: (\d+)$/)
-      if (match && match[1])
+      if (match && match[1]) {
         data.description = `File exceeded limit of ${page.getPrettyBytes(match[1])}.`
+      }
 
       file.previewElement.querySelector('.error').innerHTML = data.description
       file.previewElement.querySelector('.error').classList.remove('is-hidden')
     }
 
-    if (Array.isArray(data.files) && data.files[0])
+    if (Array.isArray(data.files) && data.files[0]) {
       page.updateTemplate(file, data.files[0])
+    }
 
     page.activeUrlsQueue--
     return shiftQueue()
@@ -673,7 +677,7 @@ page.updateTemplate = (file, response) => {
     ? exec[0].toLowerCase()
     : null
 
-  if (page.imageExts.includes(extname))
+  if (page.imageExts.includes(extname)) {
     if (page.previewImages) {
       const img = file.previewElement.querySelector('img')
       img.setAttribute('alt', response.name || '')
@@ -689,10 +693,11 @@ page.updateTemplate = (file, response) => {
     } else {
       page.updateTemplateIcon(file.previewElement, 'icon-picture')
     }
-  else if (page.videoExts.includes(extname))
+  } else if (page.videoExts.includes(extname)) {
     page.updateTemplateIcon(file.previewElement, 'icon-video')
-  else
+  } else {
     page.updateTemplateIcon(file.previewElement, 'icon-doc-inv')
+  }
 
   if (response.expirydate) {
     const expiryDate = file.previewElement.querySelector('.expiry-date')
@@ -758,8 +763,9 @@ page.createAlbum = () => {
         token: page.token
       }
     }).then(response => {
-      if (response.data.success === false)
+      if (response.data.success === false) {
         return swal('An error occurred!', response.data.description, 'error')
+      }
 
       const option = document.createElement('option')
       page.albumSelect.appendChild(option)
@@ -865,8 +871,9 @@ page.prepareUploadConfig = () => {
       valueHandler (value) {
         if (value === '0') {
           const uploadFields = document.querySelectorAll('.tab-content > .uploads')
-          for (let i = 0; i < uploadFields.length; i++)
+          for (let i = 0; i < uploadFields.length; i++) {
             uploadFields[i].classList.add('is-reversed')
+          }
         }
       }
     },
@@ -891,8 +898,9 @@ page.prepareUploadConfig = () => {
         value: i === 0 ? 'default' : String(age),
         text: page.getPrettyUploadAge(age)
       })
-      if (age === stored)
+      if (age === stored) {
         config.uploadAge.value = stored
+      }
     }
   }
 
@@ -901,8 +909,9 @@ page.prepareUploadConfig = () => {
     if (!page.fileIdentifierLength.force &&
       !isNaN(stored) &&
       stored >= page.fileIdentifierLength.min &&
-      stored <= page.fileIdentifierLength.max)
+      stored <= page.fileIdentifierLength.max) {
       config.fileLength.value = stored
+    }
   }
 
   const tabContent = document.querySelector('#tab-config')
@@ -915,8 +924,7 @@ page.prepareUploadConfig = () => {
     const conf = config[key]
 
     // Skip only if display attribute is explicitly set to false
-    if (conf.display === false)
-      continue
+    if (conf.display === false) continue
 
     const field = document.createElement('div')
     field.className = 'field'
@@ -927,24 +935,29 @@ page.prepareUploadConfig = () => {
         value = conf.value
       } else if (conf.number !== undefined) {
         const parsed = parseInt(localStorage[lsKeys[key]])
-        if (!isNaN(parsed) && parsed <= conf.number.max && parsed >= conf.number.min)
+        if (!isNaN(parsed) && parsed <= conf.number.max && parsed >= conf.number.min) {
           value = parsed
+        }
       } else {
         const stored = localStorage[lsKeys[key]]
-        if (Array.isArray(conf.select))
-          value = conf.select.find(sel => sel.value === stored) ? stored : undefined
-        else
+        if (Array.isArray(conf.select)) {
+          value = conf.select.find(sel => sel.value === stored)
+            ? stored
+            : undefined
+        } else {
           value = stored
+        }
       }
 
       // If valueHandler function exists, defer to the function,
       // otherwise pass value to global page object
-      if (typeof conf.valueHandler === 'function')
+      if (typeof conf.valueHandler === 'function') {
         conf.valueHandler(value)
-      else if (value !== undefined)
+      } else if (value !== undefined) {
         page[key] = value
-      else if (fallback[key] !== undefined)
+      } else if (fallback[key] !== undefined) {
         page[key] = fallback[key]
+      }
     }
 
     let control
@@ -975,34 +988,34 @@ page.prepareUploadConfig = () => {
       control.className = 'input is-fullwidth'
       control.type = 'number'
 
-      if (conf.number.min !== undefined)
-        control.min = conf.number.min
-      if (conf.number.max !== undefined)
-        control.max = conf.number.max
-      if (typeof value === 'number')
-        control.value = value
-      else if (conf.number.default !== undefined)
-        control.value = conf.number.default
+      if (conf.number.min !== undefined) control.min = conf.number.min
+      if (conf.number.max !== undefined) control.max = conf.number.max
+      if (typeof value === 'number') control.value = value
+      else if (conf.number.default !== undefined) control.value = conf.number.default
     }
 
     let help
     if (conf.disabled) {
-      if (Array.isArray(conf.select))
+      if (Array.isArray(conf.select)) {
         control.querySelector('select').disabled = conf.disabled
-      else
+      } else {
         control.disabled = conf.disabled
+      }
       help = 'This option is currently not configurable.'
     } else if (typeof conf.help === 'string') {
       help = conf.help
     } else if (conf.help === true && conf.number !== undefined) {
       const tmp = []
 
-      if (conf.number.default !== undefined)
+      if (conf.number.default !== undefined) {
         tmp.push(`Default is ${conf.number.default}${conf.number.suffix || ''}.`)
-      if (conf.number.min !== undefined)
+      }
+      if (conf.number.min !== undefined) {
         tmp.push(`Min is ${conf.number.min}${conf.number.suffix || ''}.`)
-      if (conf.number.max !== undefined)
+      }
+      if (conf.number.max !== undefined) {
         tmp.push(`Max is ${conf.number.max}${conf.number.suffix || ''}.`)
+      }
 
       help = tmp.join(' ')
     }
@@ -1036,8 +1049,7 @@ page.prepareUploadConfig = () => {
 
   form.appendChild(submit)
   form.querySelector('#saveConfig').addEventListener('click', () => {
-    if (!form.checkValidity())
-      return
+    if (!form.checkValidity()) return
 
     const keys = Object.keys(config)
       .filter(key => config[key].display !== false && config[key].disabled !== true)
@@ -1046,18 +1058,18 @@ page.prepareUploadConfig = () => {
 
       let value
       if (config[key].select !== undefined) {
-        if (form.elements[key].value !== 'default')
+        if (form.elements[key].value !== 'default') {
           value = form.elements[key].value
+        }
       } else if (config[key].number !== undefined) {
         const parsed = parseInt(form.elements[key].value)
-        if (!isNaN(parsed) && parsed !== config[key].number.default)
+        if (!isNaN(parsed) && parsed !== config[key].number.default) {
           value = Math.min(Math.max(parsed, config[key].number.min), config[key].number.max)
+        }
       }
 
-      if (value !== undefined)
-        localStorage[lsKeys[key]] = value
-      else
-        localStorage.removeItem(lsKeys[key])
+      if (value !== undefined) localStorage[lsKeys[key]] = value
+      else localStorage.removeItem(lsKeys[key])
     }
 
     swal({
@@ -1104,7 +1116,7 @@ window.addEventListener('paste', event => {
 })
 
 window.addEventListener('DOMContentLoaded', () => {
-  if (window.cookieconsent)
+  if (window.cookieconsent) {
     window.cookieconsent.initialise({
       cookie: {
         name: 'cookieconsent_status',
@@ -1131,6 +1143,7 @@ window.addEventListener('DOMContentLoaded', () => {
         href: 'cookiepolicy'
       }
     })
+  }
 
   page.checkIfPublic()
 

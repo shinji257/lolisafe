@@ -29,8 +29,9 @@ const postcssPlugins = [
 sass.compiler = sassCompiler
 
 // Minify on production
-if (process.env.NODE_ENV !== 'development')
+if (process.env.NODE_ENV !== 'development') {
   postcssPlugins.push(cssnano())
+}
 
 /** TASKS: LINT */
 

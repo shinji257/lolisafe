@@ -10,16 +10,11 @@ module.exports = {
     'standard'
   ],
   rules: {
-    curly: [
-      'error',
-      'multi',
-      'consistent'
-    ],
     'no-throw-literal': 0,
     'object-shorthand': [
       'error',
       'always'
     ],
-    'standard/no-callback-literal': 0
+    'node/no-callback-literal': 0
   }
 }

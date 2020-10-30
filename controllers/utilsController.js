@@ -18,7 +18,9 @@ const self = {
     chunkSize: config.uploads.scan.chunkSize || 64 * 1024,
     groupBypass: config.uploads.scan.groupBypass || null,
     whitelistExtensions: (Array.isArray(config.uploads.scan.whitelistExtensions) &&
-     config.uploads.scan.whitelistExtensions.length) ? config.uploads.scan.whitelistExtensions : null,
+      config.uploads.scan.whitelistExtensions.length)
+      ? config.uploads.scan.whitelistExtensions
+      : null,
     maxSize: (parseInt(config.uploads.scan.maxSize) * 1e6) || null
   },
   gitHash: null,
@@ -92,14 +94,16 @@ self.extname = filename => {
   }
 
   // check against extensions that must be preserved
-  for (const extPreserve of extPreserves)
+  for (const extPreserve of extPreserves) {
     if (lower.endsWith(extPreserve)) {
       extname = extPreserve
       break
     }
+  }
 
-  if (!extname)
+  if (!extname) {
     extname = lower.slice(lower.lastIndexOf('.') - lower.length) // path.extname(lower)
+  }
 
   return extname + multi
 }
@@ -110,14 +114,12 @@ self.escape = string => {
   // Copyright(c) 2015 Andreas Lubbe
   // Copyright(c) 2015 Tiancheng "Timothy" Gu
 
-  if (!string)
-    return string
+  if (!string) return string
 
   const str = String(string)
   const match = /["'&<>]/.exec(str)
 
-  if (!match)
-    return str
+  if (!match) return str
 
   let escape
   let html = ''
@@ -145,8 +147,9 @@ self.escape = string => {
         continue
     }
 
-    if (lastIndex !== index)
+    if (lastIndex !== index) {
       html += str.substring(lastIndex, index)
+    }
 
     lastIndex = index + 1
     html += escape
@@ -203,16 +206,16 @@ self.generateThumbs = async (name, extname, force) => {
     // Check if thumbnail already exists
     try {
       const lstat = await paths.lstat(thumbname)
-      if (lstat.isSymbolicLink())
+      if (lstat.isSymbolicLink()) {
         // Unlink if symlink (should be symlink to the placeholder)
         await paths.unlink(thumbname)
-      else if (!force)
+      } else if (!force) {
         // Continue only if it does not exist, unless forced to
         return true
+      }
     } catch (error) {
       // Re-throw error
-      if (error.code !== 'ENOENT')
-        throw error
+      if (error.code !== 'ENOENT') throw error
     }
 
     // Full path to input file
@@ -257,12 +260,14 @@ self.generateThumbs = async (name, extname, force) => {
       const metadata = await self.ffprobe(input)
 
       const duration = parseInt(metadata.format.duration)
-      if (isNaN(duration))
+      if (isNaN(duration)) {
         throw 'Warning: File does not have valid duration metadata'
+      }
 
       const videoStream = metadata.streams && metadata.streams.find(s => s.codec_type === 'video')
-      if (!videoStream || !videoStream.width || !videoStream.height)
+      if (!videoStream || !videoStream.width || !videoStream.height) {
         throw 'Warning: File does not have valid video stream metadata'
+      }
 
       await new Promise((resolve, reject) => {
         ffmpeg(input)
@@ -287,10 +292,11 @@ self.generateThumbs = async (name, extname, force) => {
             await paths.lstat(thumbname)
             return true
           } catch (err) {
-            if (err.code === 'ENOENT')
+            if (err.code === 'ENOENT') {
               throw error || 'Warning: FFMPEG exited with empty output file'
-            else
+            } else {
               throw error || err
+            }
           }
         })
     } else {
@@ -361,8 +367,7 @@ self.unlinkFile = async (filename, predb) => {
     await paths.unlink(path.join(paths.uploads, filename))
   } catch (error) {
     // Return true if file does not exist
-    if (error.code !== 'ENOENT')
-      throw error
+    if (error.code !== 'ENOENT') throw error
   }
 
   const identifier = filename.split('.')[0]
@@ -375,26 +380,26 @@ self.unlinkFile = async (filename, predb) => {
   }
 
   const extname = self.extname(filename)
-  if (self.imageExts.includes(extname) || self.videoExts.includes(extname))
+  if (self.imageExts.includes(extname) || self.videoExts.includes(extname)) {
     try {
       await paths.unlink(path.join(paths.thumbs, `${identifier}.png`))
     } catch (error) {
-      if (error.code !== 'ENOENT')
-        throw error
+      if (error.code !== 'ENOENT') throw error
     }
+  }
 }
 
 self.bulkDeleteFromDb = async (field, values, user) => {
   // Always return an empty array on failure
-  if (!user || !['id', 'name'].includes(field) || !values.length)
-    return []
+  if (!user || !['id', 'name'].includes(field) || !values.length) return []
 
   // SQLITE_LIMIT_VARIABLE_NUMBER, which defaults to 999
   // Read more: https://www.sqlite.org/limits.html
   const MAX_VARIABLES_CHUNK_SIZE = 999
   const chunks = []
-  while (values.length)
+  while (values.length) {
     chunks.push(values.splice(0, MAX_VARIABLES_CHUNK_SIZE))
+  }
 
   const failed = []
   const ismoderator = perms.is(user, 'moderator')
@@ -407,8 +412,9 @@ self.bulkDeleteFromDb = async (field, values, user) => {
       const files = await db.table('files')
         .whereIn(field, chunk)
         .where(function () {
-          if (!ismoderator)
+          if (!ismoderator) {
             this.where('userid', user.id)
+          }
         })
 
       // Push files that could not be found in db
@@ -435,17 +441,19 @@ self.bulkDeleteFromDb = async (field, values, user) => {
         .del()
       self.invalidateStatsCache('uploads')
 
-      if (self.idSet)
+      if (self.idSet) {
         unlinked.forEach(file => {
           const identifier = file.name.split('.')[0]
           self.idSet.delete(identifier)
           // logger.log(`Removed ${identifier} from identifiers cache (bulkDeleteFromDb)`)
         })
+      }
 
       // Push album ids
       unlinked.forEach(file => {
-        if (file.albumid && !albumids.includes(file.albumid))
+        if (file.albumid && !albumids.includes(file.albumid)) {
           albumids.push(file.albumid)
+        }
       })
 
       // Push unlinked files
@@ -463,13 +471,16 @@ self.bulkDeleteFromDb = async (field, values, user) => {
       }
 
       // Purge Cloudflare's cache if necessary, but do not wait
-      if (config.cloudflare.purgeCache)
+      if (config.cloudflare.purgeCache) {
         self.purgeCloudflareCache(unlinkeds.map(file => file.name), true, true)
           .then(results => {
-            for (const result of results)
-              if (result.errors.length)
+            for (const result of results) {
+              if (result.errors.length) {
                 result.errors.forEach(error => logger.error(`[CF]: ${error}`))
+              }
+            }
           })
+      }
     }
   } catch (error) {
     logger.error(error)
@@ -480,12 +491,15 @@ self.bulkDeleteFromDb = async (field, values, user) => {
 
 self.purgeCloudflareCache = async (names, uploads, thumbs) => {
   const errors = []
-  if (!cloudflareAuth)
+  if (!cloudflareAuth) {
     errors.push('Cloudflare auth is incomplete or missing')
-  if (!Array.isArray(names) || !names.length)
+  }
+  if (!Array.isArray(names) || !names.length) {
     errors.push('Names array is invalid or empty')
-  if (errors.length)
+  }
+  if (errors.length) {
     return [{ success: false, files: [], errors }]
+  }
 
   let domain = config.domain
   if (!uploads) domain = config.homeDomain
@@ -495,8 +509,9 @@ self.purgeCloudflareCache = async (names, uploads, thumbs) => {
     if (uploads) {
       const url = `${domain}/${name}`
       const extname = self.extname(name)
-      if (thumbs && self.mayGenerateThumb(extname))
+      if (thumbs && self.mayGenerateThumb(extname)) {
         thumbNames.push(`${domain}/thumbs/${name.slice(0, -extname.length)}.png`)
+      }
       return url
     } else {
       return name === 'home' ? domain : `${domain}/${name}`
@@ -509,8 +524,9 @@ self.purgeCloudflareCache = async (names, uploads, thumbs) => {
   // TODO: Handle API rate limits
   const MAX_LENGTH = 30
   const chunks = []
-  while (names.length)
+  while (names.length) {
     chunks.push(names.splice(0, MAX_LENGTH))
+  }
 
   const url = `https://api.cloudflare.com/client/v4/zones/${config.cloudflare.zoneId}/purge_cache`
   const results = []
@@ -543,8 +559,9 @@ self.purgeCloudflareCache = async (names, uploads, thumbs) => {
 
       const response = await purge.json()
       result.success = response.success
-      if (Array.isArray(response.errors) && response.errors.length)
+      if (Array.isArray(response.errors) && response.errors.length) {
         result.errors = response.errors.map(error => `${error.code}: ${error.message}`)
+      }
     } catch (error) {
       result.errors = [error.toString()]
     }
@@ -642,7 +659,7 @@ self.stats = async (req, res, next) => {
     }
 
     // Disk usage, only for Linux platform
-    if (os.platform === 'linux')
+    if (os.platform === 'linux') {
       if (!statsCache.disk.cache && statsCache.disk.generating) {
         stats.disk = false
       } else if (((Date.now() - statsCache.disk.generatedAt) <= 60000) || statsCache.disk.generating) {
@@ -727,8 +744,9 @@ self.stats = async (req, res, next) => {
                 stats.disk[basename] = parseInt(formatted[0])
 
                 // Add to types if necessary
-                if (!stats.disk._types.byte.includes(basename))
+                if (!stats.disk._types.byte.includes(basename)) {
                   stats.disk._types.byte.push(basename)
+                }
               })
 
               const stderr = []
@@ -786,6 +804,7 @@ self.stats = async (req, res, next) => {
         statsCache.disk.cache = stats.disk
         statsCache.disk.generating = false
       }
+    }
 
     // Uploads
     if (!statsCache.uploads.cache && statsCache.uploads.generating) {
@@ -812,8 +831,9 @@ self.stats = async (req, res, next) => {
         stats.uploads.total = uploads.length
         stats.uploads.sizeInDb = uploads.reduce((acc, upload) => acc + parseInt(upload.size), 0)
         // Add type information for the new column
-        if (!Array.isArray(stats.uploads._types.byte))
+        if (!Array.isArray(stats.uploads._types.byte)) {
           stats.uploads._types.byte = []
+        }
         stats.uploads._types.byte.push('sizeInDb')
       } else {
         stats.uploads.total = await db.table('files')
@@ -823,16 +843,18 @@ self.stats = async (req, res, next) => {
 
       stats.uploads.images = await db.table('files')
         .where(function () {
-          for (const ext of self.imageExts)
+          for (const ext of self.imageExts) {
             this.orWhere('name', 'like', `%${ext}`)
+          }
         })
         .count('id as count')
         .then(rows => rows[0].count)
 
       stats.uploads.videos = await db.table('files')
         .where(function () {
-          for (const ext of self.videoExts)
+          for (const ext of self.videoExts) {
             this.orWhere('name', 'like', `%${ext}`)
+          }
         })
         .count('id as count')
         .then(rows => rows[0].count)
@@ -870,16 +892,18 @@ self.stats = async (req, res, next) => {
       const users = await db.table('users')
       stats.users.total = users.length
       for (const user of users) {
-        if (user.enabled === false || user.enabled === 0)
+        if (user.enabled === false || user.enabled === 0) {
           stats.users.disabled++
+        }
 
         // This may be inaccurate on installations with customized permissions
         user.permission = user.permission || 0
-        for (const p of permissionKeys)
+        for (const p of permissionKeys) {
           if (user.permission === perms.permissions[p]) {
             stats.users[p]++
             break
           }
+        }
       }
 
       // Update cache
@@ -926,8 +950,7 @@ self.stats = async (req, res, next) => {
           stats.albums.zipGenerated++
         } catch (error) {
           // Re-throw error
-          if (error.code !== 'ENOENT')
-            throw error
+          if (error.code !== 'ENOENT') throw error
         }
       }))
 

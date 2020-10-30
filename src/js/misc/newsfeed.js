@@ -92,9 +92,11 @@ newsfeed.dismissNotification = element => {
   element.parentNode.removeChild(element)
 
   const keys = Object.keys(newsfeed.dismissed)
-  if (keys.length > newsfeed.maxItems)
-    for (let i = 0; i < keys.length - newsfeed.maxItems; i++)
+  if (keys.length > newsfeed.maxItems) {
+    for (let i = 0; i < keys.length - newsfeed.maxItems; i++) {
       delete newsfeed.dismissed[keys[i]]
+    }
+  }
 
   localStorage[newsfeed.lsKey] = JSON.stringify(newsfeed.dismissed)
 }
@@ -108,8 +110,9 @@ newsfeed.do = () => {
 
       if (items.length) {
         const dismissed = localStorage[newsfeed.lsKey]
-        if (dismissed)
+        if (dismissed) {
           newsfeed.dismissed = JSON.parse(dismissed)
+        }
 
         const element = document.createElement('section')
         element.id = 'newsfeed'
@@ -142,11 +145,12 @@ newsfeed.do = () => {
             })
 
             const dismissTrigger = notificationElement.querySelector('.delete')
-            if (dismissTrigger)
+            if (dismissTrigger) {
               dismissTrigger.addEventListener('click', function () {
                 event.preventDefault()
                 newsfeed.dismissNotification(event.target.parentNode)
               })
+            }
 
             column.appendChild(notificationElement)
           }
@@ -163,11 +167,13 @@ newsfeed.do = () => {
 newsfeed.onloaded = () => {
   // If the main script had already done its API check, yet newsfeed haven't been triggered, do it
   // This would only happen if this newsfeed script only gets loaded after the main script's API check
-  if (typeof page !== 'undefined' && page.apiChecked && !newsfeed.done)
+  if (typeof page !== 'undefined' && page.apiChecked && !newsfeed.done) {
     newsfeed.do()
+  }
 }
 
-if (document.readyState === 'interactive' || document.readyState === 'complete')
+if (document.readyState === 'interactive' || document.readyState === 'complete') {
   newsfeed.onloaded()
-else
+} else {
   window.addEventListener('DOMContentLoaded', () => newsfeed.onloaded())
+}
