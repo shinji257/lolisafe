@@ -802,12 +802,14 @@ page.prepareUploadConfig = () => {
     fileLength: {
       display: fileIdentifierLength,
       label: 'File identifier length',
-      number: fileIdentifierLength ? {
-        min: page.fileIdentifierLength.min,
-        max: page.fileIdentifierLength.max,
-        default: page.fileIdentifierLength.default,
-        round: true
-      } : undefined,
+      number: fileIdentifierLength
+        ? {
+            min: page.fileIdentifierLength.min,
+            max: page.fileIdentifierLength.max,
+            default: page.fileIdentifierLength.default,
+            round: true
+          }
+        : undefined,
       help: true, // true means auto-generated, for number-based configs only
       disabled: fileIdentifierLength && page.fileIdentifierLength.force
     },
@@ -820,10 +822,12 @@ page.prepareUploadConfig = () => {
     stripTags: {
       display: page.stripTagsConfig,
       label: 'Strip tags',
-      select: page.stripTagsConfig ? [
-        { value: page.stripTagsConfig.default ? 'default' : '1', text: 'Yes' },
-        { value: page.stripTagsConfig.default ? '0' : 'default', text: 'No' }
-      ] : null,
+      select: page.stripTagsConfig
+        ? [
+            { value: page.stripTagsConfig.default ? 'default' : '1', text: 'Yes' },
+            { value: page.stripTagsConfig.default ? '0' : 'default', text: 'No' }
+          ]
+        : null,
       help: `Whether to strip tags (e.g. EXIF) from your uploads.<br>
         This only applies to regular image${page.stripTagsConfig && page.stripTagsConfig.video ? ' and video' : ''} uploads (i.e. not URL uploads).`,
       disabled: page.stripTagsConfig && page.stripTagsConfig.force

@@ -625,8 +625,9 @@ page.getUploads = (params = {}) => {
               <i class="icon-cancel"></i>
             </span>
           </a>
-          ${params.all ? '' : `
-          <a class="button is-small is-warning is-outlined" title="Bulk add to album" data-action="add-selected-uploads-to-album">
+          ${params.all
+            ? ''
+            : `<a class="button is-small is-warning is-outlined" title="Bulk add to album" data-action="add-selected-uploads-to-album">
             <span class="icon">
               <i class="icon-plus"></i>
             </span>
@@ -736,12 +737,13 @@ page.getUploads = (params = {}) => {
         div.innerHTML += `
           <input type="checkbox" class="checkbox" title="Select" data-index="${i}" data-action="select"${upload.selected ? ' checked' : ''}>
           <div class="controls">
-            ${upload.thumb ? `
-            <a class="button is-small is-primary" title="Display preview" data-action="display-preview">
+            ${upload.thumb
+              ? `<a class="button is-small is-primary" title="Display preview" data-action="display-preview">
               <span class="icon">
                 <i class="${upload.type !== 'other' ? `icon-${upload.type}` : 'icon-doc-inv'}"></i>
               </span>
-            </a>` : ''}
+            </a>`
+              : ''}
             <a class="button is-small is-info clipboard-js" title="Copy link to clipboard" data-clipboard-text="${upload.file}">
               <span class="icon">
                 <i class="icon-clipboard"></i>
@@ -762,8 +764,9 @@ page.getUploads = (params = {}) => {
             <p class="name" title="${upload.file}">${upload.name}</p>
             ${showOriginalNames ? `<p class="originalname" title="${upload.original}">${upload.original}</p>` : ''}
             <p class="prettybytes">${upload.appendix ? `<span>${upload.appendix}</span> – ` : ''}${upload.prettyBytes}</p>
-            ${hasExpiryDateColumn && upload.prettyExpiryDate ? `
-            <p class="prettyexpirydate">EXP: ${upload.prettyExpiryDate}</p>` : ''}
+            ${hasExpiryDateColumn && upload.prettyExpiryDate
+              ? `<p class="prettyexpirydate">EXP: ${upload.prettyExpiryDate}</p>`
+              : ''}
           </div>
         `
 
@@ -828,8 +831,9 @@ page.getUploads = (params = {}) => {
                 <i class="icon-clipboard"></i>
               </span>
             </a>
-            ${params.all ? '' : `
-            <a class="button is-small is-warning is-outlined" title="Add to album" data-action="add-to-album">
+            ${params.all
+              ? ''
+              : `<a class="button is-small is-warning is-outlined" title="Add to album" data-action="add-to-album">
               <span class="icon">
                 <i class="icon-plus"></i>
               </span>
@@ -1098,8 +1102,8 @@ page.uploadFiltersHelp = element => {
   const all = Boolean(element.dataset.all)
   const content = document.createElement('div')
   content.style = 'text-align: left'
-  content.innerHTML = `${all ? `
-    There are 2 filter keys, namely <b>user</b> (username) and <b>ip</b>.
+  content.innerHTML = `${all
+    ? `There are 2 filter keys, namely <b>user</b> (username) and <b>ip</b>.
     These keys can be specified more than once.
     For usernames with whitespaces, wrap them with double quotes (<code>"</code>).
     Special cases such as uploads by non-registered users or have no IPs respectively, use <code>user:-</code> or <code>ip:-</code>.
@@ -1108,15 +1112,14 @@ page.uploadFiltersHelp = element => {
     Negation sign can also be used to exclude the special cases mentioned above (i.e. <code>-user:-</code> or <code>-ip:-</code>).
 
     If you know the ID of a user's album, you can list its uploads with <b>albumid</b> key.
-    Negation sign works for this key as well.
-    ` : `
-    There is only 1 filter key, namely <b>albumid</b>.
+    Negation sign works for this key as well.`
+    : `There is only 1 filter key, namely <b>albumid</b>.
     This key can be specified more than once.
     Special case such as uploads with no albums, use <code>albumid:-</code>.
 
     To exclude certain albums while still listing every other uploads, add negation sign (<code>-</code>) before the keys.
-    Negation sign can also be used to exclude the special case mentioned above (i.e. <code>-albumid:-</code>).
-    `}
+    Negation sign can also be used to exclude the special case mentioned above (i.e. <code>-albumid:-</code>).`}
+
     There are 2 range keys: <b>date</b> (upload date) and <b>expiry</b> (expiry date).
     Their format is: <code>"YYYY/MM/DD HH:MM:SS-YYYY/MM/DD HH:MM:SS"</code> ("from" date and "to" date respectively).
     You may specify only one of the dates.
@@ -1146,8 +1149,10 @@ page.uploadFiltersHelp = element => {
     Excluding certain keywords is also supported by adding negation sign before the keywords.
 
     <b>Internal steps:</b>
-    ${all ? `- Query uploads passing ALL exclusion filter keys OR matching ANY filter keys, if any.
-    - Refine matches` : '- Filter uploads'} using date key, if any.
+    ${all
+      ? `- Query uploads passing ALL exclusion filter keys OR matching ANY filter keys, if any.
+    - Refine matches`
+      : '- Filter uploads'} using date key, if any.
     - Refine matches using expiry key, if any.
     - Refine matches using type-is keys, if any.
     - Refine matches using ANY non-keyed keywords, if any.
@@ -1155,13 +1160,15 @@ page.uploadFiltersHelp = element => {
     - Sort matches using sorting keys, if any.
 
     <b>Examples:</b>
-    ${all ? `- Uploads from users named "demo" AND/OR "John Doe" AND/OR non-registered users:
+    ${all
+      ? `- Uploads from users named "demo" AND/OR "John Doe" AND/OR non-registered users:
     <code>user:demo user:"John Doe" user:-</code>
     - ALL uploads, but NOT the ones from user named "demo" AND "John Doe":
     <code>-user:demo -user:"John Doe"</code>
     - Uploads from IP "127.0.0.1" AND which file names match "*.rar" OR "*.zip":
     <code>ip:127.0.0.1 *.rar *.zip</code>
-    ` : ''}- Uploads without albums:
+    `
+      : ''}- Uploads without albums:
     <code>albumid:-</code>
     - ALL uploads, but NOT the ones from album with ID 69:
     <code>-albumid:69</code>
@@ -1176,9 +1183,9 @@ page.uploadFiltersHelp = element => {
     - Sort matches by "size" column in ascending and descending order respectively:
     <code>${all ? 'user:"John Doe"' : '*.txt'} sort:size</code>
     <code>*.mp4 ${all ? 'user:- ' : ''}sort:size:d</code>
-    ${!page.permissions.moderator ? `
-    <b>Notice:</b> Regular users may face some limitations in the amount of keys that can be used at a time.
-    ` : ''}
+    ${!page.permissions.moderator
+      ? '<b>Notice:</b> Regular users may face some limitations in the amount of keys that can be used at a time.'
+      : ''}
     <b>Friendly reminder:</b> This window can be scrolled up!
   `.trim().replace(/^\s*/g, '').replace(/\n/g, '<br>')
 
@@ -1399,11 +1406,10 @@ page.postBulkDeleteUploads = (params = {}) => {
       if (!response) return
 
       if (response.data.success === false)
-        if (response.data.description === 'No token provided') {
+        if (response.data.description === 'No token provided')
           return page.verifyToken(page.token)
-        } else {
+        else
           return swal('An error occurred!', response.data.description, 'error')
-        }
 
       const failed = Array.isArray(response.data.failed) ? response.data.failed : []
       if (failed.length === params.values.length)
@@ -1907,11 +1913,10 @@ page.editAlbum = id => {
       if (!response) return
 
       if (response.data.success === false)
-        if (response.data.description === 'No token provided') {
+        if (response.data.description === 'No token provided')
           return page.verifyToken(page.token)
-        } else {
+        else
           return swal('An error occurred!', response.data.description, 'error')
-        }
 
       if (response.data.identifier)
         swal('Success!', `The album's new identifier is: ${response.data.identifier}.`, 'success')
@@ -1998,11 +2003,10 @@ page.submitAlbum = element => {
 
     page.updateTrigger(element)
     if (response.data.success === false)
-      if (response.data.description === 'No token provided') {
+      if (response.data.description === 'No token provided')
         return page.verifyToken(page.token)
-      } else {
+      else
         return swal('An error occurred!', response.data.description, 'error')
-      }
 
     swal('Woohoo!', 'Album was created successfully.', 'success', {
       buttons: false,
@@ -2023,11 +2027,10 @@ page.getAlbumsSidebar = () => {
     if (!response) return
 
     if (response.data.success === false)
-      if (response.data.description === 'No token provided') {
+      if (response.data.description === 'No token provided')
         return page.verifyToken(page.token)
-      } else {
+      else
         return swal('An error occurred!', response.data.description, 'error')
-      }
 
     const albums = response.data.albums
     const count = response.data.count
@@ -2514,11 +2517,10 @@ page.createUser = () => {
       if (!response) return
 
       if (response.data.success === false)
-        if (response.data.description === 'No token provided') {
+        if (response.data.description === 'No token provided')
           return page.verifyToken(page.token)
-        } else {
+        else
           return swal('An error occurred!', response.data.description, 'error')
-        }
 
       const div = document.createElement('div')
       div.innerHTML = `
@@ -2613,11 +2615,10 @@ page.editUser = id => {
       if (!response) return
 
       if (response.data.success === false)
-        if (response.data.description === 'No token provided') {
+        if (response.data.description === 'No token provided')
           return page.verifyToken(page.token)
-        } else {
+        else
           return swal('An error occurred!', response.data.description, 'error')
-        }
 
       let autoClose = true
       const div = document.createElement('div')

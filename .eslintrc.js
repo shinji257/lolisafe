@@ -1,37 +1,25 @@
 module.exports = {
-  "root": true,
-  "parserOptions": {
-    "ecmaVersion": 9 // 2018
+  root: true,
+  parserOptions: {
+    ecmaVersion: 9 // 2018
   },
-  "env": {
-    "node": true
+  env: {
+    node: true
   },
-  "extends": [
-    "standard"
+  extends: [
+    'standard'
   ],
-  "rules": {
-    "curly": [
-      "error",
-      "multi",
-      "consistent"
+  rules: {
+    curly: [
+      'error',
+      'multi',
+      'consistent'
     ],
-    "no-throw-literal": 0,
-    "no-var": "error",
-    "prefer-const": [
-      "error",
-      {
-        "destructuring": "any",
-        "ignoreReadBeforeAssign": false
-      }
+    'no-throw-literal': 0,
+    'object-shorthand': [
+      'error',
+      'always'
     ],
-    "object-shorthand": [
-      "error",
-      "always"
-    ],
-    "quotes": [
-      "error",
-      "single"
-    ],
-    "standard/no-callback-literal": 0
+    'standard/no-callback-literal': 0
   }
 }
