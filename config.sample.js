@@ -348,13 +348,7 @@ module.exports = {
       Example: 'moderator' = moderators, admins & superadmins.
     */
     scan: {
-      enabled: false,
-
-      ip: '127.0.0.1',
-      port: 3310,
-      timeout: 180 * 1000,
-      chunkSize: 64 * 1024,
-
+      enabled: true,
       groupBypass: 'admin', // Other group names in controllers/permissionController.js
       whitelistExtensions: null, /* [
         '.webp',
@@ -372,7 +366,27 @@ module.exports = {
         '.mov',
         '.mkv'
       ], */
-      maxSize: null // '25MB' // Needs to be in MB
+      // Make sure maxSize is no bigger than the max size you configured for your ClamAV
+      maxSize: null, // Needs to be in MB
+
+      // https://github.com/kylefarris/clamscan/tree/v1.3.3#getting-started
+      // Breaking options (do not use): remove_infected, quarantine_infected
+      // Untested options (may work): scan_log, debug_mode, file_list, scan_recursively
+      // Supported options: clamscan, clamdscan, preference
+      clamOptions: {
+        // clamscan: {},
+        clamdscan: {
+          // When both socket and host+port are specified, it will only use socket
+          socket: '/var/run/clamav/clamd.ctl',
+          host: '127.0.0.1',
+          port: 3310,
+          timeout: 1 * 60 * 1000, // 1 minute
+          multiscan: true,
+          reload_db: false,
+          active: true
+        },
+        preference: 'clamdscan'
+      }
     },
 
     /*

@@ -337,7 +337,7 @@ self.actuallyUploadFiles = async (req, res, user, albumid, age) => {
     throw 'Empty files are not allowed.'
   }
 
-  if (utils.clamd.scanner) {
+  if (utils.clamscan.instance) {
     const scanResult = await self.scanFiles(req, user, infoMap)
     if (scanResult) throw scanResult
   }
@@ -444,7 +444,7 @@ self.actuallyUploadUrls = async (req, res, user, albumid, age) => {
     // If no errors encountered, clear cache of downloaded files
     downloaded.length = 0
 
-    if (utils.clamd.scanner) {
+    if (utils.clamscan.instance) {
       const scanResult = await self.scanFiles(req, user, infoMap)
       if (scanResult) throw scanResult
     }
@@ -577,7 +577,7 @@ self.actuallyFinishChunks = async (req, res, user) => {
       infoMap.push({ path: destination, data })
     }))
 
-    if (utils.clamd.scanner) {
+    if (utils.clamscan.instance) {
       const scanResult = await self.scanFiles(req, user, infoMap)
       if (scanResult) throw scanResult
     }
@@ -620,31 +620,30 @@ self.cleanUpChunks = async (uuid, onTimeout) => {
 }
 
 self.scanFiles = async (req, user, infoMap) => {
-  if (user && utils.clamd.groupBypass && perms.is(user, utils.clamd.groupBypass)) {
-    // logger.log(`[ClamAV]: Skipping ${infoMap.length} file(s), ${utils.clamd.groupBypass} group bypass`)
+  if (user && utils.clamscan.groupBypass && perms.is(user, utils.clamscan.groupBypass)) {
+    // logger.log(`[ClamAV]: Skipping ${infoMap.length} file(s), ${utils.clamscan.groupBypass} group bypass`)
     return false
   }
 
   const foundThreats = []
   const results = await Promise.all(infoMap.map(async info => {
-    if (utils.clamd.whitelistExtensions && utils.clamd.whitelistExtensions.includes(info.data.extname)) {
+    if (utils.clamscan.whitelistExtensions && utils.clamscan.whitelistExtensions.includes(info.data.extname)) {
       return // logger.log(`[ClamAV]: Skipping ${info.data.filename}, extension whitelisted`)
     }
 
-    if (utils.clamd.maxSize && info.data.size > utils.clamd.maxSize) {
-      return // logger.log(`[ClamAV]: Skipping ${info.data.filename}, size ${info.data.size} > ${utils.clamd.maxSize}`)
+    if (utils.clamscan.maxSize && info.data.size > utils.clamscan.maxSize) {
+      return // logger.log(`[ClamAV]: Skipping ${info.data.filename}, size ${info.data.size} > ${utils.clamscan.maxSize}`)
     }
 
-    const reply = await utils.clamd.scanner.scanFile(info.path, utils.clamd.timeout, utils.clamd.chunkSize)
-    if (!reply.includes('OK') || reply.includes('FOUND')) {
-      // eslint-disable-next-line no-control-regex
-      const foundThreat = reply.replace(/^stream: /, '').replace(/ FOUND\u0000$/, '')
-      logger.log(`[ClamAV]: ${info.data.filename}: ${foundThreat} FOUND.`)
-      foundThreats.push(foundThreat)
+    const response = await utils.clamscan.instance.is_infected(info.path)
+    if (response.is_infected) {
+      logger.log(`[ClamAV]: ${info.data.filename}: ${response.viruses.join(', ')}`)
+      foundThreats.push(...response.viruses)
     }
   })).then(() => {
     if (foundThreats.length) {
-      return `Threat found: ${foundThreats[0]}${foundThreats.length > 1 ? ', and more' : ''}.`
+      const more = foundThreats.length > 1
+      return `Threat${more ? 's' : ''} detected: ${foundThreats[0]}${more ? ', and more' : ''}.`
     }
   }).catch(error => {
     logger.error(`[ClamAV]: ${error.toString()}`)

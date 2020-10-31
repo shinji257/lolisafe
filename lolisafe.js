@@ -1,5 +1,5 @@
 const bodyParser = require('body-parser')
-const clamd = require('clamdjs')
+const ClamScan = require('clamscan')
 const contentDisposition = require('content-disposition')
 const express = require('express')
 const helmet = require('helmet')
@@ -245,16 +245,14 @@ safe.use('/api', api)
       logger.log(`Git commit: ${utils.gitHash}`)
     }
 
-    // Clamd scanner
+    // ClamAV scanner
     if (config.uploads.scan && config.uploads.scan.enabled) {
-      const { ip, port } = config.uploads.scan
-      const version = await clamd.version(ip, port)
-      logger.log(`${ip}:${port} ${version}`)
-
-      utils.clamd.scanner = clamd.createScanner(ip, port)
-      if (!utils.clamd.scanner) {
-        throw 'Could not create clamd scanner'
+      if (!config.uploads.scan.clamOptions) {
+        throw 'Missing object config.uploads.scan.clamOptions (check config.sample.js)'
       }
+      utils.clamscan.instance = await new ClamScan().init(config.uploads.scan.clamOptions)
+      utils.clamscan.version = await utils.clamscan.instance.get_version().then(s => s.trim())
+      logger.log(`Connection established with ${utils.clamscan.version}`)
     }
 
     // Cache file identifiers

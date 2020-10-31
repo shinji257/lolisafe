@@ -1183,10 +1183,10 @@ ci-info@^2.0.0:
   resolved "https://registry.yarnpkg.com/ci-info/-/ci-info-2.0.0.tgz#67a9e964be31a51e15e5010d58e6f12834002f46"
   integrity sha512-5tK7EtrZ0N+OLFMthtqOj4fI2Jeb88C4CAZPu25LDVUgXJ0A3Js4PMGqrn0JU1W0Mh1/Z8wZzYPxqUrXeBboCQ==
 
-clamdjs@~1.0.2:
-  version "1.0.2"
-  resolved "https://registry.yarnpkg.com/clamdjs/-/clamdjs-1.0.2.tgz#42b3c36370979e0c19efd4e3fbc7e0bf0006a8da"
-  integrity sha512-gVnX5ySMULvwYL2ykZQnP4UK4nIK7ftG6z015drJyOFgWpsqXt1Hcq4fMyPwM8LLsxfgfYKLiZi288xuTfmZBQ==
+clamscan@^1.3.3:
+  version "1.3.3"
+  resolved "https://registry.yarnpkg.com/clamscan/-/clamscan-1.3.3.tgz#0cf84dc3278cf7a3c81101d3e647842c34c1a825"
+  integrity sha512-AwaZeyECbqTWwrc5l7lLbA/cbYBTMW+VC77CnIjK3WCwTm1kGL6PHSXgDaEFsVkfrcRvPvSD1oxJpMzET9lqKg==
 
 class-utils@^0.3.5:
   version "0.3.6"

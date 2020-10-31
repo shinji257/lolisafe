@@ -12,10 +12,9 @@ const logger = require('./../logger')
 const db = require('knex')(config.database)
 
 const self = {
-  clamd: {
-    scanner: null,
-    timeout: config.uploads.scan.timeout || 5000,
-    chunkSize: config.uploads.scan.chunkSize || 64 * 1024,
+  clamscan: {
+    instance: null,
+    version: null,
     groupBypass: config.uploads.scan.groupBypass || null,
     whitelistExtensions: (Array.isArray(config.uploads.scan.whitelistExtensions) &&
       config.uploads.scan.whitelistExtensions.length)
