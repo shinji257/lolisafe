@@ -640,6 +640,7 @@ self.stats = async (req, res, next) => {
         platform: `${os.platform} ${os.arch}`,
         distro: `${os.distro} ${os.release}`,
         kernel: os.kernel,
+        scanner: self.clamscan.version,
         cpuLoad: `${currentLoad.currentload.toFixed(1)}%`,
         cpusLoad: currentLoad.cpus.map(cpu => `${cpu.load.toFixed(1)}%`).join(', '),
         systemMemory: {
