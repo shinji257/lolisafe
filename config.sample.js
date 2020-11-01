@@ -340,8 +340,7 @@ module.exports = {
     temporaryUploadsInterval: 1 * 60000, // 1 minute
 
     /*
-      Scan files using ClamAV through clamd.
-      https://github.com/NingLin-P/clamdjs#scannerscanfilepath-timeout-chunksize
+      Scan uploads for threats with ClamAV.
 
       groupBypass: Name of the lowest ranked group whose files will not be scanned.
       Lowest ranked meaning that group AND any groups higher than it are included.
