@@ -323,7 +323,7 @@ self.edit = async (req, res, next) => {
         : ''
     }
 
-    if (ismoderator) {
+    if (ismoderator && typeof req.body.enabled !== 'undefined') {
       update.enabled = Boolean(req.body.enabled)
     }
 
