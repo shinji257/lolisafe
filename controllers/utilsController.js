@@ -631,6 +631,15 @@ self.stats = async (req, res, next) => {
       const time = si.time()
       const nodeUptime = process.uptime()
 
+      if (self.clamscan.instance) {
+        try {
+          self.clamscan.version = await self.clamscan.instance.get_version().then(s => s.trim())
+        } catch (error) {
+          logger.error(error)
+          self.clamscan.version = 'Errored when querying version.'
+        }
+      }
+
       stats.system = {
         _types: {
           byte: ['memoryUsage'],
@@ -640,7 +649,7 @@ self.stats = async (req, res, next) => {
         platform: `${os.platform} ${os.arch}`,
         distro: `${os.distro} ${os.release}`,
         kernel: os.kernel,
-        scanner: self.clamscan.version,
+        scanner: self.clamscan.version || 'N/A',
         cpuLoad: `${currentLoad.currentload.toFixed(1)}%`,
         cpusLoad: currentLoad.cpus.map(cpu => `${cpu.load.toFixed(1)}%`).join(', '),
         systemMemory: {
