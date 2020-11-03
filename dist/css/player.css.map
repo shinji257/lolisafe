@@ -1,1 +1,1 @@
-{"version":3,"sources":["css/player.scss"],"names":[],"mappings":"AAMA,UACE,kBACF","file":"player.css","sourcesContent":["@charset \"utf-8\";\n\n@import \"_variables\";\n\n/** Main **/\n\n.video-js {\n  margin: 1.5rem auto\n}\n"]}
+{"version":3,"sources":["css/player.scss"],"names":[],"mappings":"AAMA,4BAEE,oBACF,CAEA,UACE,aACF","file":"player.css","sourcesContent":["@charset \"utf-8\";\n\n@import \"_variables\";\n\n/** Main **/\n\n#inputForm,\n#playerContainer {\n  margin-bottom: 1.5rem\n}\n\n.video-js {\n  margin: 0 auto\n}\n"]}
