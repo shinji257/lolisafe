@@ -61,7 +61,7 @@ page.reloadVideo = () => {
   const src = `${page.uploadRoot}/${page.urlInput.value}`
 
   axios.head(src).then(response => {
-    if (response.status !== 200 && response.status !== 304) {
+    if (![200, 304].includes(response.status)) {
       page.toggleReloadBtn(true)
       return page.onAxiosError(response)
     }
@@ -73,6 +73,8 @@ page.reloadVideo = () => {
       page.toggleReloadBtn(true)
       return swal('An error occurred!', 'The requested upload does not appear to be a media file.', 'error')
     }
+
+    page.urlIdentifier = page.urlInput.value
 
     if (page.player) {
       page.player.dispose()
@@ -112,14 +114,14 @@ page.reloadVideo = () => {
     page.player.seekButtons({ forward: 10, back: 10 })
 
     if (page.titleFormat) {
-      document.title = page.titleFormat.replace(/%identifier%/g, page.urlInput.value)
+      document.title = page.titleFormat.replace(/%identifier%/g, page.urlIdentifier)
     }
 
     if (page.downloadBtn) {
       page.downloadBtn.setAttribute('href', src)
     }
 
-    window.history.pushState(null, null, page.urlPrefix + page.urlInput.value)
+    window.history.pushState(null, null, page.urlPrefix + page.urlIdentifier)
     page.toggleReloadBtn(true)
   }).catch(error => {
     page.toggleReloadBtn(true)
