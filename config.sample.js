@@ -43,7 +43,7 @@ module.exports = {
     override Content-Type header for certain extension names.
   */
   overrideContentTypes: {
-    'text/plain': ['html', 'htm', 'shtml', 'xhtml']
+    // 'text/plain': ['html', 'htm', 'shtml', 'xhtml']
   },
 
   /*
