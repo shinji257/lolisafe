@@ -894,7 +894,8 @@ self.list = async (req, res) => {
     },
     typeIs: [
       'image',
-      'video'
+      'video',
+      'audio'
     ],
     flags: {}
   }

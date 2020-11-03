@@ -29,6 +29,7 @@ const self = {
 
   imageExts: ['.gif', '.jpeg', '.jpg', '.png', '.svg', '.tif', '.tiff', '.webp'],
   videoExts: ['.3g2', '.3gp', '.asf', '.avchd', '.avi', '.divx', '.evo', '.flv', '.h264', '.h265', '.hevc', '.m2p', '.m2ts', '.m4v', '.mk3d', '.mkv', '.mov', '.mp4', '.mpeg', '.mpg', '.mxf', '.ogg', '.ogv', '.ps', '.qt', '.rmvb', '.ts', '.vob', '.webm', '.wmv'],
+  audioExts: ['.flac', '.mp3', '.wav', '.wma'],
 
   thumbsSize: config.uploads.generateThumbs.size || 200,
   ffprobe: promisify(ffmpeg.ffprobe),
