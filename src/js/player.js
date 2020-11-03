@@ -1,4 +1,4 @@
-/* global swal, axios, videojs */
+/* global swal, axios, videojs, WaveSurfer */
 
 // eslint-disable-next-line no-unused-vars
 const lsKeys = {}
@@ -66,7 +66,10 @@ page.reloadVideo = () => {
       return page.onAxiosError(response)
     }
 
-    if (!/^(video|audio)\//.test(response.headers['content-type'])) {
+    const type = response.headers['content-type'] || ''
+    const isvideo = type.startsWith('video/')
+    const isaudio = type.startsWith('audio/')
+    if (!isvideo && !isaudio) {
       page.toggleReloadBtn(true)
       return swal('An error occurred!', 'The requested upload does not appear to be a media file.', 'error')
     }
@@ -82,17 +85,29 @@ page.reloadVideo = () => {
     videoElement.setAttribute('controls', true)
     videoElement.setAttribute('preload', 'auto')
 
-    const sourceElement = document.createElement('source')
-    sourceElement.src = src
-    sourceElement.type = response.headers['content-type']
-
-    videoElement.appendChild(sourceElement)
     page.videoContainer.appendChild(videoElement)
 
-    page.player = videojs('video-js', {
+    const options = {
       language: 'en',
       playbackRates: [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2],
       responsive: true
+    }
+
+    if (isaudio) {
+      options.plugins = {
+        wavesurfer: {
+          backend: 'MediaElement'
+        }
+      }
+    }
+
+    page.player = videojs('video-js', options, () => {
+      let message = `Using video.js ${videojs.VERSION}`
+      if (isaudio) {
+        message += `with videojs-wavesurfer ${videojs.getPluginVersion('wavesurfer')} and wavesurfer.js ${WaveSurfer.VERSION}`
+      }
+      videojs.log(message)
+      page.player.src({ src, type })
     })
     page.player.seekButtons({ forward: 10, back: 10 })
 
