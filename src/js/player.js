@@ -14,7 +14,7 @@ const page = {
   uploadRoot: null,
   titleFormat: null,
 
-  videoContainer: document.querySelector('#player-container'),
+  videoContainer: document.querySelector('#playerContainer'),
   player: null
 }
 
