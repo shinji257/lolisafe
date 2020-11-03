@@ -58,7 +58,7 @@ page.reloadVideo = () => {
   if (!page.urlInput.value) return
 
   page.toggleReloadBtn(false)
-  const src = `${page.uploadRoot}/${page.urlInput.value}?_=${Math.round(Date.now() / 1000)}`
+  const src = `${page.uploadRoot}/${page.urlInput.value}`
 
   axios.head(src).then(response => {
     if (response.status !== 200 && response.status !== 304) {
