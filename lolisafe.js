@@ -72,6 +72,21 @@ let setHeaders = res => {
   res.set('Access-Control-Allow-Origin', '*')
 }
 
+const contentTypes = config.overrideContentTypes && Object.keys(config.overrideContentTypes)
+const overrideContentTypes = (res, path) => {
+  // Do only if accessing files from uploads' root directory (i.e. not thumbs, etc.)
+  const relpath = path.replace(paths.uploads, '')
+  if (relpath.indexOf('/', 1) === -1) {
+    const name = relpath.substring(1)
+    const extname = utils.extname(name).substring(1)
+    for (const contentType of contentTypes) {
+      if (config.overrideContentTypes[contentType].includes(extname)) {
+        res.set('Content-Type', contentType)
+      }
+    }
+  }
+}
+
 const initServeStaticUploads = (opts = {}) => {
   if (config.setContentDisposition) {
     opts.preSetHeaders = async (res, req, path, stat) => {
@@ -133,8 +148,12 @@ if (config.cacheControl) {
   // If serving uploads with node
   if (config.serveFilesWithNode) {
     initServeStaticUploads({
-      setHeaders: res => {
+      setHeaders: (res, path) => {
         res.set('Access-Control-Allow-Origin', '*')
+        // Override Content-Type if necessary
+        if (contentTypes && contentTypes.length) {
+          overrideContentTypes(res, path)
+        }
         // If using CDN, cache uploads in CDN as well
         // Use with cloudflare.purgeCache enabled in config file
         if (config.cacheControl !== 2) {
@@ -164,7 +183,15 @@ if (config.cacheControl) {
     next()
   })
 } else if (config.serveFilesWithNode) {
-  initServeStaticUploads()
+  initServeStaticUploads({
+    setHeaders: (res, path) => {
+      res.set('Access-Control-Allow-Origin', '*')
+      // Override Content-Type if necessary
+      if (contentTypes && contentTypes.length) {
+        overrideContentTypes(res, path)
+      }
+    }
+  })
 }
 
 // Static assets

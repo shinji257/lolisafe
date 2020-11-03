@@ -39,6 +39,14 @@ module.exports = {
   setContentDisposition: false,
 
   /*
+    If you serve files with node, you can optionally choose to
+    override Content-Type header for certain extension names.
+  */
+  overrideContentTypes: {
+    'text/plain': ['html', 'htm', 'shtml', 'xhtml']
+  },
+
+  /*
     If you are serving your files with a different domain than your lolisafe homepage,
     then fill this option with your lolisafe homepage, otherwise any falsy value.
     This will be used when listing album links in the dashboard.
