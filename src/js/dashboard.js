@@ -942,24 +942,24 @@ page.displayPreview = id => {
       div.innerHTML += `
         <div class="field has-text-centered">
           <div class="controls">
-            <a id="swalOriginal" type="button" class="button is-info" data-original="${file.file}">
+            <a id="swalOriginal" type="button" class="button is-info">
               <span class="icon">
-                <i class="icon-arrows-cw"></i>
+                <i class="icon-${isimage ? 'arrows-cw' : 'video'}"></i>
               </span>
-              <span>Load original</span>
+              <span>${isimage ? 'Load original' : 'Play in embedded player'}</span>
             </a>
           </div>
         </div>
       `
 
-      div.querySelector('#swalOriginal').addEventListener('click', event => {
-        const trigger = event.currentTarget
-        if (trigger.classList.contains('is-danger')) return
+      if (isimage) {
+        div.querySelector('#swalOriginal').addEventListener('click', event => {
+          const trigger = event.currentTarget
+          if (trigger.classList.contains('is-danger')) return
 
-        trigger.classList.add('is-loading')
-        const thumb = div.querySelector('#swalThumb')
+          trigger.classList.add('is-loading')
+          const thumb = div.querySelector('#swalThumb')
 
-        if (isimage) {
           thumb.src = file.file
           thumb.onload = () => {
             trigger.classList.add('is-hidden')
@@ -975,19 +975,15 @@ page.displayPreview = id => {
               <span>Unable to load original</span>
             `
           }
-        } else if (isvideo) {
-          thumb.classList.add('is-hidden')
-          const video = document.createElement('video')
-          video.id = 'swalVideo'
-          video.controls = true
-          video.autoplay = true
-          video.src = file.file
-          thumb.insertAdjacentElement('afterend', video)
-
-          trigger.classList.add('is-hidden')
-          document.body.querySelector('.swal-overlay .swal-modal:not(.is-expanded)').classList.add('is-expanded')
+        })
+      } else {
+        const match = file.file.match(/.*\/(.*)$/)
+        console.log(file.file, match)
+        if (match || match[1]) {
+          div.querySelector('#swalOriginal').setAttribute('href', `v/${match[1]}`)
+          div.querySelector('#swalOriginal').setAttribute('target', '_blank')
         }
-      })
+      }
     }
   }
 

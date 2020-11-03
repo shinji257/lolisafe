@@ -1,0 +1,94 @@
+{%- import '_globals.njk' as globals -%}
+
+{% set metaTitle = "Player" %}
+
+{% set uploadRoot = config.domain %}
+{% set titleFormat = '%identifier% | ' + globals.name %}
+
+{% extends "_layout.njk" %}
+
+{% block stylesheets %}
+<!-- Libs stylesheets -->
+<link rel="stylesheet" href="../libs/fontello/fontello.css{{ versions[1] }}">
+<link rel="stylesheet" href="../libs/video-js/video-js.min.css{{ versions[3] }}">
+<link rel="stylesheet" href="../libs/video-js/videojs-seek-buttons
+.css{{ versions[3] }}">
+<!-- Stylesheets -->
+<link rel="stylesheet" href="../css/style.css{{ versions[1] }}">
+<link rel="stylesheet" href="../css/sweetalert.css{{ versions[1] }}">
+<link rel="stylesheet" href="../css/player.css{{ versions[1] }}">
+{% endblock %}
+
+{% block scripts %}
+{% if not nojs -%}
+<!-- Libs scripts -->
+<script src="../libs/sweetalert/sweetalert.min.js{{ versions[3] }}"></script>
+<script src="../libs/axios/axios.min.js{{ versions[3] }}"></script>
+<script src="../libs/video-js/video.min.js{{ versions[3] }}"></script>
+<script src="../libs/video-js/lang/en.js{{ versions[3] }}"></script>
+<script src="../libs/video-js/videojs-seek-buttons.min.js{{ versions[3] }}"></script>
+<!-- Scripts -->
+{# We assign an ID for this so that the script can find out proper root URL of uploaded files #}
+<script id="mainScript" src="../js/player.js{{ versions[1] }}" data-upload-root="{{ uploadRoot }}" data-title-format="
+{{ titleFormat }}"></script>
+<script src="../js/misc/utils.js{{ versions[1] }}"></script>
+{%- endif %}
+{% endblock %}
+
+{% block endmeta %}
+{% include "_partial/noscript-refresh.njk" %}
+{% endblock %}
+
+{% block content %}
+{{ super() }}
+<section class="section has-extra-bottom-padding">
+  <div class="container">
+    <nav class="level">
+      <div class="level-left">
+        <div class="level-item">
+          <h1 id="title" class="title">
+            {{ metaTitle }}
+          </h1>
+        </div>
+      </div>
+
+      <div class="level-right">
+        <p class="level-item">
+          <a id="downloadBtn" class="button is-primary is-outlined">Download video</a>
+        </p>
+      </div>
+    </nav>
+    <hr>
+
+    <form id="inputForm">
+      <div class="field has-addons">
+        <div class="control is-expanded">
+          <input id="identifier" name="identifier" class="input" type="text" placeholder="Upload's name" minlength="1">
+        </div>
+        <div class="control">
+          <button id="reloadBtn" class="button is-info is-outlined">
+            <span class="icon">
+              <i class="icon-arrows-cw"></i>
+            </span>
+            <span>Reload</span>
+          </button>
+        </div>
+      </div>
+    </form>
+
+    <div id="player-container"></div>
+
+    <article class="message">
+      <div class="message-body">
+        <p>This is an experimental embedded video player using <a href="https://github.com/videojs/video.js" target="_blank" rel="noopener">Video.js</a>.</p>
+        <p>This only allows you to play video uploads that you can play directly on your browser in the first place.</p>
+        <p>Thus there is no additional support for other formats such as MKV.</p>
+      </div>
+    </article>
+  </div>
+</section>
+
+{% set floatingHomeHref = '..' %}
+{% include "_partial/floating-home.njk" %}
+{% include "_partial/noscript.njk" %}
+{% endblock %}
