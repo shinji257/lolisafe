@@ -66,9 +66,9 @@ page.reloadVideo = () => {
       return page.onAxiosError(response)
     }
 
-    if (!response.headers['content-type'].startsWith('video/')) {
+    if (!/^(video|audio)\//.test(response.headers['content-type'])) {
       page.toggleReloadBtn(true)
-      return swal('An error occurred!', 'The requested upload does not appear to be a video file.', 'error')
+      return swal('An error occurred!', 'The requested upload does not appear to be a media file.', 'error')
     }
 
     if (page.player) {

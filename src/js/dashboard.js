@@ -91,9 +91,9 @@ const page = {
   clipboardJS: null,
   lazyLoad: null,
 
-  imageExts: ['.webp', '.jpg', '.jpeg', '.gif', '.png', '.tiff', '.tif', '.svg'],
-  // TODO: Disable "Load original" button with non-streamable extensions
-  videoExts: ['.webm', '.mp4', '.wmv', '.avi', '.mov', '.mkv', '.m4v', '.m2ts'],
+  imageExts: ['.gif', '.jpeg', '.jpg', '.png', '.svg', '.tif', '.tiff', '.webp'],
+  videoExts: ['.3g2', '.3gp', '.asf', '.avchd', '.avi', '.divx', '.evo', '.flv', '.h264', '.h265', '.hevc', '.m2p', '.m2ts', '.m4v', '.mk3d', '.mkv', '.mov', '.mp4', '.mpeg', '.mpg', '.mxf', '.ogg', '.ogv', '.ps', '.qt', '.rmvb', '.ts', '.vob', '.webm', '.wmv'],
+  audioExts: ['.flac', '.mp3', '.wma'],
 
   isSomethingLoading: false,
   fadingIn: null,
@@ -677,7 +677,11 @@ page.getUploads = (params = {}) => {
         files[i].type = 'picture'
       } else if (page.videoExts.includes(extname)) {
         files[i].type = 'video'
+      } else if (page.audioExts.includes(extname)) {
+        files[i].type = 'audio'
       }
+
+      files[i].previewable = files[i].thumb || files[i].type === 'audio'
 
       // Cache bare minimum data for thumbnails viewer
       page.cache[files[i].id] = {
@@ -685,7 +689,8 @@ page.getUploads = (params = {}) => {
         original: files[i].original,
         thumb: files[i].thumb,
         file: files[i].file,
-        type: files[i].type
+        type: files[i].type,
+        previewable: files[i].previewable
       }
 
       // Prettify
@@ -743,7 +748,7 @@ page.getUploads = (params = {}) => {
         div.innerHTML += `
           <input type="checkbox" class="checkbox" title="Select" data-index="${i}" data-action="select"${upload.selected ? ' checked' : ''}>
           <div class="controls">
-            ${upload.thumb
+            ${upload.previewable
               ? `<a class="button is-small is-primary" title="Display preview" data-action="display-preview">
               <span class="icon">
                 <i class="${upload.type !== 'other' ? `icon-${upload.type}` : 'icon-doc-inv'}"></i>
@@ -827,7 +832,7 @@ page.getUploads = (params = {}) => {
           <td class="prettydate">${upload.prettyDate}</td>
           ${hasExpiryDateColumn ? `<td class="prettyexpirydate">${upload.prettyExpiryDate || '-'}</td>` : ''}
           <td class="controls has-text-right">
-            <a class="button is-small is-primary is-outlined" title="${upload.thumb ? 'Display preview' : 'File can\'t be previewed'}" data-action="display-preview"${upload.thumb ? '' : ' disabled'}>
+            <a class="button is-small is-primary is-outlined" title="${upload.previewable ? 'Display preview' : 'File can\'t be previewed'}" data-action="display-preview"${upload.previewable ? '' : ' disabled'}>
               <span class="icon">
                 <i class="${upload.type !== 'other' ? `icon-${upload.type}` : 'icon-doc-inv'}"></i>
               </span>
@@ -917,7 +922,7 @@ page.toggleOriginalNames = element => {
 
 page.displayPreview = id => {
   const file = page.cache[id]
-  if (!file.thumb) return
+  if (!file.previewable) return
 
   const div = document.createElement('div')
   div.innerHTML = `
@@ -926,9 +931,11 @@ page.displayPreview = id => {
         <div class="has-text-weight-bold">${file.name}</div>
         <div>${file.original}</div>
       </p>
-      <p class="swal-display-thumb-container">
+      ${file.thumb
+        ? `<p class="swal-display-thumb-container">
         <img id="swalThumb" src="${file.thumb}">
-      </p>
+      </p>`
+        : ''}
     </div>
   `
 
@@ -937,14 +944,15 @@ page.displayPreview = id => {
     const extname = exec && exec[0] ? exec[0].toLowerCase() : null
     const isimage = page.imageExts.includes(extname)
     const isvideo = !isimage && page.videoExts.includes(extname)
+    const isaudio = !isimage && !isvideo && page.audioExts.includes(extname)
 
-    if (isimage || isvideo) {
+    if (isimage || isvideo || isaudio) {
       div.innerHTML += `
         <div class="field has-text-centered">
           <div class="controls">
             <a id="swalOriginal" type="button" class="button is-info">
               <span class="icon">
-                <i class="icon-${isimage ? 'arrows-cw' : 'video'}"></i>
+                <i class="icon-${file.type}"></i>
               </span>
               <span>${isimage ? 'Load original' : 'Play in embedded player'}</span>
             </a>
@@ -976,7 +984,7 @@ page.displayPreview = id => {
             `
           }
         })
-      } else {
+      } else if (isvideo || isaudio) {
         const match = file.file.match(/.*\/(.*)$/)
         console.log(file.file, match)
         if (match || match[1]) {
@@ -991,10 +999,6 @@ page.displayPreview = id => {
     content: div,
     buttons: false
   }).then(() => {
-    // Destroy video, if necessary
-    const video = div.querySelector('#swalVideo')
-    if (video) video.remove()
-
     // Restore modal size
     document.body.querySelector('.swal-overlay .swal-modal').classList.remove('is-expanded')
   })
