@@ -21,6 +21,22 @@ const page = {
 // Disable video.js telemetry (should already be disabled by default since v7 though)
 window.HELP_IMPROVE_VIDEOJS = false
 
+// Handler for regular JS errors
+page.onError = error => {
+  console.error(error)
+
+  const content = document.createElement('div')
+  content.innerHTML = `
+    <p><code>${error.toString()}</code></p>
+    <p>Please check your console for more information.</p>
+  `
+  return swal({
+    title: 'An error occurred!',
+    icon: 'error',
+    content
+  })
+}
+
 // Handler for Axios errors
 page.onAxiosError = error => {
   // Better Cloudflare errors
@@ -125,7 +141,8 @@ page.reloadVideo = () => {
     page.toggleReloadBtn(true)
   }).catch(error => {
     page.toggleReloadBtn(true)
-    page.onAxiosError(error)
+    if (typeof error.response !== 'undefined') page.onAxiosError(error)
+    else page.onError(error)
   })
 }
 

@@ -90,7 +90,10 @@ page.onError = error => {
   console.error(error)
 
   const content = document.createElement('div')
-  content.innerHTML = `<code>${error.toString()}</code>`
+  content.innerHTML = `
+    <p><code>${error.toString()}</code></p>
+    <p>Please check your console for more information.</p>
+  `
   return swal({
     title: 'An error occurred!',
     icon: 'error',
@@ -120,7 +123,7 @@ page.onAxiosError = (error, cont) => {
   if (!cont) {
     const description = error.response.data && error.response.data.description
       ? error.response.data.description
-      : 'There was an error with the request, please check the console for more information.'
+      : 'There was an error with the request.\nPlease check the console for more information.'
     return swal(`${error.response.status} ${statusText}`, description, 'error')
   } else if (error.response.data && error.response.data.description) {
     return error.response
