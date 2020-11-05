@@ -270,7 +270,11 @@ page.prepareUpload = () => {
     page.urlMaxSize = parseInt(urlMaxSize.innerHTML)
     page.urlMaxSizeBytes = page.urlMaxSize * 1e6
     urlMaxSize.innerHTML = page.getPrettyBytes(page.urlMaxSizeBytes)
-    document.querySelector('#uploadUrls').addEventListener('click', event => {
+  }
+
+  const uploadUrls = document.querySelector('#uploadUrls')
+  if (uploadUrls) {
+    uploadUrls.addEventListener('click', event => {
       page.addUrlsToQueue()
     })
   }
