@@ -256,6 +256,12 @@ module.exports = {
     },
 
     /*
+      Folder where in-progress chunks should be kept temporarily.
+      NOTE: When set to falsy value, defaults to "chunks" subfolder within uploads folder.
+    */
+    chunksFolder: null,
+
+    /*
       Max file size allowed for upload by URLs. Needs to be in MB.
       NOTE: Set to falsy value to disable upload by URLs.
     */

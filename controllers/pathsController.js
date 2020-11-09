@@ -25,7 +25,9 @@ for (const fsFunc of fsFuncs) {
 }
 
 self.uploads = path.resolve(config.uploads.folder)
-self.chunks = path.join(self.uploads, 'chunks')
+self.chunks = config.uploads.chunksFolder
+  ? path.resolve(config.uploads.chunksFolder)
+  : path.join(self.uploads, 'chunks')
 self.thumbs = path.join(self.uploads, 'thumbs')
 self.zips = path.join(self.uploads, 'zips')
 
