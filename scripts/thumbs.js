@@ -19,8 +19,9 @@ self.getFiles = async directory => {
   const files = []
   for (const name of names) {
     const lstat = await paths.lstat(path.join(directory, name))
-    if (lstat.isFile() && !name.startsWith('.'))
+    if (lstat.isFile() && !name.startsWith('.')) {
       files.push(name)
+    }
   }
   return files
 }
@@ -38,7 +39,7 @@ self.getFiles = async directory => {
     ![0, 1].includes(self.force) ||
     ![0, 1].includes(self.verbose) ||
     args.includes('--help') ||
-    args.includes('-h'))
+    args.includes('-h')) {
     return console.log(utils.stripIndents(`
       Generate thumbnails.
 
@@ -50,6 +51,7 @@ self.getFiles = async directory => {
       verbose: 0 = only print missing thumbs (default), 1 = print all
       cfcache: 0 = do not clear cloudflare cache (default), 1 = clear cloudflare cache
     `))
+  }
 
   console.log('Looking through existing thumbnails\u2026')
   const uploads = await self.getFiles(paths.uploads)
@@ -60,8 +62,9 @@ self.getFiles = async directory => {
   })
 
   console.log(`Found ${thumbs.length} existing thumbnails (may include placeholder symlinks).`)
-  if (!self.verbose)
+  if (!self.verbose) {
     console.log('Verbose logging disabled! Please be patient, this script may appear to be frozen but is actually working in the background.')
+  }
 
   const succeeded = []
   let error = 0
@@ -92,8 +95,9 @@ self.getFiles = async directory => {
       return `thumbs/${name.slice(0, -extname.length)}.png`
     }), true, false)
     for (let i = 0; i < results.length; i++) {
-      if (results[i].errors.length)
+      if (results[i].errors.length) {
         results[i].errors.forEach(error => console.error(`CF: ${error}`))
+      }
       console.log(`Status [${i}]: ${results[i].success ? 'OK' : 'ERROR'}`)
     }
   }

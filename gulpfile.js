@@ -39,7 +39,7 @@ gulp.task('lint:sass', () => {
   return gulp.src('./src/**/*.scss')
     .pipe(stylelint({
       failAfterError: true,
-      reporters: [{ formatter: 'verbose', console: true }]
+      reporters: [{ formatter: 'string', console: true }]
     }))
 })
 
@@ -49,13 +49,18 @@ gulp.task('lint:css', () => {
   })
     .pipe(stylelint({
       failAfterError: true,
-      reporters: [{ formatter: 'verbose', console: true }]
+      reporters: [{ formatter: 'string', console: true }]
     }))
 })
 
 gulp.task('lint:js', () => {
-  return gulp.src('./src/**/*.js', {
-    ignore: './src/libs/**/*'
+  return gulp.src([
+    './*.js',
+    './{controllers,database,routes,scripts,src}/**/*.js'
+  ], {
+    ignore: [
+      './src/libs/**/*'
+    ]
   })
     .pipe(eslint())
     .pipe(eslint.format('stylish'))

@@ -13,8 +13,9 @@ self.getFiles = async directory => {
   const files = []
   for (const name of names) {
     const lstat = await paths.lstat(path.join(directory, name))
-    if (lstat.isFile() && !name.startsWith('.'))
+    if (lstat.isFile() && !name.startsWith('.')) {
       files.push(name)
+    }
   }
   return files
 }
@@ -23,7 +24,7 @@ self.getFiles = async directory => {
   const location = process.argv[1].replace(process.cwd() + '/', '')
   const args = process.argv.slice(2)
 
-  if (args.includes('--help') || args.includes('-h'))
+  if (args.includes('--help') || args.includes('-h')) {
     return console.log(utils.stripIndents(`
       Clean up files that are not in the database.
 
@@ -34,6 +35,7 @@ self.getFiles = async directory => {
       0 = Only list names of files that are not in the database.
       1 = Clean up the files.
     `))
+  }
 
   self.mode = parseInt(args[0]) || 0
   const dryrun = self.mode === 0
