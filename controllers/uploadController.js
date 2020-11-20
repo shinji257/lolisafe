@@ -33,8 +33,10 @@ const chunkedUploads = config.uploads.chunkSize &&
   config.uploads.chunkSize.default
 const chunkedUploadsTimeout = config.uploads.chunkSize.timeout || 1800000
 const chunksData = {}
-//  Hard-coded min chunk size of 1 MB (e.g. 50 MB = max 50 chunks)
+// Hard-coded min chunk size of 1 MB (e.g. 50 MB = max 50 chunks)
 const maxChunksCount = maxSize
+// Use fs.copyFile() instead of fs.rename() if chunks dir is NOT inside uploads dir
+const chunksCopyFile = !paths.chunks.startsWith(paths.uploads)
 
 const extensionsFilter = Array.isArray(config.extensionsFilter) &&
   config.extensionsFilter.length
@@ -553,8 +555,13 @@ self.actuallyFinishChunks = async (req, res, user) => {
       const name = await self.getUniqueRandomName(length, file.extname)
 
       // Move tmp file to final destination
+      // For fs.copyFile(), tmpfile will eventually be unlinked by self.cleanUpChunks()
       const destination = path.join(paths.uploads, name)
-      await paths.rename(tmpfile, destination)
+      if (chunksCopyFile) {
+        await paths.copyFile(tmpfile, destination)
+      } else {
+        await paths.rename(tmpfile, destination)
+      }
       const hash = chunksData[file.uuid].hasher.digest('hex')
 
       // Continue even when encountering errors
@@ -595,7 +602,7 @@ self.actuallyFinishChunks = async (req, res, user) => {
         if (chunksData[file.uuid].hasher) {
           chunksData[file.uuid].hasher.dispose()
         }
-      } catch (error) {}
+      } catch (_) {}
       self.cleanUpChunks(file.uuid).catch(logger.error)
     })
 

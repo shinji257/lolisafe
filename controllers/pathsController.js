@@ -9,6 +9,7 @@ const self = {}
 // Promisify these fs functions
 const fsFuncs = [
   'access',
+  'copyFile',
   'lstat',
   'mkdir',
   'readdir',
