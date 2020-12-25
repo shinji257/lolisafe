@@ -736,6 +736,7 @@ self.stats = async (req, res, next) => {
             Images: 0,
             Videos: 0,
             Others: 0,
+            Temporary: 0,
             'Size in DB': {
               value: 0,
               type: 'byte'
@@ -766,6 +767,12 @@ self.stats = async (req, res, next) => {
                     this.orWhere('name', 'like', `%${ext}`)
                   }
                 })
+                .count('id as count')
+                .then(rows => rows[0].count)
+            })(),
+            (async () => {
+              stats[data.title].Temporary = await db.table('files')
+                .whereNotNull('expirydate')
                 .count('id as count')
                 .then(rows => rows[0].count)
             })()
