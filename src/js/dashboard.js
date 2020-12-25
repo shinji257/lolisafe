@@ -2871,29 +2871,39 @@ page.getStatistics = (params = {}) => {
         `
       } else {
         try {
-          const types = response.data.stats[keys[i]]._types || {}
           const valKeys = Object.keys(response.data.stats[keys[i]])
           for (let j = 0; j < valKeys.length; j++) {
-            // Skip keys that starts with an underscore
-            if (/^_/.test(valKeys[j])) continue
+            const data = response.data.stats[keys[i]][valKeys[j]]
+            const type = typeof data === 'object' ? data.type : 'auto'
+            const value = typeof data === 'object' ? data.value : data
 
-            const value = response.data.stats[keys[i]][valKeys[j]]
-            let parsed = value
-
-            // Parse values with some preset formatting
-            if ((types.number || []).includes(valKeys[j])) parsed = value.toLocaleString()
-            if ((types.byte || []).includes(valKeys[j])) parsed = page.getPrettyBytes(value)
-            if ((types.byteUsage || []).includes(valKeys[j])) {
-              parsed = `${page.getPrettyBytes(value.used)} / ${page.getPrettyBytes(value.total)} (${Math.floor(value.used / value.total * 100)}%)`
+            let parsed
+            switch (type) {
+              case 'byte':
+                parsed = page.getPrettyBytes(value)
+                break
+              case 'byteUsage':
+                parsed = `${page.getPrettyBytes(value.used)} / ${page.getPrettyBytes(value.total)} (${Math.floor(value.used / value.total * 100)}%)`
+                break
+              case 'uptime':
+                parsed = page.getPrettyUptime(value)
+                break
+              case 'auto':
+                switch (typeof value) {
+                  case 'number':
+                    parsed = value.toLocaleString()
+                    break
+                  default:
+                    parsed = value
+                }
+                break
+              default:
+                parsed = value
             }
-            if ((types.uptime || []).includes(valKeys[j])) parsed = page.getPrettyUptime(value)
 
-            const string = valKeys[j]
-              .replace(/([A-Z])/g, ' $1')
-              .replace(/(^|\s)(cpu|db|zip)/gi, s => s.toUpperCase())
             rows += `
               <tr>
-                <th class="capitalize">${string}</th>
+                <th>${valKeys[j]}</th>
                 <td>${parsed}</td>
               </tr>
             `
