@@ -5,6 +5,7 @@ const randomstring = require('randomstring')
 const Zip = require('jszip')
 const paths = require('./pathsController')
 const perms = require('./permissionController')
+const uploadController = require('./uploadController')
 const utils = require('./utilsController')
 const config = require('./../config')
 const logger = require('./../logger')
@@ -382,16 +383,8 @@ self.get = async (req, res, next) => {
       })
       .first()
 
-    if (!album) {
-      return res.json({
-        success: false,
-        description: 'Album not found.'
-      })
-    } else if (album.public === 0) {
-      return res.status(403).json({
-        success: false,
-        description: 'This album is not available for public.'
-      })
+    if (!album || album.public === 0) {
+      return res.status(404).json({ success: false, description: 'The album could not be found.' })
     }
 
     const title = album.name
@@ -401,17 +394,24 @@ self.get = async (req, res, next) => {
       .orderBy('id', 'desc')
 
     for (const file of files) {
-      file.file = `${config.domain}/${file.name}`
+      if (req._upstreamCompat) {
+        file.url = `${config.domain}/${file.name}`
+      } else {
+        file.file = `${config.domain}/${file.name}`
+      }
 
       const extname = utils.extname(file.name)
       if (utils.mayGenerateThumb(extname)) {
         file.thumb = `${config.domain}/thumbs/${file.name.slice(0, -extname.length)}.png`
+        if (req._upstreamCompat) file.thumbSquare = file.thumb
       }
     }
 
     return res.json({
       success: true,
+      description: 'Successfully retrieved files.',
       title,
+      download: Boolean(album.download),
       count: files.length,
       files
     })
@@ -549,6 +549,42 @@ self.generateZip = async (req, res, next) => {
   } catch (error) {
     logger.error(error)
     return res.status(500).json({ success: false, description: 'An unexpected error occurred. Try again?' })
+  }
+}
+
+self.listFiles = async (req, res, next) => {
+  if (req.params.page === undefined) {
+    // Map to /api/album/get, but with lolisafe upstream compatibility, when accessed with this API route
+    req.params.identifier = req.params.id
+    delete req.params.id
+
+    req._upstreamCompat = true
+    res._json = res.json
+    res.json = (body = {}) => {
+      // Rebuild JSON payload to match lolisafe upstream
+      const rebuild = {}
+      const maps = {
+        success: null,
+        description: 'message',
+        title: 'name',
+        download: 'downloadEnabled',
+        count: null
+      }
+
+      Object.keys(body).forEach(key => {
+        if (maps[key] !== undefined) {
+          if (maps[key]) rebuild[maps[key]] = body[key]
+        } else {
+          rebuild[key] = body[key]
+        }
+      })
+
+      if (rebuild.message) rebuild.message = rebuild.message.replace(/\.$/, '')
+      return res._json(rebuild)
+    }
+    return self.get(req, res, next)
+  } else {
+    return uploadController.list(req, res, next)
   }
 }
 

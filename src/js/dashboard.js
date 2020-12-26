@@ -808,7 +808,7 @@ page.getUploads = (params = {}) => {
                 ${params.all ? '<th title="Key: ip">IP</th>' : ''}
                 <th title="Key: timestamp">Upload date</th>
                 ${hasExpiryDateColumn ? '<th title="Key: expirydate">Expiry date</th>' : ''}
-                <th></th>
+                <th class="has-text-right">(${response.data.count} total)</th>
               </tr>
             </thead>
             <tbody id="table">
@@ -1748,7 +1748,7 @@ page.getAlbums = (params = {}) => {
               <th>Uploads</th>
               <th>Created at</th>
               <th>Public link</th>
-              <th></th>
+              <th class="has-text-right">(${response.data.count} total)</th>
             </tr>
           </thead>
           <tbody id="table">
@@ -2386,7 +2386,7 @@ page.getUsers = (params = {}) => {
               <th title="Key: permission">Group</th>
               <th title="Key: registration">Registration date</th>
               <th title="Key: timestamp">Last token update</th>
-              <th></th>
+              <th class="has-text-right">(${response.data.count} total)</th>
             </tr>
           </thead>
           <tbody id="table">
