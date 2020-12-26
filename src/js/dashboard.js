@@ -70,6 +70,13 @@ const page = {
       pageNum: null
     }
   },
+  prevPageNums: {
+    uploads: null,
+    uploadsAll: null,
+    albums: null,
+    albumsAll: null,
+    users: null
+  },
 
   // ids of selected items (shared across pages and will be synced with localStorage)
   selected: {
@@ -245,7 +252,8 @@ page.prepareDashboard = () => {
 
       // eslint-disable-next-line compat/compat
       itemMenus[i].onclick.call(null, Object.assign(itemMenus[i].params || {}, {
-        trigger: event.currentTarget
+        trigger: event.currentTarget,
+        forceScroll: true
       }))
     })
 
@@ -411,7 +419,7 @@ page.domClick = event => {
   }
 }
 
-page.fadeAndScroll = disableFading => {
+page.fadeInDom = disableFading => {
   if (page.fadingIn) {
     clearTimeout(page.fadingIn)
     page.dom.classList.remove('fade-in')
@@ -423,9 +431,11 @@ page.fadeAndScroll = disableFading => {
       page.dom.classList.remove('fade-in')
     }, 500)
   }
+}
 
+page.scrollToDom = disableSmooth => {
   page.dom.scrollIntoView({
-    behavior: disableFading ? 'auto' : 'smooth',
+    behavior: disableSmooth ? 'auto' : 'smooth',
     block: 'start',
     inline: 'nearest'
   })
@@ -873,18 +883,27 @@ page.getUploads = (params = {}) => {
       selectAll.title = 'Unselect all'
     }
 
+    page.fadeInDom()
+
+    const pageNum = files.length ? params.pageNum : 0
+    if (params.forceScroll ||
+      page.prevPageNums[page.currentView] === null ||
+      page.prevPageNums[page.currentView] !== pageNum) {
+      const disableSmooth = !params.forceScroll && page.views[page.currentView].type === 'thumbs'
+      page.scrollToDom(disableSmooth)
+    }
+
     if (page.views[page.currentView].type === 'thumbs') {
-      page.fadeAndScroll(true)
       page.lazyLoad.update()
-    } else {
-      page.fadeAndScroll()
     }
 
     page.updateTrigger(params.trigger, 'active')
 
-    if (page.currentView === 'uploads') page.views.uploads.album = params.album
+    if (page.currentView === 'uploads') {
+      page.views.uploads.album = params.album
+    }
     page.views[page.currentView].filters = params.filters
-    page.views[page.currentView].pageNum = files.length ? params.pageNum : 0
+    page.views[page.currentView].pageNum = page.prevPageNums[page.currentView] = pageNum
   }).catch(error => {
     page.updateTrigger(params.trigger)
     page.onAxiosError(error)
@@ -1341,7 +1360,8 @@ page.deleteUploadsByNames = (params = {}) => {
       </div>
     </form>
   `
-  page.fadeAndScroll()
+  page.fadeInDom()
+  page.scrollToDom()
   page.updateTrigger(params.trigger, 'active')
 
   document.querySelector('#submitBulkDelete').addEventListener('click', () => {
@@ -1831,11 +1851,21 @@ page.getAlbums = (params = {}) => {
       selectAll.title = 'Unselect all'
     }
 
-    page.fadeAndScroll()
+    page.fadeInDom()
+
+    const pageNum = albums.length ? params.pageNum : 0
+    if (params.forceScroll ||
+      page.prevPageNums[page.currentView] === null ||
+      page.prevPageNums[page.currentView] !== pageNum) {
+      page.scrollToDom()
+    }
+
     page.updateTrigger(params.trigger, 'active')
 
-    if (page.currentView === 'albumsAll') page.views[page.currentView].filters = params.filters
-    page.views[page.currentView].pageNum = albums.length ? params.pageNum : 0
+    if (page.currentView === 'albumsAll') {
+      page.views[page.currentView].filters = params.filters
+    }
+    page.views[page.currentView].pageNum = page.prevPageNums[page.currentView] = pageNum
   }).catch(error => {
     page.updateTrigger(params.trigger)
     page.onAxiosError(error)
@@ -2127,7 +2157,8 @@ page.changeToken = (params = {}) => {
       </div>
     </div>
   `
-  page.fadeAndScroll()
+  page.fadeInDom()
+  page.scrollToDom()
   page.updateTrigger(params.trigger, 'active')
 
   document.querySelector('#getNewToken').addEventListener('click', event => {
@@ -2192,7 +2223,8 @@ page.changePassword = (params = {}) => {
       </div>
     </form>
   `
-  page.fadeAndScroll()
+  page.fadeInDom()
+  page.scrollToDom()
   page.updateTrigger(params.trigger, 'active')
 
   document.querySelector('#sendChangePassword').addEventListener('click', event => {
@@ -2472,10 +2504,18 @@ page.getUsers = (params = {}) => {
       selectAll.title = 'Unselect all'
     }
 
-    page.fadeAndScroll()
+    page.fadeInDom()
+
+    const pageNum = users.length ? params.pageNum : 0
+    if (params.forceScroll ||
+      page.prevPageNums[page.currentView] === null ||
+      page.prevPageNums[page.currentView] !== pageNum) {
+      page.scrollToDom()
+    }
+
     page.updateTrigger(params.trigger, 'active')
 
-    page.views[page.currentView].pageNum = users.length ? params.pageNum : 0
+    page.views[page.currentView].pageNum = page.prevPageNums[page.currentView] = pageNum
   }).catch(error => {
     page.updateTrigger(params.trigger)
     page.onAxiosError(error)
@@ -2948,7 +2988,8 @@ page.getStatistics = (params = {}) => {
     }
 
     page.dom.innerHTML = content
-    page.fadeAndScroll()
+    page.fadeInDom()
+    page.scrollToDom()
     page.updateTrigger(params.trigger, 'active')
   }).catch(error => {
     page.updateTrigger(params.trigger)
