@@ -73,7 +73,7 @@ self.list = async (req, res, next) => {
   if (!user) return
 
   const all = req.headers.all === '1'
-  const sidebar = req.headers.sidebar
+  const simple = req.headers.simple
   const ismoderator = perms.is(user, 'moderator')
   if (all && !ismoderator) return res.status(403).end()
 
@@ -97,10 +97,9 @@ self.list = async (req, res, next) => {
     const fields = ['id', 'name']
 
     let albums
-    if (sidebar) {
+    if (simple) {
       albums = await db.table('albums')
         .where(filter)
-        .limit(9)
         .select(fields)
 
       return res.json({ success: true, albums, count })

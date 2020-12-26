@@ -314,7 +314,12 @@ page.setActiveTab = index => {
 }
 
 page.fetchAlbums = () => {
-  return axios.get('api/albums', { headers: { token: page.token } }).then(response => {
+  return axios.get('api/albums', {
+    headers: {
+      simple: '1',
+      token: page.token
+    }
+  }).then(response => {
     if (response.data.success === false) {
       return swal('An error occurred!', response.data.description, 'error')
     }

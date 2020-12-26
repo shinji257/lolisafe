@@ -1,4 +1,4 @@
-/* global swal, axios, ClipboardJS, LazyLoad */
+/* global swal, axios, ClipboardJS, LazyLoad, bulmaCollapsible */
 
 const lsKeys = {
   token: 'token',
@@ -90,6 +90,8 @@ const page = {
 
   clipboardJS: null,
   lazyLoad: null,
+  albumsSidebarCollapse: null,
+  albumsSidebarCollapsible: null,
 
   imageExts: ['.gif', '.jpeg', '.jpg', '.png', '.svg', '.tif', '.tiff', '.webp'],
   videoExts: ['.3g2', '.3gp', '.asf', '.avchd', '.avi', '.divx', '.evo', '.flv', '.h264', '.h265', '.hevc', '.m2p', '.m2ts', '.m4v', '.mk3d', '.mkv', '.mov', '.mp4', '.mpeg', '.mpg', '.mxf', '.ogg', '.ogv', '.ps', '.qt', '.rmvb', '.ts', '.vob', '.webm', '.wmv'],
@@ -1540,7 +1542,7 @@ page.addUploadsToAlbum = (ids, callback) => {
   })
 
   // Get albums list then update content of swal
-  axios.get('api/albums').then(list => {
+  axios.get('api/albums', { headers: { simple: '1' } }).then(list => {
     if (list.data.success === false) {
       if (list.data.description === 'No token provided') {
         page.verifyToken(page.token)
@@ -2040,7 +2042,7 @@ page.submitAlbum = element => {
 }
 
 page.getAlbumsSidebar = () => {
-  axios.get('api/albums', { headers: { sidebar: '1' } }).then(response => {
+  axios.get('api/albums', { headers: { simple: '1' } }).then(response => {
     if (!response) return
 
     if (response.data.success === false) {
@@ -2053,18 +2055,27 @@ page.getAlbumsSidebar = () => {
 
     const albums = response.data.albums
     const count = response.data.count
-    const albumsContainer = document.querySelector('#albumsContainer')
+    const albumsSidebar = document.querySelector('#albumsSidebar')
 
     // Clear albums sidebar if necessary
-    const oldAlbums = albumsContainer.querySelectorAll('li > a')
+    const oldAlbums = albumsSidebar.querySelectorAll('li > a')
+    const diffCount = oldAlbums.length !== count
     if (oldAlbums.length) {
       for (let i = 0; i < oldAlbums.length; i++) {
         page.menus.splice(page.menus.indexOf(oldAlbums[i]), 1)
       }
-      albumsContainer.innerHTML = ''
+      albumsSidebar.innerHTML = ''
     }
 
-    if (albums === undefined) return
+    page.albumsSidebarCollapse.innerText = page.albumsSidebarCollapsible.collapsed()
+      ? page.albumsSidebarCollapse.dataset.textExpand
+      : page.albumsSidebarCollapse.dataset.textCollapse
+
+    if (!albums || !albums.length) {
+      page.albumsSidebarCollapsible.collapse()
+      page.albumsSidebarCollapse.setAttribute('disabled', 'disabled')
+      return
+    }
 
     for (let i = 0; i < albums.length; i++) {
       const album = albums[i]
@@ -2083,24 +2094,14 @@ page.getAlbumsSidebar = () => {
       page.menus.push(a)
 
       li.appendChild(a)
-      albumsContainer.appendChild(li)
+      albumsSidebar.appendChild(li)
     }
 
-    if (count > albums.length) {
-      const li = document.createElement('li')
-      const a = document.createElement('a')
-      a.className = 'is-relative'
-      a.innerHTML = '...'
-      a.title = `You have ${count} albums, but the sidebar can only list your first ${albums.length} albums.`
-
-      a.addEventListener('click', event => {
-        page.getAlbums({
-          trigger: document.querySelector('#itemManageYourAlbums')
-        })
-      })
-
-      li.appendChild(a)
-      albumsContainer.appendChild(li)
+    page.albumsSidebarCollapse.removeAttribute('disabled')
+    if (!page.albumsSidebarCollapsible.collapsed() && diffCount) {
+      // Since it's not possible to refresh collapsible's height with bulmaCollapsible APIs,
+      // forcefully collapse albums sidebar if albums count is different with the previous iteration.
+      page.albumsSidebarCollapsible.collapse()
     }
   }).catch(page.onAxiosError)
 }
@@ -3010,4 +3011,15 @@ window.addEventListener('DOMContentLoaded', () => {
   page.clipboardJS.on('error', page.onError)
 
   page.lazyLoad = new LazyLoad()
+
+  page.albumsSidebarCollapse = document.querySelector('#albumsSidebarCollapse')
+
+  /* eslint-disable-next-line new-cap */
+  page.albumsSidebarCollapsible = new bulmaCollapsible(document.querySelector('#albumsSidebar'))
+  page.albumsSidebarCollapsible.on('before:expand', event => {
+    page.albumsSidebarCollapse.innerText = page.albumsSidebarCollapse.dataset.textCollapse
+  })
+  page.albumsSidebarCollapsible.on('before:collapse', event => {
+    page.albumsSidebarCollapse.innerText = page.albumsSidebarCollapse.dataset.textExpand
+  })
 })

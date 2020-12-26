@@ -66,7 +66,7 @@ page.toggleReloadBtn = enabled => {
     page.reloadBtn.removeAttribute('disabled')
   } else {
     page.reloadBtn.classList.add('is-loading')
-    page.reloadBtn.setAttribute('disabled', true)
+    page.reloadBtn.setAttribute('disabled', 'disabled')
   }
 }
 
