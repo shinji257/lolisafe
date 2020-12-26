@@ -525,8 +525,8 @@ self.purgeCloudflareCache = async (names, uploads, thumbs) => {
 
   // Split array into multiple arrays with max length of 30 URLs
   // https://api.cloudflare.com/#zone-purge-files-by-url
-  // TODO: Handle API rate limits
   const MAX_LENGTH = 30
+  const MAX_TRIES = 3 // only for rate limit and unexpected errors
   const chunks = []
   while (names.length) {
     chunks.push(names.splice(0, MAX_LENGTH))
@@ -542,35 +542,61 @@ self.purgeCloudflareCache = async (names, uploads, thumbs) => {
       errors: []
     }
 
-    try {
-      const headers = {
-        'Content-Type': 'application/json'
-      }
-      if (config.cloudflare.apiToken) {
-        headers.Authorization = `Bearer ${config.cloudflare.apiToken}`
-      } else if (config.cloudflare.userServiceKey) {
-        headers['X-Auth-User-Service-Key'] = config.cloudflare.userServiceKey
-      } else if (config.cloudflare.apiKey && config.cloudflare.email) {
-        headers['X-Auth-Key'] = config.cloudflare.apiKey
-        headers['X-Auth-Email'] = config.cloudflare.email
-      }
-
-      const purge = await fetch(url, {
-        method: 'POST',
-        body: JSON.stringify({ files: chunk }),
-        headers
-      })
-
-      const response = await purge.json()
-      result.success = response.success
-      if (Array.isArray(response.errors) && response.errors.length) {
-        result.errors = response.errors.map(error => `${error.code}: ${error.message}`)
-      }
-    } catch (error) {
-      result.errors = [error.toString()]
+    const headers = {
+      'Content-Type': 'application/json'
+    }
+    if (config.cloudflare.apiToken) {
+      headers.Authorization = `Bearer ${config.cloudflare.apiToken}`
+    } else if (config.cloudflare.userServiceKey) {
+      headers['X-Auth-User-Service-Key'] = config.cloudflare.userServiceKey
+    } else if (config.cloudflare.apiKey && config.cloudflare.email) {
+      headers['X-Auth-Key'] = config.cloudflare.apiKey
+      headers['X-Auth-Email'] = config.cloudflare.email
     }
 
-    results.push(result)
+    for (let i = 0; i < MAX_TRIES; i++) {
+      const _log = message => {
+        let prefix = `[CF]: ${i + 1}/${MAX_TRIES}: ${path.basename(chunk[0])}`
+        if (chunk.length > 1) prefix += ',\u2026'
+        logger.log(`${prefix}: ${message}`)
+      }
+
+      try {
+        const purge = await fetch(url, {
+          method: 'POST',
+          body: JSON.stringify({ files: chunk }),
+          headers
+        })
+        const response = await purge.json()
+
+        const hasErrorsArray = Array.isArray(response.errors) && response.errors.length
+        if (hasErrorsArray) {
+          const rateLimit = response.errors.find(error => /rate limit/i.test(error.message))
+          if (rateLimit && i < MAX_TRIES - 1) {
+            _log(`${rateLimit.code}: ${rateLimit.message}. Retrying in a minute\u2026`)
+            await new Promise(resolve => setTimeout(resolve, 60000))
+            continue
+          }
+        }
+
+        result.success = response.success
+        result.errors = hasErrorsArray
+          ? response.errors.map(error => `${error.code}: ${error.message}`)
+          : []
+      } catch (error) {
+        const errorString = error.toString()
+        if (i < MAX_TRIES - 1) {
+          _log(`${errorString}. Retrying in 5 seconds\u2026`)
+          await new Promise(resolve => setTimeout(resolve, 5000))
+          continue
+        }
+
+        result.errors = [errorString]
+      }
+
+      results.push(result)
+      break
+    }
   }))
 
   return results
