@@ -361,7 +361,7 @@ module.exports = {
       Example: 'moderator' = moderators, admins & superadmins.
     */
     scan: {
-      enabled: true,
+      enabled: false,
       groupBypass: 'admin', // Other group names in controllers/permissionController.js
       whitelistExtensions: null, /* [
         '.webp',
