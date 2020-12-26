@@ -436,7 +436,7 @@ self.generateZip = async (req, res, next) => {
   if (!config.uploads.generateZips) {
     return res.status(401).json({
       success: false,
-      description: 'Zip generation disabled.'
+      description: 'ZIP generation disabled.'
     })
   }
 
