@@ -5,19 +5,17 @@ const config = require('./../config')
 const db = require('knex')(config.database)
 
 const self = {
-  mode: null
-}
-
-self.getFiles = async directory => {
-  const names = await paths.readdir(directory)
-  const files = []
-  for (const name of names) {
-    const lstat = await paths.lstat(path.join(directory, name))
-    if (lstat.isFile() && !name.startsWith('.')) {
-      files.push(name)
+  getFiles: async directory => {
+    const names = await paths.readdir(directory)
+    const files = []
+    for (const name of names) {
+      const lstat = await paths.lstat(path.join(directory, name))
+      if (lstat.isFile() && !name.startsWith('.')) {
+        files.push(name)
+      }
     }
+    return files
   }
-  return files
 }
 
 ;(async () => {
@@ -37,8 +35,10 @@ self.getFiles = async directory => {
     `).trim())
   }
 
-  self.mode = parseInt(args[0]) || 0
-  const dryrun = self.mode === 0
+  const mode = parseInt(args[0]) || 0
+  const dryrun = mode === 0
+
+  console.log('Querying uploads\u2026')
 
   const uploads = await self.getFiles(paths.uploads)
   console.log(`Uploads: ${uploads.length}`)
@@ -49,18 +49,19 @@ self.getFiles = async directory => {
   console.log(`- In DB: ${uploadsDb.length}`)
 
   const uploadsNotInDb = uploads.filter(upload => !uploadsDb.includes(upload))
-  console.log(`- Not in DB: ${uploadsNotInDb.length}`)
+  console.log(`- Stray: ${uploadsNotInDb.length}`)
 
   const thumbs = await self.getFiles(paths.thumbs)
-  console.log(`Thumbs: ${thumbs.length}`)
+  console.log(`Thumbs : ${thumbs.length}`)
 
   const uploadsDbSet = new Set(uploadsDb.map(upload => upload.split('.')[0]))
   const thumbsNotInDb = thumbs.filter(thumb => !uploadsDbSet.has(thumb.slice(0, -4)))
-  console.log(`- Not in DB: ${thumbsNotInDb.length}`)
+  console.log(`- Stray: ${thumbsNotInDb.length}`)
 
   if (dryrun) {
-    console.log('U:', uploadsNotInDb.join(', '))
-    console.log('T:', thumbsNotInDb.join(', '))
+    console.log('Stray uploads:', uploadsNotInDb.join(', '))
+    console.log('Stray thumbs :', thumbsNotInDb.join(', '))
+    console.log('INFO: This was a dry run. No files had been deleted.')
   } else if (!dryrun) {
     for (const upload of uploadsNotInDb) {
       await paths.unlink(path.join(paths.uploads, upload))

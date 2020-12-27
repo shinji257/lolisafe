@@ -1,9 +1,5 @@
 const utils = require('../controllers/utilsController')
 
-const self = {
-  mode: null
-}
-
 ;(async () => {
   const location = process.argv[1].replace(process.cwd() + '/', '')
   const args = process.argv.slice(2)
@@ -22,9 +18,9 @@ const self = {
     `).trim())
   }
 
-  self.mode = parseInt(args[0]) || 0
-  const dryrun = self.mode === 0
-  const quiet = self.mode === 2
+  const mode = parseInt(args[0]) || 0
+  const dryrun = mode === 0
+  const quiet = mode === 2
 
   const result = await utils.bulkDeleteExpired(dryrun, true)
 

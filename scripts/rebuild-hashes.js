@@ -6,44 +6,41 @@ const utils = require('../controllers/utilsController')
 const config = require('./../config')
 const db = require('knex')(config.database)
 
-const self = {
-  mode: null
-}
-
 ;(async () => {
   const location = process.argv[1].replace(process.cwd() + '/', '')
   const args = process.argv.slice(2)
 
-  self.mode = parseInt(args[0])
+  const mode = parseInt(args[0])
 
-  if (![0, 1, 2].includes(self.mode) ||
+  if (![0, 1, 2].includes(mode) ||
     args.includes('--help') ||
     args.includes('-h')) {
     return console.log(utils.stripIndents(`
       Rebuild file hashes.
 
-      Usage  :
+      Usage:
       node ${location} <mode=0|1|2> [parallel]
 
       mode:
       0 = Dry run (recalculate hashes, print them, but do NOT store to DB).
-      1 = Recalculate hashes, print them, and store to DB.
-      2 = Quiet (recalculate hashes and store to DB).
+      1 = Recalculate hashes and store to DB.
+      2 = Verbose (recalculate hashes, print them, and store to DB).
 
       parallel:
       Amount of uploads to hash in parallel (not to be confused with multi-threading).
     `).trim())
   }
 
-  const dryrun = self.mode === 0
-  const quiet = self.mode === 2
-  const parallel = Math.min(Math.max(parseInt(args[1]), 0), 32) || 8
+  const dryrun = mode === 0
+  const verbose = [0, 2].includes(mode)
+  const parallel = Math.max(parseInt(args[1]), 1) || 1
 
+  console.log(`Parallel: ${parallel}`)
+  console.log('Querying uploads\u2026')
   const hrstart = process.hrtime()
   const uploads = await db.table('files')
     .select('id', 'name', 'hash')
   console.log(`Uploads : ${uploads.length}`)
-  console.log(`Parallel: ${parallel}`)
 
   let lastProgressOut
   await utils.parallelLimit(uploads.map(upload => {
@@ -53,7 +50,7 @@ const self = {
         .pipe(blake3.createHash())
         .on('data', async hasher => {
           const hash = hasher.toString('hex')
-          if (!quiet) console.log(`${upload.name}: ${hash}`)
+          if (verbose) console.log(`${upload.name}: ${hash}`)
           if (!dryrun && upload.hash !== hash) {
             await db.table('files')
               .update('hash', hash)
