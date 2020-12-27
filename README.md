@@ -120,4 +120,4 @@ Unfortunately, this will slow down uploads processing as it has to wait for the 
 
 To enable this, make sure you have [ClamAV installed](https://github.com/kylefarris/clamscan#to-use-local-binary-method-of-scanning), or additionally have [ClamAV daemon running](https://github.com/kylefarris/clamscan#to-use-clamav-using-tcp-sockets). Afterwards configure `uploads.scan` options, and more importantly its sub-option `clamOptions`. Read more about it in the `config.sample.js` file.
 
-Additionally, you can also configure usergroups bypass, extensions whitelist, and max file size, to lessen the burden on your server. 
+Additionally, you can also configure usergroups bypass, extensions whitelist, and max file size, to lessen the burden on your server.
