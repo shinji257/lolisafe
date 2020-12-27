@@ -53,15 +53,12 @@ $ node ./scripts/rebuild-hashes.js -h
 Rebuild file hashes.
 
 Usage:
-node scripts/rebuild-hashes.js <mode=0|1|2> [parallel]
+node scripts/rebuild-hashes.js <mode=0|1|2>
 
 mode:
 0 = Dry run (recalculate hashes, print them, but do NOT store to DB).
 1 = Recalculate hashes and store to DB.
 2 = Verbose (recalculate hashes, print them, and store to DB).
-
-parallel:
-Amount of uploads to hash in parallel (not to be confused with multi-threading).
 ```
 
 ## thumbs.js
