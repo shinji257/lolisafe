@@ -13,7 +13,7 @@ const utils = require('./../controllers/utilsController')
 
       filename:
       Upload names separated by space (will automatically include their thumbs if available).
-    `))
+    `).trim())
   }
 
   const results = await utils.purgeCloudflareCache(args, true, true)

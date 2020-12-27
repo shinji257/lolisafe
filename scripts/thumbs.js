@@ -50,7 +50,7 @@ self.getFiles = async directory => {
       force  : 0 = no force (default), 1 = overwrite existing thumbnails
       verbose: 0 = only print missing thumbs (default), 1 = print all
       cfcache: 0 = do not clear cloudflare cache (default), 1 = clear cloudflare cache
-    `))
+    `).trim())
   }
 
   console.log('Looking through existing thumbnails\u2026')

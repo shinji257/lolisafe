@@ -176,6 +176,36 @@ self.stripIndents = string => {
   return result
 }
 
+self.parallelLimit = (promiseFactories, limit, progressCallback) => {
+  // https://stackoverflow.com/a/40377750
+  // CC BY-SA 3.0
+  const hasProgressCallback = typeof progressCallback === 'function'
+  const total = promiseFactories.length
+  const result = []
+  let cnt = 0
+
+  function chain (promiseFactories) {
+    if (!promiseFactories.length) return
+    const i = cnt++ // preserve order in result
+    if (hasProgressCallback) {
+      progressCallback({ done: cnt, total })
+    }
+    return promiseFactories.shift().then((res) => {
+      result[i] = res // save result
+      return chain(promiseFactories) // append next promise
+    })
+  }
+
+  const arrChains = []
+  while (limit-- > 0 && promiseFactories.length > 0) {
+    // create "limit" chains which run in parallel
+    arrChains.push(chain(promiseFactories))
+  }
+
+  // return when all arrChains are finished
+  return Promise.all(arrChains).then(() => result)
+}
+
 self.authorize = async (req, res) => {
   // TODO: Improve usage of this function by the other APIs
   const token = req.headers.token

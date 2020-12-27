@@ -19,7 +19,7 @@ const self = {
       0 = Only list names of the expired files.
       1 = Delete expired files (output file names).
       2 = Delete expired files (no output).
-    `))
+    `).trim())
   }
 
   self.mode = parseInt(args[0]) || 0

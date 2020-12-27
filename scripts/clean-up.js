@@ -34,7 +34,7 @@ self.getFiles = async directory => {
       mode:
       0 = Only list names of files that are not in the database.
       1 = Clean up the files.
-    `))
+    `).trim())
   }
 
   self.mode = parseInt(args[0]) || 0

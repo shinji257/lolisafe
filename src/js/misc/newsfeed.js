@@ -29,6 +29,7 @@ newsfeed.simpleParseDate = string => {
 
 newsfeed.formatRelativeDate = delta => {
   // https://stackoverflow.com/a/7641812
+  // CC BY-SA 3.0
   const minute = 60
   const hour = minute * 60
   const day = hour * 24

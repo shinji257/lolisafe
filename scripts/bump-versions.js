@@ -61,7 +61,7 @@ const self = {
       4: Renders from /public/render/* directories (to be used with /src/js/misc/render.js).
       5: Fontello font files.
       a: Shortcut to update all types.
-    `))
+    `).trim())
   }
 
   const file = path.resolve('./src/versions.json')
