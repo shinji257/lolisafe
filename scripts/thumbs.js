@@ -31,7 +31,6 @@ const self = {
   const force = parseInt(args[1]) || 0
   const verbose = parseInt(args[2]) || 0
   const cfcache = parseInt(args[3]) || 0
-  const parallel = Math.max(parseInt(args[1]), 1) || 1
 
   if (![1, 2, 3].includes(self.mode) ||
     ![0, 1].includes(force) ||
@@ -43,17 +42,15 @@ const self = {
       Generate thumbnails.
 
       Usage:
-      node ${location} <mode=1|2|3> [force=0|1] [verbose=0|1] [cfcache=0|1] [parallel]
+      node ${location} <mode=1|2|3> [force=0|1] [verbose=0|1] [cfcache=0|1]
 
       mode    : 1 = images only, 2 = videos only, 3 = both images and videos
       force   : 0 = no force (default), 1 = overwrite existing thumbnails
       verbose : 0 = only print missing thumbs (default), 1 = print all, 2 = print nothing
       cfcache : 0 = do not clear cloudflare cache (default), 1 = clear cloudflare cache
-      parallel: amount of thumbs to generate in parallel (not to be confused with multi-threading).
     `).trim())
   }
 
-  console.log(`Parallel: ${parallel}`)
   console.log('Looking through existing thumbnails\u2026')
   const uploads = await db.table('files')
     .select('id', 'name')
@@ -69,8 +66,16 @@ const self = {
   let error = 0
   let exists = 0
   let skipped = 0
-  let lastProgressOut
-  await utils.parallelLimit(uploads.map(async upload => {
+
+  const printProgress = () => {
+    const done = succeeded.length + error + exists + skipped
+    console.log(`PROGRESS: ${done}/${uploads.length}`)
+    if (done >= uploads.length) clearInterval(progressInterval)
+  }
+  const progressInterval = setInterval(printProgress, 1000)
+  printProgress()
+
+  for (const upload of uploads) {
     const extname = utils.extname(upload.name)
     const basename = upload.name.slice(0, -extname.length)
 
@@ -92,13 +97,10 @@ const self = {
       }
       generated ? succeeded.push({ upload, extname }) : error++
     }
-  }), parallel, progress => {
-    const now = Date.now()
-    if (!lastProgressOut || (now - lastProgressOut >= 1000) || progress.done === progress.total) {
-      console.log(`Progress: ${progress.done}/${progress.total}`)
-      lastProgressOut = now
-    }
-  })
+  }
+
+  clearInterval(progressInterval)
+  printProgress()
 
   console.log(utils.stripIndents(`
     ---

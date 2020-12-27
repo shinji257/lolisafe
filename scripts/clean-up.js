@@ -38,7 +38,7 @@ const self = {
   const mode = parseInt(args[0]) || 0
   const dryrun = mode === 0
 
-  console.log('Querying uploads\u2026')
+  console.log('Querying and mapping uploads\u2026')
 
   const uploads = await self.getFiles(paths.uploads)
   console.log(`Uploads: ${uploads.length}`)
