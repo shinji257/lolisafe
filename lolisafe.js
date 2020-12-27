@@ -82,6 +82,7 @@ const overrideContentTypes = (res, path) => {
     for (const contentType of contentTypes) {
       if (config.overrideContentTypes[contentType].includes(extname)) {
         res.set('Content-Type', contentType)
+        break
       }
     }
   }
