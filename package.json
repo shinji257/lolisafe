@@ -25,6 +25,7 @@
     "cf-purge": "node ./scripts/cf-purge.js",
     "clean-up": "node ./scripts/clean-up.js",
     "delete-expired": "node ./scripts/delete-expired.js",
+    "rebuild-hashes": "node ./scripts/rebuild-hashes.js",
     "thumbs": "node ./scripts/thumbs.js",
     "pull": "git pull && yarn --production",
     "stash": "git stash || true",

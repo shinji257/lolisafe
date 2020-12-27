@@ -94,16 +94,16 @@ To generate thumbnails for those files, you can use `yarn thumbs`.
 ```none
 $ yarn thumbs
 $ node ./scripts/thumbs.js
-
 Generate thumbnails.
 
-Usage  :
-node scripts/thumbs.js <mode=1|2|3> [force=0|1] [verbose=0|1] [cfcache=0|1]
+Usage:
+node scripts/thumbs.js <mode=1|2|3> [force=0|1] [verbose=0|1] [cfcache=0|1] [parallel]
 
-mode   : 1 = images only, 2 = videos only, 3 = both images and videos
-force  : 0 = no force (default), 1 = overwrite existing thumbnails
-verbose: 0 = only print missing thumbs (default), 1 = print all
-cfcache: 0 = do not clear cloudflare cache (default), 1 = clear cloudflare cache
+mode    : 1 = images only, 2 = videos only, 3 = both images and videos
+force   : 0 = no force (default), 1 = overwrite existing thumbnails
+verbose : 0 = only print missing thumbs (default), 1 = print all, 2 = print nothing
+cfcache : 0 = do not clear cloudflare cache (default), 1 = clear cloudflare cache
+parallel: amount of thumbs to generate in parallel (not to be confused with multi-threading).
 ```
 
 For example, if you only want to generate thumbnails for image files without overwriting existing ones, you can run `yarn thumbs 1`, or if you want to generate thumbnails for both image and video files, while also overwriting existsing ones, you can run `yarn thumbs 3 1`.
