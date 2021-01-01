@@ -52,6 +52,7 @@ const self = {
   }
 
   console.log('Looking through existing thumbnails\u2026')
+  const hrstart = process.hrtime()
   const uploads = await db.table('files')
     .select('id', 'name')
   const thumbs = await self.getFiles(paths.thumbs)
@@ -102,8 +103,10 @@ const self = {
   clearInterval(progressInterval)
   printProgress()
 
+  const hrend = process.hrtime(hrstart)
   console.log(utils.stripIndents(`
     ---
+    Done in: ${(hrend[0] + (hrend[1] / 1e9)).toFixed(4)}s
     Success: ${succeeded.length}
     Error: ${error}
     Already exists: ${exists}
