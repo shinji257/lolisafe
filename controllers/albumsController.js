@@ -190,7 +190,7 @@ self.create = async (req, res, next) => {
       })
       .first()
 
-    if (album) throw new ClientError('Album name already in use.')
+    if (album) throw new ClientError('Album name already in use.', { statusCode: 403 })
 
     const identifier = await self.getUniqueRandomName()
 
@@ -329,7 +329,7 @@ self.edit = async (req, res, next) => {
         // Old rename API (stick with 200 status code for this)
         throw new ClientError('You did not specify a new name.', { statusCode: 200 })
       } else {
-        throw new ClientError('Album name already in use.')
+        throw new ClientError('Album name already in use.', { statusCode: 403 })
       }
     }
 
@@ -499,7 +499,7 @@ self.generateZip = async (req, res, next) => {
       .where('albumid', album.id)
     if (files.length === 0) {
       logger.log(`Finished zip task for album: ${identifier} (no files).`)
-      const clientErr = new ClientError('There are no files in the album.')
+      const clientErr = new ClientError('There are no files in the album.', { statusCode: 200 })
       self.zipEmitters.get(identifier).emit('done', null, null, clientErr)
       throw clientErr
     }
@@ -508,7 +508,7 @@ self.generateZip = async (req, res, next) => {
       const totalSizeBytes = files.reduce((accumulator, file) => accumulator + parseInt(file.size), 0)
       if (totalSizeBytes > zipMaxTotalSizeBytes) {
         logger.log(`Finished zip task for album: ${identifier} (size exceeds).`)
-        const clientErr = new ClientError(`Total size of all files in the album exceeds ${zipMaxTotalSize} MB limit.`)
+        const clientErr = new ClientError(`Total size of all files in the album exceeds ${zipMaxTotalSize} MB limit.`, { statusCode: 403 })
         self.zipEmitters.get(identifier).emit('done', null, null, clientErr)
         throw clientErr
       }
@@ -616,7 +616,7 @@ self.addFiles = async (req, res, next) => {
         .first()
 
       if (!album) {
-        throw new ClientError('Album does not exist or it does not belong to the user.')
+        throw new ClientError('Album does not exist or it does not belong to the user.', { statusCode: 404 })
       }
 
       albumids.push(albumid)
