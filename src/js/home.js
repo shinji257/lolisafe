@@ -629,6 +629,8 @@ page.processUrlsQueue = () => {
 
       file.previewElement.querySelector('.error').innerHTML = data.description
       file.previewElement.querySelector('.error').classList.remove('is-hidden')
+
+      page.updateTemplateIcon(file.previewElement, 'icon-block')
     }
 
     if (Array.isArray(data.files) && data.files[0]) {
