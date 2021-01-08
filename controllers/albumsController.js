@@ -165,7 +165,7 @@ self.list = async (req, res, next) => {
       users[user.id] = user.username
     }
 
-    return res.json({ success: true, albums, count, users, homeDomain })
+    await res.json({ success: true, albums, count, users, homeDomain })
   } catch (error) {
     return apiErrorsHandler(error, req, res, next)
   }
@@ -211,7 +211,7 @@ self.create = async (req, res, next) => {
     utils.invalidateStatsCache('albums')
     self.onHold.delete(identifier)
 
-    return res.json({ success: true, id: ids[0] })
+    await res.json({ success: true, id: ids[0] })
   } catch (error) {
     return apiErrorsHandler(error, req, res, next)
   }
@@ -270,7 +270,7 @@ self.disable = async (req, res, next) => {
       // Re-throw non-ENOENT error
       if (error.code !== 'ENOENT') throw error
     }
-    return res.json({ success: true })
+    await res.json({ success: true })
   } catch (error) {
     return apiErrorsHandler(error, req, res, next)
   }
@@ -369,12 +369,12 @@ self.edit = async (req, res, next) => {
         if (error.code !== 'ENOENT') throw error
       }
 
-      return res.json({
+      await res.json({
         success: true,
         identifier: update.identifier
       })
     } else {
-      return res.json({ success: true, name })
+      await res.json({ success: true, name })
     }
   } catch (error) {
     return apiErrorsHandler(error, req, res, next)
@@ -425,7 +425,7 @@ self.get = async (req, res, next) => {
       }
     }
 
-    return res.json({
+    await res.json({
       success: true,
       description: 'Successfully retrieved files.',
       title,
@@ -472,7 +472,7 @@ self.generateZip = async (req, res, next) => {
       try {
         const filePath = path.join(paths.zips, `${identifier}.zip`)
         await paths.access(filePath)
-        return res.download(filePath, `${album.name}.zip`)
+        await res.download(filePath, `${album.name}.zip`)
       } catch (error) {
         // Re-throw non-ENOENT error
         if (error.code !== 'ENOENT') throw error
@@ -547,7 +547,7 @@ self.generateZip = async (req, res, next) => {
     const fileName = `${album.name}.zip`
 
     self.zipEmitters.get(identifier).emit('done', filePath, fileName)
-    return res.download(filePath, fileName)
+    await res.download(filePath, fileName)
   } catch (error) {
     return apiErrorsHandler(error, req, res, next)
   }
@@ -643,7 +643,7 @@ self.addFiles = async (req, res, next) => {
       .update('editedAt', Math.floor(Date.now() / 1000))
     utils.invalidateAlbumsCache(albumids)
 
-    return res.json({ success: true, failed })
+    await res.json({ success: true, failed })
   } catch (error) {
     if (Array.isArray(failed) && (failed.length === ids.length)) {
       return apiErrorsHandler(new ServerError(`Could not ${albumid === null ? 'add' : 'remove'} any files ${albumid === null ? 'to' : 'from'} the album.`), req, res, next)
