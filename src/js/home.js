@@ -526,16 +526,16 @@ page.prepareDropzone = () => {
         }
 
         // Clean up file size errors
-        if (/^File is too big/.test(err) && /File too large/.test(err)) {
+        if (/^File is too big/.test(err) || /File too large/.test(err)) {
           err = `File too large (${page.getPrettyBytes(file.size)}).`
         }
-
-        page.updateTemplateIcon(file.previewElement, 'icon-block')
 
         file.previewElement.querySelector('.descriptive-progress').classList.add('is-hidden')
 
         file.previewElement.querySelector('.error').innerHTML = err
         file.previewElement.querySelector('.error').classList.remove('is-hidden')
+
+        page.updateTemplateIcon(file.previewElement, 'icon-block')
       })
     },
 
@@ -566,6 +566,8 @@ page.prepareDropzone = () => {
         if (response.data.success === false) {
           file.previewElement.querySelector('.error').innerHTML = response.data.description
           file.previewElement.querySelector('.error').classList.remove('is-hidden')
+
+          page.updateTemplateIcon(file.previewElement, 'icon-block')
         }
 
         if (response.data.files && response.data.files[0]) {
