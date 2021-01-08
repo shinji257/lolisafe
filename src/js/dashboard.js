@@ -2924,7 +2924,7 @@ page.getStatistics = (params = {}) => {
                 parsed = page.getPrettyBytes(value)
                 break
               case 'byteUsage':
-                parsed = `${page.getPrettyBytes(value.used)} / ${page.getPrettyBytes(value.total)} (${Math.floor(value.used / value.total * 100)}%)`
+                parsed = `${page.getPrettyBytes(value.used)} / ${page.getPrettyBytes(value.total)} (${(value.used / value.total * 100).toFixed(2)}%)`
                 break
               case 'uptime':
                 parsed = page.getPrettyUptime(value)
