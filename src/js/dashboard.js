@@ -2607,12 +2607,17 @@ page.editUser = id => {
   const user = page.cache[id]
   if (!user) return
 
+  let isHigher = false
   const groupOptions = Object.keys(page.permissions).map((g, i, a) => {
     const selected = g === user.displayGroup
+    if (selected) {
+      isHigher = typeof a[i + 1] !== 'undefined' && page.permissions[a[i + 1]]
+    }
     const disabled = !(a[i + 1] && page.permissions[a[i + 1]])
     return `<option value="${g}"${selected ? ' selected' : ''}${disabled ? ' disabled' : ''}>${g}</option>`
   }).join('\n')
 
+  const isDisabledHelper = isHigher ? '' : ' disabled'
   const div = document.createElement('div')
   div.innerHTML = `
     <div class="field">
@@ -2621,14 +2626,14 @@ page.editUser = id => {
     <div class="field">
       <label class="label">Username</label>
       <div class="controls">
-        <input id="swalUsername" class="input" type="text" value="${user.username || ''}">
+        <input id="swalUsername" class="input" type="text" value="${user.username || ''}"${isDisabledHelper}>
       </div>
     </div>
     <div class="field">
       <label class="label">User group</label>
       <div class="control">
         <div class="select is-fullwidth">
-          <select id="swalGroup">
+          <select id="swalGroup"${isDisabledHelper}>
             ${groupOptions}
           </select>
         </div>
@@ -2637,7 +2642,7 @@ page.editUser = id => {
     <div class="field">
       <div class="control">
         <label class="checkbox">
-          <input id="swalEnabled" type="checkbox" ${user.enabled ? 'checked' : ''}>
+          <input id="swalEnabled" type="checkbox"${user.enabled ? ' checked' : ''}${isDisabledHelper}>
           Enabled
         </label>
       </div>
@@ -2645,11 +2650,17 @@ page.editUser = id => {
     <div class="field">
       <div class="control">
         <label class="checkbox">
-          <input id="swalResetPassword" type="checkbox">
+          <input id="swalResetPassword" type="checkbox"${isDisabledHelper}>
           Reset password
         </label>
       </div>
     </div>
+    ${isHigher
+      ? ''
+      : `<div class="notification is-danger">
+      You <strong>cannot</strong> modify user in the same or higher group as you.
+    </div>`
+    }
   `
 
   swal({
