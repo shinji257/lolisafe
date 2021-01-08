@@ -626,6 +626,7 @@ self.addFiles = async (req, res, next) => {
     await db.table('files')
       .whereIn('id', files.map(file => file.id))
       .update('albumid', albumid)
+    utils.invalidateStatsCache('albums')
 
     files.forEach(file => {
       if (file.albumid && !albumids.includes(file.albumid)) {

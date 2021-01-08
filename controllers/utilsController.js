@@ -874,15 +874,23 @@ self.stats = async (req, res, next) => {
 
           const albums = await db.table('albums')
           stats[data.title].Total = albums.length
+
+          const activeAlbums = []
           for (const album of albums) {
             if (!album.enabled) {
               stats[data.title].Disabled++
               continue
             }
+            activeAlbums.push(album.id)
             if (album.download) stats[data.title].Downloadable++
             if (album.public) stats[data.title].Public++
             if (album.zipGeneratedAt) stats[data.title]['ZIP Generated']++
           }
+
+          stats[data.title]['Files in albums'] = await db.table('files')
+            .whereIn('albumid', activeAlbums)
+            .count('id as count')
+            .then(rows => rows[0].count)
 
           // Update cache
           data.cache = stats[data.title]
