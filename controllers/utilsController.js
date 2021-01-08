@@ -6,6 +6,8 @@ const sharp = require('sharp')
 const si = require('systeminformation')
 const paths = require('./pathsController')
 const perms = require('./permissionController')
+const apiErrorsHandler = require('./handlers/apiErrorsHandler')
+const ClientError = require('./utils/ClientError')
 const config = require('./../config')
 const logger = require('./../logger')
 const db = require('knex')(config.database)
@@ -176,31 +178,26 @@ self.stripIndents = string => {
   return result
 }
 
-self.authorize = async (req, res) => {
-  // TODO: Improve usage of this function by the other APIs
+self.assertUser = async token => {
+  const user = await db.table('users')
+    .where('token', token)
+    .first()
+  if (user) {
+    if (user.enabled === false || user.enabled === 0) {
+      throw new ClientError('This account has been disabled.', { statusCode: 403 })
+    }
+    return user
+  } else {
+    throw new ClientError('Invalid token.', { statusCode: 403 })
+  }
+}
+
+self.authorize = async req => {
   const token = req.headers.token
   if (token === undefined) {
-    res.status(401).json({ success: false, description: 'No token provided.' })
-    return
+    throw new ClientError('No token provided.', { statusCode: 403 })
   }
-
-  try {
-    const user = await db.table('users')
-      .where('token', token)
-      .first()
-    if (user) {
-      if (user.enabled === false || user.enabled === 0) {
-        res.json({ success: false, description: 'This account has been disabled.' })
-        return
-      }
-      return user
-    }
-
-    res.status(401).json({ success: false, description: 'Invalid token.' })
-  } catch (error) {
-    logger.error(error)
-    res.status(500).json({ success: false, description: 'An unexpected error occurred. Try again?' })
-  }
+  return self.assertUser(token)
 }
 
 self.generateThumbs = async (name, extname, force) => {
@@ -309,6 +306,7 @@ self.generateThumbs = async (name, extname, force) => {
   } catch (error) {
     logger.error(`[${name}]: ${error.toString().trim()}`)
     try {
+      await paths.unlink(thumbname).catch(() => {}) // try to unlink incomplete thumbs first
       await paths.symlink(paths.thumbPlaceholder, thumbname)
       return true
     } catch (err) {
@@ -322,25 +320,17 @@ self.generateThumbs = async (name, extname, force) => {
 
 self.stripTags = async (name, extname) => {
   const fullpath = path.join(paths.uploads, name)
+  let tmpfile
 
-  if (self.imageExts.includes(extname)) {
-    const tmpfile = path.join(paths.uploads, `tmp-${name}`)
-    await paths.rename(fullpath, tmpfile)
-
-    try {
+  try {
+    if (self.imageExts.includes(extname)) {
+      tmpfile = path.join(paths.uploads, `tmp-${name}`)
+      await paths.rename(fullpath, tmpfile)
       await sharp(tmpfile)
         .toFile(fullpath)
-      await paths.unlink(tmpfile)
-    } catch (error) {
-      await paths.unlink(tmpfile)
-      // Re-throw error
-      throw error
-    }
-  } else if (config.uploads.stripTags.video && self.videoExts.includes(extname)) {
-    const tmpfile = path.join(paths.uploads, `tmp-${name}`)
-    await paths.rename(fullpath, tmpfile)
-
-    try {
+    } else if (config.uploads.stripTags.video && self.videoExts.includes(extname)) {
+      tmpfile = path.join(paths.uploads, `tmp-${name}`)
+      await paths.rename(fullpath, tmpfile)
       await new Promise((resolve, reject) => {
         ffmpeg(tmpfile)
           .output(fullpath)
@@ -355,11 +345,18 @@ self.stripTags = async (name, extname) => {
           .on('end', () => resolve(true))
           .run()
       })
+    }
+  } catch (error) {
+    logger.error(`[${name}]: ${error.toString().trim()}`)
+  }
+
+  if (tmpfile) {
+    try {
       await paths.unlink(tmpfile)
     } catch (error) {
-      await paths.unlink(tmpfile)
-      // Re-throw error
-      throw error
+      if (error.code !== 'ENOENT') {
+        logger.error(`[${name}]: ${error.toString().trim()}`)
+      }
     }
   }
 
@@ -370,14 +367,13 @@ self.unlinkFile = async (filename, predb) => {
   try {
     await paths.unlink(path.join(paths.uploads, filename))
   } catch (error) {
-    // Return true if file does not exist
+    // Re-throw non-ENOENT error
     if (error.code !== 'ENOENT') throw error
   }
 
   const identifier = filename.split('.')[0]
 
   // Do not remove from identifiers cache on pre-db-deletion
-  // eslint-disable-next-line curly
   if (!predb && self.idSet) {
     self.idSet.delete(identifier)
     // logger.log(`Removed ${identifier} from identifiers cache (deleteFile)`)
@@ -388,6 +384,7 @@ self.unlinkFile = async (filename, predb) => {
     try {
       await paths.unlink(path.join(paths.thumbs, `${identifier}.png`))
     } catch (error) {
+      // Re-throw non-ENOENT error
       if (error.code !== 'ENOENT') throw error
     }
   }
@@ -636,13 +633,12 @@ self.invalidateStatsCache = type => {
 }
 
 self.stats = async (req, res, next) => {
-  const user = await self.authorize(req, res)
-  if (!user) return
-
-  const isadmin = perms.is(user, 'admin')
-  if (!isadmin) return res.status(403).end()
-
   try {
+    const user = await self.authorize(req)
+
+    const isadmin = perms.is(user, 'admin')
+    if (!isadmin) throw new ClientError('', { statusCode: 403 })
+
     const hrstart = process.hrtime()
     const stats = {}
     Object.keys(statsData).forEach(key => {
@@ -908,12 +904,11 @@ self.stats = async (req, res, next) => {
 
     return res.json({ success: true, stats, hrtime: process.hrtime(hrstart) })
   } catch (error) {
-    logger.error(error)
     // Reset generating state when encountering any errors
     Object.keys(statsData).forEach(key => {
       statsData[key].generating = false
     })
-    return res.status(500).json({ success: false, description: 'An unexpected error occurred. Try again?' })
+    return apiErrorsHandler(error)
   }
 }
 
