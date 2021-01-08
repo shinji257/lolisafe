@@ -278,7 +278,8 @@ safe.use('/api', api)
     // ClamAV scanner
     if (config.uploads.scan && config.uploads.scan.enabled) {
       if (!config.uploads.scan.clamOptions) {
-        throw 'Missing object config.uploads.scan.clamOptions (check config.sample.js)'
+        logger.error('Missing object config.uploads.scan.clamOptions (check config.sample.js)')
+        process.exit(1)
       }
       utils.clamscan.instance = await new ClamScan().init(config.uploads.scan.clamOptions)
       utils.clamscan.version = await utils.clamscan.instance.get_version().then(s => s.trim())
