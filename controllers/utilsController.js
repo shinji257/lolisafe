@@ -218,7 +218,7 @@ self.generateThumbs = async (name, extname, force) => {
         return true
       }
     } catch (error) {
-      // Re-throw error
+      // Re-throw non-ENOENT error
       if (error.code !== 'ENOENT') throw error
     }
 
@@ -265,12 +265,12 @@ self.generateThumbs = async (name, extname, force) => {
 
       const duration = parseInt(metadata.format.duration)
       if (isNaN(duration)) {
-        throw 'Warning: File does not have valid duration metadata'
+        throw new Error('File does not have valid duration metadata')
       }
 
       const videoStream = metadata.streams && metadata.streams.find(s => s.codec_type === 'video')
       if (!videoStream || !videoStream.width || !videoStream.height) {
-        throw 'Warning: File does not have valid video stream metadata'
+        throw new Error('File does not have valid video stream metadata')
       }
 
       await new Promise((resolve, reject) => {
@@ -297,7 +297,7 @@ self.generateThumbs = async (name, extname, force) => {
             return true
           } catch (err) {
             if (err.code === 'ENOENT') {
-              throw error || 'Warning: FFMPEG exited with empty output file'
+              throw error || new Error('FFMPEG exited with empty output file')
             } else {
               throw error || err
             }
