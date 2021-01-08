@@ -74,8 +74,7 @@ self.getUniqueRandomName = async () => {
 
 self.list = async (req, res, next) => {
   try {
-    const user = await utils.authorize(req, res)
-    if (!user) return
+    const user = await utils.authorize(req)
 
     const all = req.headers.all === '1'
     const simple = req.headers.simple
@@ -173,8 +172,7 @@ self.list = async (req, res, next) => {
 
 self.create = async (req, res, next) => {
   try {
-    const user = await utils.authorize(req, res)
-    if (!user) return
+    const user = await utils.authorize(req)
 
     const name = typeof req.body.name === 'string'
       ? utils.escape(req.body.name.trim().substring(0, self.titleMaxLength))
@@ -224,8 +222,7 @@ self.delete = async (req, res, next) => {
 
 self.disable = async (req, res, next) => {
   try {
-    const user = await utils.authorize(req, res)
-    if (!user) return
+    const user = await utils.authorize(req)
 
     const id = req.body.id
     const purge = req.body.purge
@@ -278,8 +275,7 @@ self.disable = async (req, res, next) => {
 
 self.edit = async (req, res, next) => {
   try {
-    const user = await utils.authorize(req, res)
-    if (!user) return
+    const user = await utils.authorize(req)
 
     const ismoderator = perms.is(user, 'moderator')
 
@@ -592,8 +588,7 @@ self.listFiles = async (req, res, next) => {
 self.addFiles = async (req, res, next) => {
   let ids, albumid, failed, albumids
   try {
-    const user = await utils.authorize(req, res)
-    if (!user) return
+    const user = await utils.authorize(req)
 
     ids = req.body.ids
     if (!Array.isArray(ids) || !ids.length) {

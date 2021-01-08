@@ -118,8 +118,7 @@ self.register = async (req, res, next) => {
 
 self.changePassword = async (req, res, next) => {
   try {
-    const user = await utils.authorize(req, res)
-    if (!user) return
+    const user = await utils.authorize(req)
 
     const password = typeof req.body.password === 'string'
       ? req.body.password.trim()
@@ -152,8 +151,7 @@ self.assertPermission = (user, target) => {
 
 self.createUser = async (req, res, next) => {
   try {
-    const user = await utils.authorize(req, res)
-    if (!user) return
+    const user = await utils.authorize(req)
 
     const isadmin = perms.is(user, 'admin')
     if (!isadmin) return res.status(403).end()
@@ -219,8 +217,7 @@ self.createUser = async (req, res, next) => {
 
 self.editUser = async (req, res, next) => {
   try {
-    const user = await utils.authorize(req, res)
-    if (!user) return
+    const user = await utils.authorize(req)
 
     const isadmin = perms.is(user, 'admin')
     if (!isadmin) throw new ClientError('', { statusCode: 403 })
@@ -279,8 +276,7 @@ self.disableUser = async (req, res, next) => {
 
 self.deleteUser = async (req, res, next) => {
   try {
-    const user = await utils.authorize(req, res)
-    if (!user) return
+    const user = await utils.authorize(req)
 
     const isadmin = perms.is(user, 'admin')
     if (!isadmin) throw new ClientError('', { statusCode: 403 })
@@ -354,8 +350,7 @@ self.bulkDeleteUsers = async (req, res, next) => {
 
 self.listUsers = async (req, res, next) => {
   try {
-    const user = await utils.authorize(req, res)
-    if (!user) return
+    const user = await utils.authorize(req)
 
     const isadmin = perms.is(user, 'admin')
     if (!isadmin) throw new ClientError('', { statusCode: 403 })

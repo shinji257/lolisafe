@@ -259,15 +259,9 @@ self.upload = async (req, res, next) => {
   try {
     let user
     if (config.private === true) {
-      user = await utils.authorize(req, res)
-      if (!user) return
+      user = await utils.authorize(req)
     } else if (req.headers.token) {
-      user = await db.table('users')
-        .where('token', req.headers.token)
-        .first()
-      if (user && (user.enabled === false || user.enabled === 0)) {
-        throw new ClientError('This account has been disabled.', { statusCode: 403 })
-      }
+      user = await utils.assertUser(req.headers.token)
     }
 
     let albumid = parseInt(req.headers.albumid || req.params.albumid)
@@ -476,15 +470,10 @@ self.finishChunks = async (req, res, next) => {
 
     let user
     if (config.private === true) {
-      user = await utils.authorize(req, res)
+      user = await utils.authorize(req)
       if (!user) return
     } else if (req.headers.token) {
-      user = await db.table('users')
-        .where('token', req.headers.token)
-        .first()
-      if (user && (user.enabled === false || user.enabled === 0)) {
-        throw new ClientError('This account has been disabled.', { statusCode: 403 })
-      }
+      user = await utils.assertUser(req.headers.token)
     }
 
     await self.actuallyFinishChunks(req, res, user)
@@ -847,8 +836,7 @@ self.delete = async (req, res, next) => {
 
 self.bulkDelete = async (req, res, next) => {
   try {
-    const user = await utils.authorize(req, res)
-    if (!user) return
+    const user = await utils.authorize(req)
 
     const field = req.body.field || 'id'
     const values = req.body.values
@@ -866,8 +854,7 @@ self.bulkDelete = async (req, res, next) => {
 
 self.list = async (req, res, next) => {
   try {
-    const user = await utils.authorize(req, res)
-    if (!user) return
+    const user = await utils.authorize(req)
 
     const all = req.headers.all === '1'
     const filters = req.headers.filters
