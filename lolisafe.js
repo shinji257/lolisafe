@@ -254,14 +254,18 @@ safe.use('/api', api)
 
     // Error pages
     safe.use((req, res, next) => {
-      res.setHeader('Cache-Control', 'no-store')
-      res.status(404).sendFile(path.join(paths.errorRoot, config.errorPages[404]))
+      if (!res.headersSent) {
+        res.setHeader('Cache-Control', 'no-store')
+        res.status(404).sendFile(path.join(paths.errorRoot, config.errorPages[404]))
+      }
     })
 
     safe.use((error, req, res, next) => {
       logger.error(error)
-      res.setHeader('Cache-Control', 'no-store')
-      res.status(500).sendFile(path.join(paths.errorRoot, config.errorPages[500]))
+      if (!res.headersSent) {
+        res.setHeader('Cache-Control', 'no-store')
+        res.status(500).sendFile(path.join(paths.errorRoot, config.errorPages[500]))
+      }
     })
 
     // Git hash
