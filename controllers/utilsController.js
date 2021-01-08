@@ -874,7 +874,6 @@ self.stats = async (req, res, next) => {
 
           const albums = await db.table('albums')
           stats[data.title].Total = albums.length
-          const identifiers = []
           for (const album of albums) {
             if (!album.enabled) {
               stats[data.title].Disabled++
@@ -882,18 +881,8 @@ self.stats = async (req, res, next) => {
             }
             if (album.download) stats[data.title].Downloadable++
             if (album.public) stats[data.title].Public++
-            if (album.zipGeneratedAt) identifiers.push(album.identifier)
+            if (album.zipGeneratedAt) stats[data.title]['ZIP Generated']++
           }
-
-          await Promise.all(identifiers.map(async identifier => {
-            try {
-              await paths.access(path.join(paths.zips, `${identifier}.zip`))
-              stats[data.title]['ZIP Generated']++
-            } catch (error) {
-              // Re-throw error
-              if (error.code !== 'ENOENT') throw error
-            }
-          }))
 
           // Update cache
           data.cache = stats[data.title]
