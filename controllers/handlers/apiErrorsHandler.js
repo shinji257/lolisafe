@@ -1,4 +1,5 @@
-const UserError = require('./../utils/UserError')
+const ClientError = require('./../utils/ClientError')
+const ServerError = require('./../utils/ServerError')
 const logger = require('./../../logger')
 
 module.exports = (error, req, res, next) => {
@@ -6,21 +7,21 @@ module.exports = (error, req, res, next) => {
     return logger.error(new Error('Missing "res" object.'))
   }
 
-  // Intentional error messages to be delivered to users
-  const isUserError = error instanceof UserError
+  // Error messages that can be returned to users
+  const isClientError = error instanceof ClientError
+  const isServerError = error instanceof ServerError
 
-  // ENOENT or missing file errors, typically harmless, so do not log stacktrace
-  const isENOENTError = error instanceof Error && error.code === 'ENOENT'
-
-  if (!isUserError && !isENOENTError) {
+  const logStack = (!isClientError && !isServerError) ||
+    (isServerError && error.logStack)
+  if (logStack) {
     logger.error(error)
   }
 
-  const statusCode = isUserError
+  const statusCode = (isClientError || isServerError)
     ? error.statusCode
     : 500
 
-  const description = isUserError
+  const description = (isClientError || isServerError)
     ? error.message
     : 'An unexpected error occurred. Try again?'
 

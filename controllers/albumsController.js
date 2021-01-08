@@ -8,7 +8,8 @@ const perms = require('./permissionController')
 const uploadController = require('./uploadController')
 const utils = require('./utilsController')
 const apiErrorsHandler = require('./handlers/apiErrorsHandler.js')
-const UserError = require('./utils/UserError')
+const ClientError = require('./utils/ClientError')
+const ServerError = require('./utils/ServerError')
 const config = require('./../config')
 const logger = require('./../logger')
 const db = require('knex')(config.database)
@@ -68,7 +69,7 @@ self.getUniqueRandomName = async () => {
     return identifier
   }
 
-  throw new UserError('Failed to allocate a unique identifier for the album. Try again?', 500)
+  throw new ServerError('Failed to allocate a unique identifier for the album. Try again?')
 }
 
 self.list = async (req, res, next) => {
@@ -179,7 +180,7 @@ self.create = async (req, res, next) => {
       ? utils.escape(req.body.name.trim().substring(0, self.titleMaxLength))
       : ''
 
-    if (!name) return res.json({ success: false, description: 'No album name specified.' })
+    if (!name) throw new ClientError('No album name specified.')
 
     const album = await db.table('albums')
       .where({
@@ -189,7 +190,7 @@ self.create = async (req, res, next) => {
       })
       .first()
 
-    if (album) return res.json({ success: false, description: 'There is already an album with that name.' })
+    if (album) throw new ClientError('Album name already in use.')
 
     const identifier = await self.getUniqueRandomName()
 
@@ -228,7 +229,7 @@ self.disable = async (req, res, next) => {
 
     const id = req.body.id
     const purge = req.body.purge
-    if (!Number.isFinite(id)) return res.json({ success: false, description: 'No album specified.' })
+    if (!Number.isFinite(id)) throw new ClientError('No album specified.')
 
     if (purge) {
       const files = await db.table('files')
@@ -263,7 +264,12 @@ self.disable = async (req, res, next) => {
       .first()
       .then(row => row.identifier)
 
-    await paths.unlink(path.join(paths.zips, `${identifier}.zip`))
+    try {
+      await paths.unlink(path.join(paths.zips, `${identifier}.zip`))
+    } catch (error) {
+      // Re-throw non-ENOENT error
+      if (error.code !== 'ENOENT') throw error
+    }
     return res.json({ success: true })
   } catch (error) {
     return apiErrorsHandler(error, req, res, next)
@@ -278,13 +284,13 @@ self.edit = async (req, res, next) => {
     const ismoderator = perms.is(user, 'moderator')
 
     const id = parseInt(req.body.id)
-    if (isNaN(id)) return res.json({ success: false, description: 'No album specified.' })
+    if (isNaN(id)) throw new ClientError('No album specified.')
 
     const name = typeof req.body.name === 'string'
       ? utils.escape(req.body.name.trim().substring(0, self.titleMaxLength))
       : ''
 
-    if (!name) return res.json({ success: false, description: 'No name specified.' })
+    if (!name) throw new ClientError('No album name specified.')
 
     const filter = function () {
       this.where('id', id)
@@ -302,12 +308,29 @@ self.edit = async (req, res, next) => {
       .first()
 
     if (!album) {
-      return res.json({ success: false, description: 'Could not get album with the specified ID.' })
-    } else if (album.id !== id) {
-      return res.json({ success: false, description: 'Name already in use.' })
-    } else if (req._old && (album.id === id)) {
-      // Old rename API
-      return res.json({ success: false, description: 'You did not specify a new name.' })
+      throw new ClientError('Could not get album with the specified ID.')
+    }
+
+    const albumNewState = (ismoderator && typeof req.body.enabled !== 'undefined')
+      ? Boolean(req.body.enabled)
+      : null
+
+    const nameInUse = await db.table('albums')
+      .where({
+        name,
+        enabled: 1,
+        userid: user.id
+      })
+      .whereNot('id', id)
+      .first()
+
+    if ((album.enabled || (albumNewState === true)) && nameInUse) {
+      if (req._old) {
+        // Old rename API (stick with 200 status code for this)
+        throw new ClientError('You did not specify a new name.', { statusCode: 200 })
+      } else {
+        throw new ClientError('Album name already in use.')
+      }
     }
 
     const update = {
@@ -319,8 +342,8 @@ self.edit = async (req, res, next) => {
         : ''
     }
 
-    if (ismoderator && typeof req.body.enabled !== 'undefined') {
-      update.enabled = Boolean(req.body.enabled)
+    if (albumNewState !== null) {
+      update.enabled = albumNewState
     }
 
     if (req.body.requestLink) {
@@ -342,7 +365,7 @@ self.edit = async (req, res, next) => {
         const newZip = path.join(paths.zips, `${update.identifier}.zip`)
         await paths.rename(oldZip, newZip)
       } catch (error) {
-        // Re-throw error
+        // Re-throw non-ENOENT error
         if (error.code !== 'ENOENT') throw error
       }
 
@@ -368,7 +391,7 @@ self.get = async (req, res, next) => {
   try {
     const identifier = req.params.identifier
     if (identifier === undefined) {
-      return res.status(401).json({ success: false, description: 'No identifier provided.' })
+      throw new ClientError('No identifier provided.')
     }
 
     const album = await db.table('albums')
@@ -379,7 +402,7 @@ self.get = async (req, res, next) => {
       .first()
 
     if (!album || album.public === 0) {
-      return res.status(404).json({ success: false, description: 'The album could not be found.' })
+      throw new ClientError('Album not found.', { statusCode: 404 })
     }
 
     const title = album.name
@@ -421,17 +444,11 @@ self.generateZip = async (req, res, next) => {
 
     const identifier = req.params.identifier
     if (identifier === undefined) {
-      return res.status(401).json({
-        success: false,
-        description: 'No identifier provided.'
-      })
+      throw new ClientError('No identifier provided.')
     }
 
     if (!config.uploads.generateZips) {
-      return res.status(401).json({
-        success: false,
-        description: 'ZIP generation disabled.'
-      })
+      throw new ClientError('ZIP generation disabled.', { statusCode: 403 })
     }
 
     const album = await db.table('albums')
@@ -442,9 +459,9 @@ self.generateZip = async (req, res, next) => {
       .first()
 
     if (!album) {
-      return res.json({ success: false, description: 'Album not found.' })
+      throw new ClientError('Album not found.', { statusCode: 404 })
     } else if (album.download === 0) {
-      return res.json({ success: false, description: 'Download for this album is disabled.' })
+      throw new ClientError('Download for this album is disabled.', { statusCode: 403 })
     }
 
     if ((isNaN(versionString) || versionString <= 0) && album.editedAt) {
@@ -457,18 +474,18 @@ self.generateZip = async (req, res, next) => {
         await paths.access(filePath)
         return res.download(filePath, `${album.name}.zip`)
       } catch (error) {
-        // Re-throw error
+        // Re-throw non-ENOENT error
         if (error.code !== 'ENOENT') throw error
       }
     }
 
     if (self.zipEmitters.has(identifier)) {
       logger.log(`Waiting previous zip task for album: ${identifier}.`)
-      return self.zipEmitters.get(identifier).once('done', (filePath, fileName, json) => {
+      return self.zipEmitters.get(identifier).once('done', (filePath, fileName, clientErr) => {
         if (filePath && fileName) {
           res.download(filePath, fileName)
-        } else if (json) {
-          res.json(json)
+        } else if (clientErr) {
+          apiErrorsHandler(clientErr, req, res, next)
         }
       })
     }
@@ -482,24 +499,18 @@ self.generateZip = async (req, res, next) => {
       .where('albumid', album.id)
     if (files.length === 0) {
       logger.log(`Finished zip task for album: ${identifier} (no files).`)
-      const json = {
-        success: false,
-        description: 'There are no files in the album.'
-      }
-      self.zipEmitters.get(identifier).emit('done', null, null, json)
-      return res.json(json)
+      const clientErr = new ClientError('There are no files in the album.')
+      self.zipEmitters.get(identifier).emit('done', null, null, clientErr)
+      throw clientErr
     }
 
     if (zipMaxTotalSize) {
       const totalSizeBytes = files.reduce((accumulator, file) => accumulator + parseInt(file.size), 0)
       if (totalSizeBytes > zipMaxTotalSizeBytes) {
         logger.log(`Finished zip task for album: ${identifier} (size exceeds).`)
-        const json = {
-          success: false,
-          description: `Total size of all files in the album exceeds the configured limit (${zipMaxTotalSize} MB).`
-        }
-        self.zipEmitters.get(identifier).emit('done', null, null, json)
-        return res.json(json)
+        const clientErr = new ClientError(`Total size of all files in the album exceeds ${zipMaxTotalSize} MB limit.`)
+        self.zipEmitters.get(identifier).emit('done', null, null, clientErr)
+        throw clientErr
       }
     }
 
@@ -522,10 +533,7 @@ self.generateZip = async (req, res, next) => {
       })
     } catch (error) {
       logger.error(error)
-      return res.status(500).json({
-        success: 'false',
-        description: error.toString()
-      })
+      throw new ServerError(error.message)
     }
 
     logger.log(`Finished zip task for album: ${identifier} (success).`)
@@ -589,7 +597,7 @@ self.addFiles = async (req, res, next) => {
 
     ids = req.body.ids
     if (!Array.isArray(ids) || !ids.length) {
-      return res.json({ success: false, description: 'No files specified.' })
+      throw new ClientError('No files specified.')
     }
 
     albumid = parseInt(req.body.albumid)
@@ -608,10 +616,7 @@ self.addFiles = async (req, res, next) => {
         .first()
 
       if (!album) {
-        return res.json({
-          success: false,
-          description: 'Album does not exist or it does not belong to the user.'
-        })
+        throw new ClientError('Album does not exist or it does not belong to the user.')
       }
 
       albumids.push(albumid)
@@ -641,10 +646,7 @@ self.addFiles = async (req, res, next) => {
     return res.json({ success: true, failed })
   } catch (error) {
     if (Array.isArray(failed) && (failed.length === ids.length)) {
-      return res.json({
-        success: false,
-        description: `Could not ${albumid === null ? 'add' : 'remove'} any files ${albumid === null ? 'to' : 'from'} the album.`
-      })
+      return apiErrorsHandler(new ServerError(`Could not ${albumid === null ? 'add' : 'remove'} any files ${albumid === null ? 'to' : 'from'} the album.`), req, res, next)
     } else {
       return apiErrorsHandler(error, req, res, next)
     }
