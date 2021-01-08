@@ -7,6 +7,8 @@ const paths = require('./pathsController')
 const perms = require('./permissionController')
 const uploadController = require('./uploadController')
 const utils = require('./utilsController')
+const apiErrorsHandler = require('./handlers/apiErrorsHandler.js')
+const UserError = require('./utils/UserError')
 const config = require('./../config')
 const logger = require('./../logger')
 const db = require('knex')(config.database)
@@ -66,28 +68,28 @@ self.getUniqueRandomName = async () => {
     return identifier
   }
 
-  throw 'Sorry, we could not allocate a unique random identifier. Try again?'
+  throw new UserError('Failed to allocate a unique identifier for the album. Try again?', 500)
 }
 
 self.list = async (req, res, next) => {
-  const user = await utils.authorize(req, res)
-  if (!user) return
-
-  const all = req.headers.all === '1'
-  const simple = req.headers.simple
-  const ismoderator = perms.is(user, 'moderator')
-  if (all && !ismoderator) return res.status(403).end()
-
-  const filter = function () {
-    if (!all) {
-      this.where({
-        enabled: 1,
-        userid: user.id
-      })
-    }
-  }
-
   try {
+    const user = await utils.authorize(req, res)
+    if (!user) return
+
+    const all = req.headers.all === '1'
+    const simple = req.headers.simple
+    const ismoderator = perms.is(user, 'moderator')
+    if (all && !ismoderator) return res.status(403).end()
+
+    const filter = function () {
+      if (!all) {
+        this.where({
+          enabled: 1,
+          userid: user.id
+        })
+      }
+    }
+
     // Query albums count for pagination
     const count = await db.table('albums')
       .where(filter)
@@ -164,22 +166,21 @@ self.list = async (req, res, next) => {
 
     return res.json({ success: true, albums, count, users, homeDomain })
   } catch (error) {
-    logger.error(error)
-    return res.status(500).json({ success: false, description: 'An unexpected error occurred. Try again?' })
+    return apiErrorsHandler(error, req, res, next)
   }
 }
 
 self.create = async (req, res, next) => {
-  const user = await utils.authorize(req, res)
-  if (!user) return
-
-  const name = typeof req.body.name === 'string'
-    ? utils.escape(req.body.name.trim().substring(0, self.titleMaxLength))
-    : ''
-
-  if (!name) return res.json({ success: false, description: 'No album name specified.' })
-
   try {
+    const user = await utils.authorize(req, res)
+    if (!user) return
+
+    const name = typeof req.body.name === 'string'
+      ? utils.escape(req.body.name.trim().substring(0, self.titleMaxLength))
+      : ''
+
+    if (!name) return res.json({ success: false, description: 'No album name specified.' })
+
     const album = await db.table('albums')
       .where({
         name,
@@ -211,8 +212,7 @@ self.create = async (req, res, next) => {
 
     return res.json({ success: true, id: ids[0] })
   } catch (error) {
-    logger.error(error)
-    return res.status(500).json({ success: false, description: 'An unexpected error occurred. Try again?' })
+    return apiErrorsHandler(error, req, res, next)
   }
 }
 
@@ -222,14 +222,14 @@ self.delete = async (req, res, next) => {
 }
 
 self.disable = async (req, res, next) => {
-  const user = await utils.authorize(req, res)
-  if (!user) return
-
-  const id = req.body.id
-  const purge = req.body.purge
-  if (!Number.isFinite(id)) return res.json({ success: false, description: 'No album specified.' })
-
   try {
+    const user = await utils.authorize(req, res)
+    if (!user) return
+
+    const id = req.body.id
+    const purge = req.body.purge
+    if (!Number.isFinite(id)) return res.json({ success: false, description: 'No album specified.' })
+
     if (purge) {
       const files = await db.table('files')
         .where({
@@ -264,43 +264,39 @@ self.disable = async (req, res, next) => {
       .then(row => row.identifier)
 
     await paths.unlink(path.join(paths.zips, `${identifier}.zip`))
+    return res.json({ success: true })
   } catch (error) {
-    if (error && error.code !== 'ENOENT') {
-      logger.error(error)
-      return res.status(500).json({ success: false, description: 'An unexpected error occurred. Try again?' })
-    }
+    return apiErrorsHandler(error, req, res, next)
   }
-
-  return res.json({ success: true })
 }
 
 self.edit = async (req, res, next) => {
-  const user = await utils.authorize(req, res)
-  if (!user) return
-
-  const ismoderator = perms.is(user, 'moderator')
-
-  const id = parseInt(req.body.id)
-  if (isNaN(id)) return res.json({ success: false, description: 'No album specified.' })
-
-  const name = typeof req.body.name === 'string'
-    ? utils.escape(req.body.name.trim().substring(0, self.titleMaxLength))
-    : ''
-
-  if (!name) return res.json({ success: false, description: 'No name specified.' })
-
-  const filter = function () {
-    this.where('id', id)
-
-    if (!ismoderator) {
-      this.andWhere({
-        enabled: 1,
-        userid: user.id
-      })
-    }
-  }
-
   try {
+    const user = await utils.authorize(req, res)
+    if (!user) return
+
+    const ismoderator = perms.is(user, 'moderator')
+
+    const id = parseInt(req.body.id)
+    if (isNaN(id)) return res.json({ success: false, description: 'No album specified.' })
+
+    const name = typeof req.body.name === 'string'
+      ? utils.escape(req.body.name.trim().substring(0, self.titleMaxLength))
+      : ''
+
+    if (!name) return res.json({ success: false, description: 'No name specified.' })
+
+    const filter = function () {
+      this.where('id', id)
+
+      if (!ismoderator) {
+        this.andWhere({
+          enabled: 1,
+          userid: user.id
+        })
+      }
+    }
+
     const album = await db.table('albums')
       .where(filter)
       .first()
@@ -358,8 +354,7 @@ self.edit = async (req, res, next) => {
       return res.json({ success: true, name })
     }
   } catch (error) {
-    logger.error(error)
-    return res.status(500).json({ success: false, description: 'An unexpected error occurred. Try again?' })
+    return apiErrorsHandler(error, req, res, next)
   }
 }
 
@@ -370,12 +365,12 @@ self.rename = async (req, res, next) => {
 }
 
 self.get = async (req, res, next) => {
-  const identifier = req.params.identifier
-  if (identifier === undefined) {
-    return res.status(401).json({ success: false, description: 'No identifier provided.' })
-  }
-
   try {
+    const identifier = req.params.identifier
+    if (identifier === undefined) {
+      return res.status(401).json({ success: false, description: 'No identifier provided.' })
+    }
+
     const album = await db.table('albums')
       .where({
         identifier,
@@ -416,30 +411,29 @@ self.get = async (req, res, next) => {
       files
     })
   } catch (error) {
-    logger.error(error)
-    return res.status(500).json({ success: false, description: 'An unexpected error occcured. Try again?' })
+    return apiErrorsHandler(error, req, res, next)
   }
 }
 
 self.generateZip = async (req, res, next) => {
-  const versionString = parseInt(req.query.v)
-
-  const identifier = req.params.identifier
-  if (identifier === undefined) {
-    return res.status(401).json({
-      success: false,
-      description: 'No identifier provided.'
-    })
-  }
-
-  if (!config.uploads.generateZips) {
-    return res.status(401).json({
-      success: false,
-      description: 'ZIP generation disabled.'
-    })
-  }
-
   try {
+    const versionString = parseInt(req.query.v)
+
+    const identifier = req.params.identifier
+    if (identifier === undefined) {
+      return res.status(401).json({
+        success: false,
+        description: 'No identifier provided.'
+      })
+    }
+
+    if (!config.uploads.generateZips) {
+      return res.status(401).json({
+        success: false,
+        description: 'ZIP generation disabled.'
+      })
+    }
+
     const album = await db.table('albums')
       .where({
         identifier,
@@ -547,8 +541,7 @@ self.generateZip = async (req, res, next) => {
     self.zipEmitters.get(identifier).emit('done', filePath, fileName)
     return res.download(filePath, fileName)
   } catch (error) {
-    logger.error(error)
-    return res.status(500).json({ success: false, description: 'An unexpected error occurred. Try again?' })
+    return apiErrorsHandler(error, req, res, next)
   }
 }
 
@@ -589,20 +582,21 @@ self.listFiles = async (req, res, next) => {
 }
 
 self.addFiles = async (req, res, next) => {
-  const user = await utils.authorize(req, res)
-  if (!user) return
-
-  const ids = req.body.ids
-  if (!Array.isArray(ids) || !ids.length) {
-    return res.json({ success: false, description: 'No files specified.' })
-  }
-
-  let albumid = parseInt(req.body.albumid)
-  if (isNaN(albumid) || albumid < 0) albumid = null
-
-  let failed = []
-  const albumids = []
+  let ids, albumid, failed, albumids
   try {
+    const user = await utils.authorize(req, res)
+    if (!user) return
+
+    ids = req.body.ids
+    if (!Array.isArray(ids) || !ids.length) {
+      return res.json({ success: false, description: 'No files specified.' })
+    }
+
+    albumid = parseInt(req.body.albumid)
+    if (isNaN(albumid) || albumid < 0) albumid = null
+
+    failed = []
+    albumids = []
     if (albumid !== null) {
       const album = await db.table('albums')
         .where('id', albumid)
@@ -646,14 +640,13 @@ self.addFiles = async (req, res, next) => {
 
     return res.json({ success: true, failed })
   } catch (error) {
-    logger.error(error)
-    if (failed.length === ids.length) {
+    if (Array.isArray(failed) && (failed.length === ids.length)) {
       return res.json({
         success: false,
         description: `Could not ${albumid === null ? 'add' : 'remove'} any files ${albumid === null ? 'to' : 'from'} the album.`
       })
     } else {
-      return res.status(500).json({ success: false, description: 'An unexpected error occurred. Try again?' })
+      return apiErrorsHandler(error, req, res, next)
     }
   }
 }
