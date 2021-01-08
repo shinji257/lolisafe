@@ -757,6 +757,7 @@ self.stats = async (req, res, next) => {
             Total: 0,
             Images: 0,
             Videos: 0,
+            Audios: 0,
             Others: 0,
             Temporary: 0,
             'Size in DB': {
@@ -793,6 +794,16 @@ self.stats = async (req, res, next) => {
                 .then(rows => rows[0].count)
             })(),
             (async () => {
+              stats[data.title].Audios = await db.table('files')
+                .where(function () {
+                  for (const ext of self.audioExts) {
+                    this.orWhere('name', 'like', `%${ext}`)
+                  }
+                })
+                .count('id as count')
+                .then(rows => rows[0].count)
+            })(),
+            (async () => {
               stats[data.title].Temporary = await db.table('files')
                 .whereNotNull('expirydate')
                 .count('id as count')
@@ -800,7 +811,10 @@ self.stats = async (req, res, next) => {
             })()
           ])
 
-          stats[data.title].Others = stats[data.title].Total - stats[data.title].Images - stats[data.title].Videos
+          stats[data.title].Others = stats[data.title].Total -
+            stats[data.title].Images -
+            stats[data.title].Videos -
+            stats[data.title].Audios
 
           // Update cache
           data.cache = stats[data.title]
