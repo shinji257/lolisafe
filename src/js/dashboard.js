@@ -2934,9 +2934,14 @@ page.getStatistics = (params = {}) => {
               case 'byte':
                 parsed = page.getPrettyBytes(value)
                 break
-              case 'byteUsage':
-                parsed = `${page.getPrettyBytes(value.used)} / ${page.getPrettyBytes(value.total)} (${(value.used / value.total * 100).toFixed(2)}%)`
+              case 'byteUsage': {
+                // Reasoning: https://github.com/sebhildebrandt/systeminformation/issues/464#issuecomment-756406053
+                const totalForPercentage = typeof value.available !== 'undefined'
+                  ? (value.used + value.available)
+                  : value.total
+                parsed = `${page.getPrettyBytes(value.used)} / ${page.getPrettyBytes(value.total)} (${(value.used / totalForPercentage * 100).toFixed(2)}%)`
                 break
+              }
               case 'uptime':
                 parsed = page.getPrettyUptime(value)
                 break
