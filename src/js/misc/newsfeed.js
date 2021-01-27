@@ -4,6 +4,7 @@ const newsfeed = {
   lsKey: 'newsfeed',
   feedUrl: 'https://blog.fiery.me/rss-newsfeed.xml',
   maxItems: 3,
+  maxAge: 91 * 24 * 60 * 60, // 91 days (~3 months)
   dismissed: {},
   done: false
 }
@@ -58,10 +59,7 @@ newsfeed.formatRelativeDate = delta => {
 }
 
 newsfeed.formatNotification = item => {
-  const parsedDate = newsfeed.simpleParseDate(item.pubDate)
-  const dateDelta = Math.round((+new Date() - parsedDate) / 1000)
-  const isRecentWeek = dateDelta <= 604800
-
+  const isRecentWeek = item.dateDelta <= (7 * 24 * 60 * 60) // 7 days (1 week)
   const element = document.createElement('a')
   element.dataset.identifier = item.identifier
   element.className = 'notification is-info'
@@ -79,7 +77,7 @@ newsfeed.formatNotification = item => {
           : 'N/A'}
       </div>
       <div class="news-date${isRecentWeek ? ' is-recent-week' : ''}">
-        <span title="${parsedDate.toLocaleString()}">${newsfeed.formatRelativeDate(dateDelta)}</span>
+        <span title="${item.parsedDate.toLocaleString()}">${newsfeed.formatRelativeDate(item.dateDelta)}</span>
       </div>
     <div>
   `
@@ -141,19 +139,24 @@ newsfeed.do = () => {
           const identifier = title + '|' + description + '|' + pubDate + '|' + link
 
           if (!newsfeed.dismissed[identifier]) {
-            const notificationElement = newsfeed.formatNotification({
-              title, description, pubDate, link, identifier
-            })
+            const parsedDate = newsfeed.simpleParseDate(pubDate)
+            const dateDelta = Math.round((+new Date() - parsedDate) / 1000)
 
-            const dismissTrigger = notificationElement.querySelector('.delete')
-            if (dismissTrigger) {
-              dismissTrigger.addEventListener('click', function () {
-                event.preventDefault()
-                newsfeed.dismissNotification(event.target.parentNode)
+            if (typeof newsfeed.maxAge === 'number' && dateDelta <= newsfeed.maxAge) {
+              const notificationElement = newsfeed.formatNotification({
+                title, description, pubDate, link, identifier, parsedDate, dateDelta
               })
-            }
 
-            column.appendChild(notificationElement)
+              const dismissTrigger = notificationElement.querySelector('.delete')
+              if (dismissTrigger) {
+                dismissTrigger.addEventListener('click', function () {
+                  event.preventDefault()
+                  newsfeed.dismissNotification(event.target.parentNode)
+                })
+              }
+
+              column.appendChild(notificationElement)
+            }
           }
         }
 
