@@ -519,7 +519,7 @@ page.getUploads = (params = {}) => {
     params.pageNum = 0
   }
 
-  const url = params.album !== undefined
+  const url = typeof params.album !== 'undefined'
     ? `api/album/${params.album}/${params.pageNum}`
     : `api/uploads/${params.pageNum}`
 
@@ -673,9 +673,7 @@ page.getUploads = (params = {}) => {
     let unselected = false
 
     const showOriginalNames = page.views[page.currentView].originalNames
-    const hasExpiryDateColumn = files.some(file => {
-      return file.expirydate !== undefined
-    })
+    const hasExpiryDateColumn = files.some(file => typeof file.expirydate !== 'undefined')
 
     for (let i = 0; i < files.length; i++) {
       // Build full URLs
@@ -727,7 +725,7 @@ page.getUploads = (params = {}) => {
         files[i].appendix = files[i].userid
           ? users[files[i].userid] || ''
           : ''
-      } else if (params.album === undefined) {
+      } else if (typeof params.album === 'undefined') {
         files[i].appendix = files[i].albumid
           ? albums[files[i].albumid] || ''
           : ''
@@ -754,7 +752,7 @@ page.getUploads = (params = {}) => {
         div.className = 'image-container column'
         div.dataset.id = upload.id
 
-        if (upload.thumb !== undefined) {
+        if (typeof upload.thumb !== 'undefined') {
           div.innerHTML = `<a class="image" href="${upload.file}" target="_blank"><img alt="${upload.name}" data-src="${upload.thumb}"/></a>`
         } else {
           div.innerHTML = `<a class="image" href="${upload.file}" target="_blank"><h1 class="title">${upload.extname || 'N/A'}</h1></a>`
@@ -812,7 +810,7 @@ page.getUploads = (params = {}) => {
                 <th class="controls"><input id="selectAll" class="checkbox" type="checkbox" title="Select all" data-action="select-all"></th>
                 <th title="Key: name">File name</th>
                 ${showOriginalNames ? '<th title="Key: original">Original name</th>' : ''}
-                ${params.album === undefined ? `<th title="Key: ${params.all ? 'userid">User' : 'albumid">Album'}</th>` : ''}
+                ${typeof params.album === 'undefined' ? `<th title="Key: ${params.all ? 'userid">User' : 'albumid">Album'}</th>` : ''}
                 ${allAlbums ? '<th title="Key: albumid">Album</th>' : ''}
                 <th title="Key: size">Size</th>
                 ${params.all ? '<th title="Key: ip">IP</th>' : ''}
@@ -840,7 +838,7 @@ page.getUploads = (params = {}) => {
           <td class="controls"><input type="checkbox" class="checkbox" title="Select" data-index="${i}" data-action="select"${upload.selected ? ' checked' : ''}></td>
           <th class="name"><a href="${upload.file}" target="_blank" title="${upload.file}">${upload.name}</a></th>
           ${showOriginalNames ? `<th class="originalname" title="${upload.original}">${upload.original}</th>` : ''}
-          ${params.album === undefined ? `<th class="appendix">${upload.appendix}</th>` : ''}
+          ${typeof params.album === 'undefined' ? `<th class="appendix">${upload.appendix}</th>` : ''}
           ${allAlbums ? `<th class="album">${upload.albumid ? (albums[upload.albumid] || '') : ''}</th>` : ''}
           <td class="prettybytes">${upload.prettyBytes}</td>
           ${params.all ? `<td class="ip">${upload.ip || ''}</td>` : ''}
@@ -3021,13 +3019,13 @@ window.addEventListener('DOMContentLoaded', () => {
     Object.defineProperty(Object, 'assign', {
       value: function assign (target, varArgs) { // .length of function is 2
         'use strict'
-        if (target === null || target === undefined) {
+        if (target === null || typeof target === 'undefined') {
           throw new TypeError('Cannot convert undefined or null to object')
         }
         const to = Object(target)
         for (let i = 1; i < arguments.length; i++) {
           const nextSource = arguments[i]
-          if (nextSource !== null && nextSource !== undefined) {
+          if (nextSource !== null && typeof nextSource !== 'undefined') {
             for (const nextKey in nextSource) {
               // Avoid bugs when hasOwnProperty is shadowed
               if (Object.prototype.hasOwnProperty.call(nextSource, nextKey)) {

@@ -15,7 +15,7 @@ newsfeed.simpleParseDate = string => {
   // Probably better to use a library if it needs to support other formats.
   const months = { Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5, Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11 }
   const match = string.match(/[a-zA-Z]*,\s(\d{2})\s([a-zA-Z]{3})\s(\d{4})\s(\d{2}):(\d{2}):(\d{2})\sGMT/)
-  if (match && (months[match[2]] !== undefined)) {
+  if (match && (typeof months[match[2]] !== 'undefined')) {
     const date = new Date()
     date.setUTCDate(match[1])
     date.setUTCMonth(months[match[2]])

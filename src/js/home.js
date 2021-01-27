@@ -399,7 +399,7 @@ page.prepareDropzone = () => {
         }
 
         // Attach necessary data for initial upload speed calculation
-        if (xhr._uplSpeedCalc === undefined) {
+        if (typeof xhr._uplSpeedCalc === 'undefined') {
           xhr._uplSpeedCalc = {
             lastSent: 0,
             data: [{ timestamp: Date.now(), bytes: 0 }]
@@ -947,9 +947,9 @@ page.prepareUploadConfig = () => {
 
     let value
     if (!conf.disabled) {
-      if (conf.value !== undefined) {
+      if (typeof conf.value !== 'undefined') {
         value = conf.value
-      } else if (conf.number !== undefined) {
+      } else if (typeof conf.number !== 'undefined') {
         const parsed = parseInt(localStorage[lsKeys[key]])
         if (!isNaN(parsed) && parsed <= conf.number.max && parsed >= conf.number.min) {
           value = parsed
@@ -969,9 +969,9 @@ page.prepareUploadConfig = () => {
       // otherwise pass value to global page object
       if (typeof conf.valueHandler === 'function') {
         conf.valueHandler(value)
-      } else if (value !== undefined) {
+      } else if (typeof value !== 'undefined') {
         page[key] = value
-      } else if (fallback[key] !== undefined) {
+      } else if (typeof fallback[key] !== 'undefined') {
         page[key] = fallback[key]
       }
     }
@@ -985,7 +985,7 @@ page.prepareUploadConfig = () => {
       for (let j = 0; j < conf.select.length; j++) {
         const opt = conf.select[j]
         const selected = (value && (opt.value === String(value))) ||
-          (value === undefined && opt.value === 'default')
+          (typeof value === 'undefined' && opt.value === 'default')
         opts.push(`
           <option value="${opt.value}"${selected ? ' selected' : ''}>
             ${opt.text}${opt.value === 'default' ? ' (default)' : ''}
@@ -1004,10 +1004,10 @@ page.prepareUploadConfig = () => {
       control.className = 'input is-fullwidth'
       control.type = 'number'
 
-      if (conf.number.min !== undefined) control.min = conf.number.min
-      if (conf.number.max !== undefined) control.max = conf.number.max
+      if (typeof conf.number.min !== 'undefined') control.min = conf.number.min
+      if (typeof conf.number.max !== 'undefined') control.max = conf.number.max
       if (typeof value === 'number') control.value = value
-      else if (conf.number.default !== undefined) control.value = conf.number.default
+      else if (typeof conf.number.default !== 'undefined') control.value = conf.number.default
     }
 
     let help
@@ -1020,16 +1020,16 @@ page.prepareUploadConfig = () => {
       help = 'This option is currently not configurable.'
     } else if (typeof conf.help === 'string') {
       help = conf.help
-    } else if (conf.help === true && conf.number !== undefined) {
+    } else if (conf.help === true && typeof conf.number !== 'undefined') {
       const tmp = []
 
-      if (conf.number.default !== undefined) {
+      if (typeof conf.number.default !== 'undefined') {
         tmp.push(`Default is ${conf.number.default}${conf.number.suffix || ''}.`)
       }
-      if (conf.number.min !== undefined) {
+      if (typeof conf.number.min !== 'undefined') {
         tmp.push(`Min is ${conf.number.min}${conf.number.suffix || ''}.`)
       }
-      if (conf.number.max !== undefined) {
+      if (typeof conf.number.max !== 'undefined') {
         tmp.push(`Max is ${conf.number.max}${conf.number.suffix || ''}.`)
       }
 
@@ -1073,18 +1073,18 @@ page.prepareUploadConfig = () => {
       const key = keys[i]
 
       let value
-      if (config[key].select !== undefined) {
+      if (typeof config[key].select !== 'undefined') {
         if (form.elements[key].value !== 'default') {
           value = form.elements[key].value
         }
-      } else if (config[key].number !== undefined) {
+      } else if (typeof config[key].number !== 'undefined') {
         const parsed = parseInt(form.elements[key].value)
         if (!isNaN(parsed) && parsed !== config[key].number.default) {
           value = Math.min(Math.max(parsed, config[key].number.min), config[key].number.max)
         }
       }
 
-      if (value !== undefined) localStorage[lsKeys[key]] = value
+      if (typeof value !== 'undefined') localStorage[lsKeys[key]] = value
       else localStorage.removeItem(lsKeys[key])
     }
 
