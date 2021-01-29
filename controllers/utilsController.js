@@ -725,14 +725,19 @@ self.stats = async (req, res, next) => {
 
         const fsSize = await si.fsSize()
         for (const fs of fsSize) {
-          stats[data.title][`${fs.fs} (${fs.type}) on ${fs.mount}`] = {
+          const obj = {
             value: {
               total: fs.size,
-              used: fs.used,
-              available: fs.available
+              used: fs.used
             },
             type: 'byteUsage'
           }
+          // "available" is a new attribute in systeminformation v5, only tested on Linux,
+          // so add an if-check just in case its availability is limited in other platforms
+          if (typeof fs.available === 'number') {
+            obj.value.available = fs.available
+          }
+          stats[data.title][`${fs.fs} (${fs.type}) on ${fs.mount}`] = obj
         }
 
         // Update cache
