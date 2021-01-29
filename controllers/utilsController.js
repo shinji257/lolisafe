@@ -81,7 +81,7 @@ self.mayGenerateThumb = extname => {
     (config.uploads.generateThumbs.video && self.videoExts.includes(extname))
 }
 
-// Expand if necessary (must be lower case)
+// Expand if necessary (should be case-insensitive)
 const extPreserves = [
   /\.tar\.\w+/i // tarballs
 ]
