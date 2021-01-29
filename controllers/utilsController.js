@@ -81,34 +81,36 @@ self.mayGenerateThumb = extname => {
     (config.uploads.generateThumbs.video && self.videoExts.includes(extname))
 }
 
-// Expand if necessary (must be lower case); for now only preserves some known tarballs
-const extPreserves = ['.tar.gz', '.tar.z', '.tar.bz2', '.tar.lzma', '.tar.lzo', '.tar.xz']
+// Expand if necessary (must be lower case)
+const extPreserves = [
+  /\.tar\.\w+/i // tarballs
+]
 
 self.extname = filename => {
   // Always return blank string if the filename does not seem to have a valid extension
   // Files such as .DS_Store (anything that starts with a dot, without any extension after) will still be accepted
   if (!/\../.test(filename)) return ''
 
-  let lower = filename.toLowerCase() // due to this, the returned extname will always be lower case
   let multi = ''
   let extname = ''
 
   // check for multi-archive extensions (.001, .002, and so on)
-  if (/\.\d{3}$/.test(lower)) {
-    multi = lower.slice(lower.lastIndexOf('.') - lower.length)
-    lower = lower.slice(0, lower.lastIndexOf('.'))
+  if (/\.\d{3}$/.test(filename)) {
+    multi = filename.slice(filename.lastIndexOf('.') - filename.length)
+    filename = filename.slice(0, filename.lastIndexOf('.'))
   }
 
   // check against extensions that must be preserved
   for (const extPreserve of extPreserves) {
-    if (lower.endsWith(extPreserve)) {
-      extname = extPreserve
+    const match = filename.match(extPreserve)
+    if (match && match[0]) {
+      extname = match[0]
       break
     }
   }
 
   if (!extname) {
-    extname = lower.slice(lower.lastIndexOf('.') - lower.length) // path.extname(lower)
+    extname = filename.slice(filename.lastIndexOf('.') - filename.length)
   }
 
   return extname + multi

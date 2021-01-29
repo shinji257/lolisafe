@@ -125,7 +125,7 @@
                   {%- endif %}{{ ' ' -}}
                   {% set comma = joiner(', ') %}
                   {%- for extension in urlExtensionsFilter -%}
-                  {{ comma() }}{{ extension | replace('.', '') | upper }}
+                  {{ comma() }}{{ extension | replace('.', '', 1) | upper }}
                   {%- endfor %}.
                 {{- ' ' }}{% endif -%}
 
