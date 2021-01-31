@@ -168,9 +168,7 @@ self.isExtensionFiltered = extname => {
 
   // If there are extensions that have to be filtered
   if (extname && extensionsFilter) {
-    const match = config.extensionsFilter.some(extension =>
-      extname.localeCompare(extension, undefined, { sensitivity: 'accent' }) === 0
-    )
+    const match = config.extensionsFilter.includes(extname.toLowerCase())
     const whitelist = config.extensionsFilterMode === 'whitelist'
     if ((!whitelist && match) || (whitelist && !match)) return true
   }
@@ -368,9 +366,7 @@ self.actuallyUploadUrls = async (req, res, user, albumid, age) => {
       // Extensions filter
       let filtered = false
       if (urlExtensionsFilter && ['blacklist', 'whitelist'].includes(config.uploads.urlExtensionsFilterMode)) {
-        const match = config.uploads.urlExtensionsFilter.some(extension =>
-          extname.localeCompare(extension, undefined, { sensitivity: 'accent' }) === 0
-        )
+        const match = config.uploads.urlExtensionsFilter.includes(extname.toLowerCase())
         const whitelist = config.uploads.urlExtensionsFilterMode === 'whitelist'
         filtered = ((!whitelist && match) || (whitelist && !match))
       } else {

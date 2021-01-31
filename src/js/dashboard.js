@@ -683,15 +683,15 @@ page.getUploads = (params = {}) => {
       }
 
       // Determine types
-      files[i].type = 'other'
-      const exec = /.[\w]+(\?|$)/.exec(files[i].file)
-      const extname = exec && exec[0] ? exec[0].toLowerCase() : null
+      const extname = files[i].extname.toLowerCase()
       if (page.imageExts.includes(extname)) {
         files[i].type = 'picture'
       } else if (page.videoExts.includes(extname)) {
         files[i].type = 'video'
       } else if (page.audioExts.includes(extname)) {
         files[i].type = 'audio'
+      } else {
+        files[i].type = 'other'
       }
 
       files[i].previewable = files[i].thumb || files[i].type === 'audio'
@@ -700,6 +700,7 @@ page.getUploads = (params = {}) => {
       page.cache[files[i].id] = {
         name: files[i].name,
         original: files[i].original,
+        extname: files[i].extname,
         thumb: files[i].thumb,
         file: files[i].file,
         type: files[i].type,
@@ -961,58 +962,50 @@ page.displayPreview = id => {
     </div>
   `
 
-  if (file.file) {
-    const exec = /.[\w]+(\?|$)/.exec(file.file)
-    const extname = exec && exec[0] ? exec[0].toLowerCase() : null
-    const isimage = page.imageExts.includes(extname)
-    const isvideo = !isimage && page.videoExts.includes(extname)
-    const isaudio = !isimage && !isvideo && page.audioExts.includes(extname)
-
-    if (isimage || isvideo || isaudio) {
-      div.innerHTML += `
-        <div class="field has-text-centered">
-          <div class="controls">
-            <a id="swalOriginal" type="button" class="button is-info">
-              <span class="icon">
-                <i class="icon-${file.type}"></i>
-              </span>
-              <span>${isimage ? 'Load original' : 'Play in embedded player'}</span>
-            </a>
-          </div>
+  if (file.file && ['picture', 'video', 'audio'].includes(file.type)) {
+    div.innerHTML += `
+      <div class="field has-text-centered">
+        <div class="controls">
+          <a id="swalOriginal" type="button" class="button is-info">
+            <span class="icon">
+              <i class="icon-${file.type}"></i>
+            </span>
+            <span>${file.type === 'picture' ? 'Load original' : 'Play in embedded player'}</span>
+          </a>
         </div>
-      `
+      </div>
+    `
 
-      if (isimage) {
-        div.querySelector('#swalOriginal').addEventListener('click', event => {
-          const trigger = event.currentTarget
-          if (trigger.classList.contains('is-danger')) return
+    if (file.type === 'picture') {
+      div.querySelector('#swalOriginal').addEventListener('click', event => {
+        const trigger = event.currentTarget
+        if (trigger.classList.contains('is-danger')) return
 
-          trigger.classList.add('is-loading')
-          const thumb = div.querySelector('#swalThumb')
+        trigger.classList.add('is-loading')
+        const thumb = div.querySelector('#swalThumb')
 
-          thumb.src = file.file
-          thumb.onload = () => {
-            trigger.classList.add('is-hidden')
-            document.body.querySelector('.swal-overlay .swal-modal:not(.is-expanded)').classList.add('is-expanded')
-          }
-          thumb.onerror = event => {
-            event.currentTarget.classList.add('is-hidden')
-            trigger.className = 'button is-danger is-fullwidth'
-            trigger.innerHTML = `
-              <span class="icon">
-                <i class="icon-block"></i>
-              </span>
-              <span>Unable to load original</span>
-            `
-          }
-        })
-      } else if (isvideo || isaudio) {
-        const match = file.file.match(/.*\/(.*)$/)
-        console.log(file.file, match)
-        if (match || match[1]) {
-          div.querySelector('#swalOriginal').setAttribute('href', `v/${match[1]}`)
-          div.querySelector('#swalOriginal').setAttribute('target', '_blank')
+        thumb.src = file.file
+        thumb.onload = () => {
+          trigger.classList.add('is-hidden')
+          document.body.querySelector('.swal-overlay .swal-modal:not(.is-expanded)').classList.add('is-expanded')
         }
+        thumb.onerror = event => {
+          event.currentTarget.classList.add('is-hidden')
+          trigger.className = 'button is-danger is-fullwidth'
+          trigger.innerHTML = `
+            <span class="icon">
+              <i class="icon-block"></i>
+            </span>
+            <span>Unable to load original</span>
+          `
+        }
+      })
+    } else {
+      const match = file.file.match(/.*\/(.*)$/)
+      console.log(file.file, match)
+      if (match || match[1]) {
+        div.querySelector('#swalOriginal').setAttribute('href', `v/${match[1]}`)
+        div.querySelector('#swalOriginal').setAttribute('target', '_blank')
       }
     }
   }

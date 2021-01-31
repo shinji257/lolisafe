@@ -77,6 +77,7 @@ const cloudflareAuth = config.cloudflare && config.cloudflare.zoneId &&
   (config.cloudflare.apiKey && config.cloudflare.email))
 
 self.mayGenerateThumb = extname => {
+  extname = extname.toLowerCase()
   return (config.uploads.generateThumbs.image && self.imageExts.includes(extname)) ||
     (config.uploads.generateThumbs.video && self.videoExts.includes(extname))
 }
@@ -86,7 +87,7 @@ const extPreserves = [
   /\.tar\.\w+/i // tarballs
 ]
 
-self.extname = filename => {
+self.extname = (filename, lower) => {
   // Always return blank string if the filename does not seem to have a valid extension
   // Files such as .DS_Store (anything that starts with a dot, without any extension after) will still be accepted
   if (!/\../.test(filename)) return ''
@@ -113,7 +114,8 @@ self.extname = filename => {
     extname = filename.slice(filename.lastIndexOf('.') - filename.length)
   }
 
-  return extname + multi
+  const str = extname + multi
+  return lower ? str.toLowerCase() : str
 }
 
 self.escape = string => {
@@ -203,6 +205,7 @@ self.authorize = async req => {
 }
 
 self.generateThumbs = async (name, extname, force) => {
+  extname = extname.toLowerCase()
   const thumbname = path.join(paths.thumbs, name.slice(0, -extname.length) + '.png')
 
   try {
@@ -321,6 +324,7 @@ self.generateThumbs = async (name, extname, force) => {
 }
 
 self.stripTags = async (name, extname) => {
+  extname = extname.toLowerCase()
   const fullpath = path.join(paths.uploads, name)
   let tmpfile
 
@@ -381,7 +385,7 @@ self.unlinkFile = async (filename, predb) => {
     // logger.log(`Removed ${identifier} from identifiers cache (deleteFile)`)
   }
 
-  const extname = self.extname(filename)
+  const extname = self.extname(filename, true)
   if (self.imageExts.includes(extname) || self.videoExts.includes(extname)) {
     try {
       await paths.unlink(path.join(paths.thumbs, `${identifier}.png`))
