@@ -474,11 +474,11 @@ module.exports = {
     /*
       Thumbnails are only used in the dashboard and album's public pages.
       You need to install a separate binary called ffmpeg (https://ffmpeg.org/) for video thumbnails.
-      NOTE: Placeholder defaults to 'public/images/unavailable.png'.
     */
     generateThumbs: {
       image: true,
       video: false,
+      // Placeholder defaults to 'public/images/unavailable.png'.
       placeholder: null,
       size: 200
     },
@@ -503,7 +503,14 @@ module.exports = {
     stripTags: {
       default: false,
       video: false,
-      force: false
+      force: false,
+      // Supporting the extensions below requires using custom globally-installed libvips.
+      // https://sharp.pixelplumbing.com/install#custom-libvips
+      blacklistExtensions: [
+        // GIFs require libvips compiled with ImageMagick/GraphicsMagick support.
+        // https://sharp.pixelplumbing.com/api-output#gif
+        '.gif'
+      ]
     },
 
     /*

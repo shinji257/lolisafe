@@ -8,6 +8,7 @@ const paths = require('./pathsController')
 const perms = require('./permissionController')
 const apiErrorsHandler = require('./handlers/apiErrorsHandler')
 const ClientError = require('./utils/ClientError')
+const ServerError = require('./utils/ServerError')
 const config = require('./../config')
 const logger = require('./../logger')
 const db = require('knex')(config.database)
@@ -31,6 +32,10 @@ const self = {
   imageExts: ['.gif', '.jpeg', '.jpg', '.png', '.svg', '.tif', '.tiff', '.webp'],
   videoExts: ['.3g2', '.3gp', '.asf', '.avchd', '.avi', '.divx', '.evo', '.flv', '.h264', '.h265', '.hevc', '.m2p', '.m2ts', '.m4v', '.mk3d', '.mkv', '.mov', '.mp4', '.mpeg', '.mpg', '.mxf', '.ogg', '.ogv', '.ps', '.qt', '.rmvb', '.ts', '.vob', '.webm', '.wmv'],
   audioExts: ['.flac', '.mp3', '.wav', '.wma'],
+
+  stripTagsBlacklistedExts: Array.isArray(config.uploads.stripTags.blacklistExtensions)
+    ? config.uploads.stripTags.blacklistExtensions
+    : [],
 
   thumbsSize: config.uploads.generateThumbs.size || 200,
   ffprobe: promisify(ffmpeg.ffprobe),
@@ -309,7 +314,7 @@ self.generateThumbs = async (name, extname, force) => {
       return false
     }
   } catch (error) {
-    logger.error(`[${name}]: ${error.toString().trim()}`)
+    logger.error(`[${name}]: generateThumbs(): ${error.toString().trim()}`)
     try {
       await paths.unlink(thumbname).catch(() => {}) // try to unlink incomplete thumbs first
       await paths.symlink(paths.thumbPlaceholder, thumbname)
@@ -325,8 +330,10 @@ self.generateThumbs = async (name, extname, force) => {
 
 self.stripTags = async (name, extname) => {
   extname = extname.toLowerCase()
+  if (self.stripTagsBlacklistedExts.includes(extname)) return false
+
   const fullpath = path.join(paths.uploads, name)
-  let tmpfile
+  let tmpfile, isError
 
   try {
     if (self.imageExts.includes(extname)) {
@@ -351,9 +358,12 @@ self.stripTags = async (name, extname) => {
           .on('end', () => resolve(true))
           .run()
       })
+    } else {
+      return false
     }
   } catch (error) {
-    logger.error(`[${name}]: ${error.toString().trim()}`)
+    logger.error(`[${name}]: stripTags(): ${error.toString().trim()}`)
+    isError = true
   }
 
   if (tmpfile) {
@@ -361,9 +371,13 @@ self.stripTags = async (name, extname) => {
       await paths.unlink(tmpfile)
     } catch (error) {
       if (error.code !== 'ENOENT') {
-        logger.error(`[${name}]: ${error.toString().trim()}`)
+        logger.error(`[${name}]: stripTags(): ${error.toString().trim()}`)
       }
     }
+  }
+
+  if (isError) {
+    throw new ServerError('An error occurred while stripping tags. The format may not be supported.')
   }
 
   return true
