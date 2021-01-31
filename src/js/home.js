@@ -688,7 +688,7 @@ page.updateTemplate = (file, response) => {
   link.classList.remove('is-hidden')
   clipboard.parentElement.classList.remove('is-hidden')
 
-  const exec = /.[\w]+(\?|$)/.exec(response.url)
+  const exec = /.[\w]+$/.exec(response.url)
   const extname = exec && exec[0]
     ? exec[0].toLowerCase()
     : null
