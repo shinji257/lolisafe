@@ -469,6 +469,7 @@ self.generateZip = async (req, res, next) => {
         const filePath = path.join(paths.zips, `${identifier}.zip`)
         await paths.access(filePath)
         await res.download(filePath, `${album.name}.zip`)
+        return
       } catch (error) {
         // Re-throw non-ENOENT error
         if (error.code !== 'ENOENT') throw error
