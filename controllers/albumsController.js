@@ -111,7 +111,7 @@ self.list = async (req, res, next) => {
       if (isNaN(offset)) offset = 0
       else if (offset < 0) offset = Math.max(0, Math.ceil(count / 25) + offset)
 
-      fields.push('identifier', 'enabled', 'timestamp', 'editedAt', 'download', 'public', 'description')
+      fields.push('identifier', 'enabled', 'timestamp', 'editedAt', 'zipGeneratedAt', 'download', 'public', 'description')
       if (all) fields.push('userid')
 
       albums = await db.table('albums')
@@ -126,18 +126,34 @@ self.list = async (req, res, next) => {
       album.download = album.download !== 0
       album.public = album.public !== 0
       album.uploads = 0
+      album.size = 0
+      album.zipSize = null
 
       // Map by IDs
       albumids[album.id] = album
     }
 
+    const getAlbumZipSize = async album => {
+      if (!album.zipGeneratedAt) return
+      try {
+        const filePath = path.join(paths.zips, `${album.identifier}.zip`)
+        const stats = await paths.stat(filePath)
+        albumids[album.id].zipSize = stats.size
+      } catch (error) {
+        if (error.code !== 'ENOENT') logger.error(error)
+      }
+    }
+
+    await Promise.all(albums.map(album => getAlbumZipSize(album)))
+
     const uploads = await db.table('files')
       .whereIn('albumid', Object.keys(albumids))
-      .select('albumid')
+      .select('albumid', 'size')
 
     for (const upload of uploads) {
       if (albumids[upload.albumid]) {
         albumids[upload.albumid].uploads++
+        albumids[upload.albumid].size += parseInt(upload.size)
       }
     }
 

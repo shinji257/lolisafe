@@ -1757,7 +1757,10 @@ page.getAlbums = (params = {}) => {
               <th>Name</th>
               ${params.all ? '<th>User</th>' : ''}
               <th>Uploads</th>
+              <th>Size</th>
               <th>Created at</th>
+              <th>ZIP size</th>
+              <th>ZIP generated at</th>
               <th>Public link</th>
               <th class="has-text-right">(${response.data.count} total)</th>
             </tr>
@@ -1775,13 +1778,18 @@ page.getAlbums = (params = {}) => {
 
     for (let i = 0; i < albums.length; i++) {
       const album = albums[i]
-      const albumUrl = `${homeDomain}/a/${album.identifier}`
+      const urlPath = '/a/'
+      const albumUrlText = urlPath + album.identifier
+      const albumUrl = homeDomain + albumUrlText
 
       const selected = page.selected[page.currentView].includes(album.id)
       if (!selected) unselected = true
 
       // Prettify
+      album.hasZip = album.zipSize !== null
       album.prettyDate = page.getPrettyDate(new Date(album.timestamp * 1000))
+      album.prettyZipDate = album.hasZip ? page.getPrettyDate(new Date(album.zipGeneratedAt * 1000)) : null
+      album.isZipExpired = album.hasZip && !(album.zipGeneratedAt > album.editedAt)
 
       // Server-side explicitly expect this value to consider an album as disabled
       const enabled = album.enabled !== 0
@@ -1790,7 +1798,10 @@ page.getAlbums = (params = {}) => {
         download: album.download,
         public: album.public,
         description: album.description,
-        enabled
+        enabled,
+        homeDomain,
+        urlPath,
+        identifier: album.identifier
       }
 
       const tr = document.createElement('tr')
@@ -1801,8 +1812,11 @@ page.getAlbums = (params = {}) => {
         <th${enabled ? '' : ' class="has-text-grey"'}>${album.name}</td>
         ${params.all ? `<th>${album.userid ? (users[album.userid] || '') : ''}</th>` : ''}
         <th>${album.uploads}</th>
+        <td>${page.getPrettyBytes(album.size)}</td>
         <td>${album.prettyDate}</td>
-        <td><a ${enabled && album.public ? '' : 'class="is-linethrough" '}href="${albumUrl}" target="_blank">${albumUrl}</a></td>
+        <td>${album.hasZip ? page.getPrettyBytes(album.zipSize) : '-'}</td>
+        <td${album.isZipExpired ? ' class="has-text-warning" title="This album has been modified since the last time its ZIP was generated."' : ''}>${album.hasZip ? album.prettyZipDate : '-'}</td$>
+        <td><a ${enabled && album.public ? '' : 'class="is-linethrough" '}href="${albumUrl}" target="_blank">${albumUrlText}</a></td>
         <td class="has-text-right" data-id="${album.id}">
           <a class="button is-small is-primary is-outlined" title="Edit album" data-action="edit-album">
             <span class="icon is-small">
@@ -1867,6 +1881,9 @@ page.editAlbum = id => {
   const album = page.cache[id]
   if (!album) return
 
+  const albumUrlText = album.urlPath + album.identifier
+  const albumUrl = album.homeDomain + albumUrlText
+
   const div = document.createElement('div')
   div.innerHTML = `
     <div class="field">
@@ -1914,6 +1931,9 @@ page.editAlbum = id => {
           Request new public link
         </label>
       </div>
+    </div>
+    <div class="field">
+      <p>Current public link: <a href="${albumUrl}" target="_blank" class="is-underline">${albumUrlText}</a></p>
     </div>
   `
 

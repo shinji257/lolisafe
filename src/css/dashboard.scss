@@ -153,10 +153,19 @@ li[data-action="page-ellipsis"] {
   color: $grey-lightest
 }
 
-.table .originalname {
-  max-width: 200px;
-  text-overflow: ellipsis;
-  overflow: hidden
+.table {
+  .originalname {
+    max-width: 200px;
+    text-overflow: ellipsis;
+    overflow: hidden
+  }
+
+  th,
+  td {
+    &[title] {
+      cursor: help
+    }
+  }
 }
 
 /** Thumbs extension **/

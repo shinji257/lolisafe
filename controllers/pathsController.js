@@ -16,6 +16,7 @@ const fsFuncs = [
   'readFile',
   'rename',
   'rmdir',
+  'stat',
   'symlink',
   'unlink',
   'writeFile'
