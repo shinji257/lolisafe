@@ -8,6 +8,14 @@ module.exports = {
   private: true,
 
   /*
+    If set, only the specified group AND any groups higher than it
+    will be allowed to upload new files.
+    Any other groups, assuming registered, will still be able to manage their previously uploaded files.
+  */
+  privateUploadGroup: null, // Other group names in controllers/permissionController.js
+  privateUploadCustomRespond: null,
+
+  /*
     If true, users will be able to create accounts and access their uploaded files.
   */
   enableUserAccounts: true,
@@ -283,26 +291,26 @@ module.exports = {
     urlProxy: 'https://proxy.duckduckgo.com/iu/?u={url}',
 
     /*
-     Disclaimer message that will be printed underneath the URL uploads form.
-     Supports HTML. Be safe though.
+      Disclaimer message that will be printed underneath the URL uploads form.
+      Supports HTML. Be safe though.
     */
     urlDisclaimerMessage: 'URL uploads are being proxied by <a href="https://duckduckgo.com/" target="_blank" rel="noopener">DuckDuckGo</a>.',
 
     /*
-     Filter mode for URL uploads.
-     Can be 'blacklist', 'whitelist', or 'inherit'.
-     'inherit' => inherit primary extensions filter (extensionsFilter option).
-     The rest are paired with urlExtensionsFilter option below and should be self-explanatory.
-     When this is not set to any of the 3 values, this will fallback to 'inherit'.
+      Filter mode for URL uploads.
+      Can be 'blacklist', 'whitelist', or 'inherit'.
+      'inherit' => inherit primary extensions filter (extensionsFilter option).
+      The rest are paired with urlExtensionsFilter option below and should be self-explanatory.
+      When this is not set to any of the 3 values, this will fallback to 'inherit'.
     */
     urlExtensionsFilterMode: 'whitelist',
 
     /*
-     Mainly intended for URL proxies that only support certain extensions.
-     This will parse the extensions from the URLs, so URLs that do not end with
-     the file's extensions will always be rejected.
-     Queries and segments in the URLs will be bypassed.
-     NOTE: Can not be empty when using either 'blacklist' or 'whitelist' mode.
+      Mainly intended for URL proxies that only support certain extensions.
+      This will parse the extensions from the URLs, so URLs that do not end with
+      the file's extensions will always be rejected.
+      Queries and segments in the URLs will be bypassed.
+      NOTE: Can not be empty when using either 'blacklist' or 'whitelist' mode.
     */
     urlExtensionsFilter: [
       '.webp',

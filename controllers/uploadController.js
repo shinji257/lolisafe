@@ -264,6 +264,12 @@ self.upload = async (req, res, next) => {
       user = await utils.assertUser(req.headers.token)
     }
 
+    if (config.privateUploadGroup) {
+      if (!user || !perms.is(user, config.privateUploadGroup)) {
+        throw new ClientError(config.privateUploadCustomRespond || 'Your usergroup is not permitted to upload new files.', { statusCode: 403 })
+      }
+    }
+
     let albumid = parseInt(req.headers.albumid || req.params.albumid)
     if (isNaN(albumid)) albumid = null
 
