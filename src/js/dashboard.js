@@ -2794,7 +2794,7 @@ page.deleteUser = id => {
   const content = document.createElement('div')
   content.innerHTML = `
     <p>You will be deleting a user named <b>${page.cache[id].username}</b>.<p>
-    <p>Their files will remain, unless you choose otherwise.</p>
+    <p>Their uploads will still remain, unless you choose otherwise.</p>
   `
 
   swal({
@@ -2805,11 +2805,11 @@ page.deleteUser = id => {
     buttons: {
       cancel: true,
       confirm: {
-        text: 'Yes, delete it!',
+        text: 'Yes, ONLY the user!',
         closeModal: false
       },
       purge: {
-        text: 'Yes, and the uploads too!',
+        text: 'Yes, AND their uploads too!',
         value: 'purge',
         className: 'swal-button--danger',
         closeModal: false
