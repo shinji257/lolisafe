@@ -266,7 +266,7 @@ self.upload = async (req, res, next) => {
 
     if (config.privateUploadGroup) {
       if (!user || !perms.is(user, config.privateUploadGroup)) {
-        throw new ClientError(config.privateUploadCustomRespond || 'Your usergroup is not permitted to upload new files.', { statusCode: 403 })
+        throw new ClientError(config.privateUploadCustomResponse || 'Your usergroup is not permitted to upload new files.', { statusCode: 403 })
       }
     }
 
