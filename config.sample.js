@@ -13,7 +13,7 @@ module.exports = {
     Any other groups, assuming registered, will still be able to manage their previously uploaded files.
   */
   privateUploadGroup: null, // Other group names in controllers/permissionController.js
-  privateUploadCustomRespond: null,
+  privateUploadCustomResponse: null,
 
   /*
     If true, users will be able to create accounts and access their uploaded files.
