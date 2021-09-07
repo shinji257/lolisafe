@@ -673,8 +673,8 @@ self.stats = async (req, res, next) => {
 
       if (!data.cache && data.generating) {
         stats[data.title] = false
-      } else if (((Date.now() - data.generatedAt) <= 1000) || data.generating) {
-        // Use cache for 1000 ms (1 second)
+      } else if (((Date.now() - data.generatedAt) <= 500) || data.generating) {
+        // Use cache for 500 ms (0.5 seconds)
         stats[data.title] = data.cache
       } else {
         data.generating = true
@@ -713,7 +713,7 @@ self.stats = async (req, res, next) => {
             type: 'byte'
           },
           'System Uptime': {
-            value: time.uptime,
+            value: Math.floor(time.uptime),
             type: 'uptime'
           },
           'Node.js': `${process.versions.node}`,
