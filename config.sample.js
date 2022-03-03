@@ -136,16 +136,19 @@ module.exports = {
   },
 
   /*
-    HTTP Strict Transport Security (HSTS).
-    This doesn't enforce HTTP users to switch to HTTPS.
-    It only tells HTTPS users to stick around (i.e. not to downgrade to HTTP).
-    When set, it's also added to HTTP responses because the header will be ignored anyway.
-    https://helmetjs.github.io/docs/hsts/#the-code
+    Helmet security headers.
+    https://github.com/helmetjs/helmet#how-it-works
   */
-  hsts: {
-    // maxAge: 63072000, // 2 years
-    // includeSubDomains: true,
-    // preload: true
+  helmet: {
+    contentSecurityPolicy: false,
+    /*
+    hsts: {
+      maxAge: 63072000, // 2 years
+      includeSubDomains: true,
+      preload: true
+    }
+    */
+    hsts: false
   },
 
   /*

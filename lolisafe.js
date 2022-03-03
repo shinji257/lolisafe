@@ -32,6 +32,11 @@ const player = require('./routes/player')
 
 const db = require('knex')(config.database)
 
+// Helmet security headers
+if (config.helmet instanceof Object && Object.keys(config.helmet).length) {
+  safe.use(helmet(config.helmet))
+} else {
+  // Fallback to old behavior when the whole helmet option was not configurable from the config file
 safe.use(helmet({
   contentSecurityPolicy: false,
   hsts: false
@@ -39,6 +44,7 @@ safe.use(helmet({
 
 if (config.hsts instanceof Object && Object.keys(config.hsts).length) {
   safe.use(helmet.hsts(config.hsts))
+  }
 }
 
 if (config.trustProxy) {
