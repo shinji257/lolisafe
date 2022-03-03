@@ -13,7 +13,7 @@ const replace = require('gulp-replace')
 const sass = require('gulp-dart-sass')
 const sassCompiler = require('sass')
 const sourcemaps = require('gulp-sourcemaps')
-const stylelint = require('gulp-stylelint')
+const stylelint = require('@ronilaukkarinen/gulp-stylelint')
 const terser = require('gulp-terser')
 
 // Put built files for development on a Git-ignored directory.

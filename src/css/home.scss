@@ -1,5 +1,4 @@
 @charset "utf-8";
-
 @import "_variables";
 
 /** Main **/
@@ -194,7 +193,7 @@ input[type="file"].is-fullwidth {
   top: 0;
   right: 0;
   left: 0;
-  padding: 1.5rem 1.5rem 0 1.5rem;
+  padding: 1.5rem 1.5rem 0;
 
   .column:last-child {
     animation: floatUp 1.5s cubic-bezier(0, 0.71, 0.29, 1) 0.5s 1 normal both

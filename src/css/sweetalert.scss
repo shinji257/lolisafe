@@ -1,18 +1,7 @@
 @charset "utf-8";
-
 @import "_variables";
 
 /** Animations **/
-
-@-webkit-keyframes pulseWarning {
-  0% {
-    border-color: $warning
-  }
-
-  to {
-    border-color: $warning-dark
-  }
-}
 
 @keyframes pulseWarning {
   0% {
@@ -21,16 +10,6 @@
 
   to {
     border-color: $warning-dark
-  }
-}
-
-@-webkit-keyframes pulseWarningBody {
-  0% {
-    background-color: $warning
-  }
-
-  to {
-    background-color: $warning-dark
   }
 }
 
