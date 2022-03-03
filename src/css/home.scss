@@ -10,7 +10,7 @@
   display: inline-block;
   margin-bottom: 40px;
   vertical-align: top;
-  animation: fadeInOpacity 0.5s
+  animation: fade-in-opacity 0.5s
 }
 
 .logo {
@@ -60,7 +60,7 @@
   }
 
   > div {
-    animation: fadeInOpacity 0.5s;
+    animation: fade-in-opacity 0.5s;
     margin: 0.75rem !important;
 
     &:first-child {
@@ -108,7 +108,7 @@
 }
 
 #albumDiv {
-  animation: fadeInOpacity 0.5s;
+  animation: fade-in-opacity 0.5s;
 
   .control {
     text-align: inherit
@@ -119,7 +119,7 @@
   margin-top: -0.25rem;
   margin-left: -0.25rem;
   margin-right: -0.25rem;
-  animation: fadeInOpacity 0.5s;
+  animation: fade-in-opacity 0.5s;
 
   .column {
     padding: 0.25rem
@@ -142,11 +142,11 @@
 
 #tabs {
   margin-bottom: 1rem;
-  animation: fadeInOpacity 0.5s;
+  animation: fade-in-opacity 0.5s;
 
   .tab-content {
     margin-bottom: -0.75rem;
-    animation: fadeInOpacity 0.5s
+    animation: fade-in-opacity 0.5s
   }
 }
 
@@ -171,7 +171,7 @@ input[type="file"].is-fullwidth {
   font-size: 1rem;
   color: $grey-lightest;
   cursor: pointer;
-  animation: floatUp 1.5s cubic-bezier(0, 0.71, 0.29, 1) 0.5s 1 normal both;
+  animation: float-up 1.5s cubic-bezier(0, 0.71, 0.29, 1) 0.5s 1 normal both;
 
   &.button {
     border-bottom-left-radius: 0;
@@ -196,7 +196,7 @@ input[type="file"].is-fullwidth {
   padding: 1.5rem 1.5rem 0;
 
   .column:last-child {
-    animation: floatUp 1.5s cubic-bezier(0, 0.71, 0.29, 1) 0.5s 1 normal both
+    animation: float-up 1.5s cubic-bezier(0, 0.71, 0.29, 1) 0.5s 1 normal both
   }
 
   .notification {

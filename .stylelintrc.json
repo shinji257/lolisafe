@@ -5,7 +5,6 @@
     "declaration-block-trailing-semicolon": "never",
     "function-name-case": null,
     "indentation": 2,
-    "keyframes-name-pattern": null,
     "no-descending-specificity": null,
     "scss/at-import-no-partial-leading-underscore": null,
     "selector-class-pattern": null,

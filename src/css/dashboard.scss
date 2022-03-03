@@ -8,7 +8,7 @@ body {
 }
 
 #dashboard {
-  animation: fadeInOpacity 0.5s
+  animation: fade-in-opacity 0.5s
 }
 
 .menu-label {
@@ -74,12 +74,12 @@ body {
   }
 
   #albumsContainer li {
-    animation: fadeInOpacity 0.5s
+    animation: fade-in-opacity 0.5s
   }
 }
 
 #page.fade-in {
-  animation: fadeInOpacity 0.5s
+  animation: fade-in-opacity 0.5s
 }
 
 .pagination {
