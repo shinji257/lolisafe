@@ -42,6 +42,7 @@ package-lock.json
 
 # Configuration file
 /config.js
+/views/_globals.njk
 
 # Database
 /database/db
