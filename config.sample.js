@@ -288,7 +288,7 @@ module.exports = {
       will become:
       https://images.weserv.nl/?url=example.com%2Fassets%2Fimage.png
     */
-    urlProxy: 'https://proxy.duckduckgo.com/iu/?u={url}',
+    urlProxy: 'https://external-content.duckduckgo.com/iu/?u={url}&f=1&nofb=1',
 
     /*
       Disclaimer message that will be printed underneath the URL uploads form.
