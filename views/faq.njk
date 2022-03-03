@@ -93,6 +93,7 @@
     </article>
     {%- endif %}
 
+    {% if globals.email -%}
     <h3 class="subtitle has-text-white-ter">I saw something too illegal for my tastes here, what should I do?</h3>
     <article class="message">
       <div class="message-body">
@@ -102,6 +103,7 @@
         {%- endif %}
       </div>
     </article>
+    {%- endif %}
 
     {% if globals.support -%}
     <h3 class="subtitle has-text-white-ter">How can I support {{ globals.name }}?</h3>
@@ -234,7 +236,9 @@
     <article class="message">
       <div class="message-body">
         Feel free to create a {{ globals.fork_host }} issue <a href="{{ globals.fork_issues }}" target="_blank" rel="noopener">here</a>.</br>
+        {% if globals.email -%}
         If you do not have a {{ globals.fork_host }} account, you can also email <a href="mailto:{{ globals.email }}">{{ globals.email }}</a>.
+        {%- endif %}
       </div>
     </article>
     {%- endif %}
@@ -306,12 +310,14 @@
     </article>
     {%- endif %}
 
+    {% if globals.email -%}
     <h3 class="subtitle has-text-white-ter">I still have more unanswered questions!</h3>
     <article class="message">
       <div class="message-body">
         Feel free to email <a href="mailto:{{ globals.email }}">{{ globals.email }}</a>.
       </div>
     </article>
+    {%- endif %}
   </div>
 </section>
 
