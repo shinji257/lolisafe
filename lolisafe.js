@@ -19,7 +19,7 @@ const nunjucks = require('nunjucks')
 const path = require('path')
 const RateLimit = require('express-rate-limit')
 const readline = require('readline')
-const serveStatic = require('serve-static')
+const serveStatic = require('@bobbywibowo/serve-static')
 const { accessSync, constants } = require('fs')
 
 // Check required config files
@@ -133,9 +133,9 @@ const initServeStaticUploads = (opts = {}) => {
         logger.error(error)
       }
     }
-    // serveStatic is just a modified express/serve-static module that allows specifying
-    // an async setHeaders function by the name preSetHeaders.
-    // The module will wait for the said function before creating send stream to client.
+    // serveStatic is provided with @bobbywibowo/serve-static, a fork of express/serve-static.
+    // The fork allows specifying an async setHeaders function by the name preSetHeaders.
+    // It will await the said function before creating 'send' stream to client.
     safe.use('/', serveStatic(paths.uploads, opts))
   } else {
     safe.use('/', express.static(paths.uploads, opts))

@@ -34,6 +34,7 @@
     "full-upgrade": "rm -f ./yarn.lock && yarn"
   },
   "dependencies": {
+    "@bobbywibowo/serve-static": "git+https://git@github.com/BobbyWibowo/serve-static#2cd43e81a9cb79aaa23286d0f63642de96368750",
     "bcrypt": "~5.0.1",
     "blake3": "~2.1.7",
     "body-parser": "~1.19.0",
@@ -51,7 +52,6 @@
     "randomstring": "~1.2.1",
     "readline": "~1.3.0",
     "search-query-parser": "~1.6.0",
-    "serve-static": "git+https://git@github.com/BobbyWibowo/serve-static#02c26587b25a7156a89dc05b617fce0aa90cefb9",
     "sharp": "~0.30.2",
     "sqlite3": "~5.0.2",
     "systeminformation": "~5.11.6"
