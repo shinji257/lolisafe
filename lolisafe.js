@@ -1,3 +1,15 @@
+const logger = require('./logger')
+
+// Stray errors and exceptions capturers
+process.on('uncaughtException', error => {
+  logger.error(error, { prefix: 'Uncaught Exception: ' })
+})
+
+process.on('unhandledRejection', error => {
+  logger.error(error, { prefix: 'Unhandled Rejection (Promise): ' })
+})
+
+// Require libraries
 const bodyParser = require('body-parser')
 const ClamScan = require('clamscan')
 const contentDisposition = require('content-disposition')
@@ -8,19 +20,27 @@ const path = require('path')
 const RateLimit = require('express-rate-limit')
 const readline = require('readline')
 const serveStatic = require('serve-static')
+const { accessSync, constants } = require('fs')
+
+// Check required config files
+const configFiles = ['config.js', 'views/_globals.njk']
+for (const file of configFiles) {
+  try {
+    accessSync(file, constants.R_OK)
+  } catch (error) {
+    logger.error(`Config file '${file}' cannot be found or read.`)
+    logger.error('Please copy the provided sample file and modify it according to your needs.')
+    process.exit(1)
+  }
+}
+
+// Require config files
 const config = require('./config')
-const logger = require('./logger')
 const versions = require('./src/versions')
-const safe = express()
 
+// lolisafe
 logger.log('Starting lolisafe\u2026')
-
-process.on('uncaughtException', error => {
-  logger.error(error, { prefix: 'Uncaught Exception: ' })
-})
-process.on('unhandledRejection', error => {
-  logger.error(error, { prefix: 'Unhandled Rejection (Promise): ' })
-})
+const safe = express()
 
 const paths = require('./controllers/pathsController')
 const utils = require('./controllers/utilsController')
@@ -37,13 +57,13 @@ if (config.helmet instanceof Object && Object.keys(config.helmet).length) {
   safe.use(helmet(config.helmet))
 } else {
   // Fallback to old behavior when the whole helmet option was not configurable from the config file
-safe.use(helmet({
-  contentSecurityPolicy: false,
-  hsts: false
-}))
+  safe.use(helmet({
+    contentSecurityPolicy: false,
+    hsts: false
+  }))
 
-if (config.hsts instanceof Object && Object.keys(config.hsts).length) {
-  safe.use(helmet.hsts(config.hsts))
+  if (config.hsts instanceof Object && Object.keys(config.hsts).length) {
+    safe.use(helmet.hsts(config.hsts))
   }
 }
 
