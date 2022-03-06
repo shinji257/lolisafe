@@ -60,6 +60,7 @@
     "@ronilaukkarinen/gulp-stylelint": "~14.0.6",
     "browserslist": "~4.19.3",
     "bulma": "~0.9.3",
+    "chokidar": "~3.5.3",
     "cssnano": "~5.1.0",
     "del": "~6.0.0",
     "eslint": "~7.32.0",

@@ -75,7 +75,8 @@ if (config.trustProxy) {
 nunjucks.configure('views', {
   autoescape: true,
   express: safe,
-  noCache: process.env.NODE_ENV === 'development'
+  watch: process.env.NODE_ENV === 'development'
+  // noCache: process.env.NODE_ENV === 'development'
 })
 safe.set('view engine', 'njk')
 safe.enable('view cache')
