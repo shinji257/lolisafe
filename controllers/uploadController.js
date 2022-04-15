@@ -200,7 +200,7 @@ self.getUniqueRandomName = async (length, extension) => {
         continue
       }
       utils.idSet.add(identifier)
-      // logger.log(`Added ${identifier} to identifiers cache`)
+      logger.debug(`Added ${identifier} to identifiers cache`)
     } else if (config.uploads.queryDbForFileCollisions) {
       if (self.onHold.has(identifier)) continue
 
@@ -613,22 +613,23 @@ self.cleanUpChunks = async (uuid, onTimeout) => {
 
 self.scanFiles = async (req, user, infoMap) => {
   if (user && utils.clamscan.groupBypass && perms.is(user, utils.clamscan.groupBypass)) {
-    // logger.log(`[ClamAV]: Skipping ${infoMap.length} file(s), ${utils.clamscan.groupBypass} group bypass`)
+    logger.debug(`[ClamAV]: Skipping ${infoMap.length} file(s), ${utils.clamscan.groupBypass} group bypass`)
     return false
   }
 
   const foundThreats = []
   const results = await Promise.all(infoMap.map(async info => {
     if (utils.clamscan.whitelistExtensions && utils.clamscan.whitelistExtensions.includes(info.data.extname)) {
-      return // logger.log(`[ClamAV]: Skipping ${info.data.filename}, extension whitelisted`)
+      logger.debug(`[ClamAV]: Skipping ${info.data.filename}, extension whitelisted`)
+      return
     }
 
     if (utils.clamscan.maxSize && info.data.size > utils.clamscan.maxSize) {
-      return // logger.log(`[ClamAV]: Skipping ${info.data.filename}, size ${info.data.size} > ${utils.clamscan.maxSize}`)
+      logger.debug(`[ClamAV]: Skipping ${info.data.filename}, size ${info.data.size} > ${utils.clamscan.maxSize}`)
+      return
     }
 
-    const response = await utils.clamscan.instance.is_infected(info.path)
-    if (response.is_infected) {
+    logger.debug(`[ClamAV]: Scanning ${info.data.filename}\u2026`)
       logger.log(`[ClamAV]: ${info.data.filename}: ${response.viruses.join(', ')}`)
       foundThreats.push(...response.viruses)
     }
@@ -698,7 +699,7 @@ self.storeFilesToDb = async (req, res, user, infoMap) => {
     if (dbFile) {
       // Continue even when encountering errors
       await utils.unlinkFile(info.data.filename).catch(logger.error)
-      // logger.log(`Unlinked ${info.data.filename} since a duplicate named ${dbFile.name} exists`)
+      logger.debug(`Unlinked ${info.data.filename} since a duplicate named ${dbFile.name} exists`)
 
       // If on /nojs route, append original file name reported by client
       if (req.path === '/nojs') {

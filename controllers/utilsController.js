@@ -396,7 +396,7 @@ self.unlinkFile = async (filename, predb) => {
   // Do not remove from identifiers cache on pre-db-deletion
   if (!predb && self.idSet) {
     self.idSet.delete(identifier)
-    // logger.log(`Removed ${identifier} from identifiers cache (deleteFile)`)
+    logger.debug(`Removed ${identifier} from identifiers cache (deleteFile)`)
   }
 
   const extname = self.extname(filename, true)
@@ -466,7 +466,7 @@ self.bulkDeleteFromDb = async (field, values, user) => {
         unlinked.forEach(file => {
           const identifier = file.name.split('.')[0]
           self.idSet.delete(identifier)
-          // logger.log(`Removed ${identifier} from identifiers cache (bulkDeleteFromDb)`)
+          logger.debug(`Removed ${identifier} from identifiers cache (bulkDeleteFromDb)`)
         })
       }
 
