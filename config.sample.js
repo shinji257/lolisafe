@@ -161,7 +161,7 @@ module.exports = {
   /*
     Rate limits.
     Please be aware that these apply to all users, including site owners.
-    https://github.com/nfriedly/express-rate-limit#configuration-options
+    https://github.com/nfriedly/express-rate-limit#usage
   */
   rateLimits: [
     {
@@ -172,6 +172,8 @@ module.exports = {
       config: {
         windowMs: 1000,
         max: 10,
+        legacyHeaders: true,
+        standardHeaders: true,
         message: {
           success: false,
           description: 'Rate limit reached, please try again in a while.'
@@ -187,6 +189,8 @@ module.exports = {
       config: {
         windowMs: 5 * 1000,
         max: 2,
+        legacyHeaders: true,
+        standardHeaders: true,
         message: {
           success: false,
           description: 'Rate limit reached, please try again in 5 seconds.'
@@ -200,7 +204,9 @@ module.exports = {
       ],
       config: {
         windowMs: 30 * 1000,
-        max: 6
+        max: 6,
+        legacyHeaders: true,
+        standardHeaders: true
       }
     },
     {
@@ -211,6 +217,8 @@ module.exports = {
       config: {
         windowMs: 60 * 1000,
         max: 1,
+        legacyHeaders: true,
+        standardHeaders: true,
         message: {
           success: false,
           description: 'Rate limit reached, please try again in 60 seconds.'

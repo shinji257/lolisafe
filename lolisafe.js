@@ -17,7 +17,7 @@ const express = require('express')
 const helmet = require('helmet')
 const nunjucks = require('nunjucks')
 const path = require('path')
-const RateLimit = require('express-rate-limit')
+const rateLimit = require('express-rate-limit')
 const readline = require('readline')
 const serveStatic = require('@bobbywibowo/serve-static')
 const { accessSync, constants } = require('fs')
@@ -83,9 +83,9 @@ safe.enable('view cache')
 
 // Configure rate limits
 if (Array.isArray(config.rateLimits) && config.rateLimits.length) {
-  for (const rateLimit of config.rateLimits) {
-    const limiter = new RateLimit(rateLimit.config)
-    for (const route of rateLimit.routes) {
+  for (const _rateLimit of config.rateLimits) {
+    const limiter = rateLimit(_rateLimit.config)
+    for (const route of _rateLimit.routes) {
       safe.use(route, limiter)
     }
   }
