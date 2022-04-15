@@ -26,7 +26,7 @@ DiskStorage.prototype._handleFile = function _handleFile (req, file, cb) {
   let tempError = null
   let tempObject = {}
   let tempWeight = 0
-  const _cb = (err, result, weight = 1) => {
+  const _cb = (err = null, result = {}, weight = 1) => {
     tempError = err
     tempWeight += weight
     tempObject = Object.assign(result, tempObject)
