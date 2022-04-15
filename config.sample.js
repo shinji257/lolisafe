@@ -428,7 +428,11 @@ module.exports = {
           bypassTest: false
         },
         preference: 'clamdscan'
-      }
+      },
+
+      // Experimental .passthrough() support
+      // https://github.com/kylefarris/clamscan/tree/v2.1.2#passthrough
+      clamPassthrough: true
     },
 
     /*

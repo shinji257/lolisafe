@@ -158,7 +158,9 @@ const executeMulter = multer({
           .then(name => cb(null, name))
           .catch(error => cb(error))
       }
-    }
+    },
+
+    clamscan: utils.clamscan
   })
 }).array('files[]')
 
@@ -338,8 +340,15 @@ self.actuallyUploadFiles = async (req, res, user, albumid, age) => {
   }
 
   if (utils.clamscan.instance) {
-    const scanResult = await self.scanFiles(req, user, infoMap)
-    if (scanResult) throw new ClientError(scanResult)
+    let scanResult
+    if (utils.clamscan.passthrough) {
+      scanResult = await self.assertPassthroughScans(req, user, infoMap)
+    } else {
+      scanResult = await self.scanFiles(req, user, infoMap)
+    }
+    if (scanResult) {
+      throw new ClientError(scanResult)
+    }
   }
 
   await self.stripTags(req, infoMap)
@@ -611,6 +620,42 @@ self.cleanUpChunks = async (uuid, onTimeout) => {
   delete chunksData[uuid]
 }
 
+self.assertPassthroughScans = async (req, user, infoMap) => {
+  const foundThreats = []
+  const unableToScan = []
+
+  for (const info of infoMap) {
+    if (info.data.clamscan) {
+      if (info.data.clamscan.isInfected) {
+        foundThreats.push(...info.data.clamscan.viruses)
+      } else if (info.data.clamscan.isInfected === null) {
+        unableToScan.push(info.data.filename)
+      }
+    } else {
+      unableToScan.push(info.data.filename)
+    }
+  }
+
+  let result = ''
+  if (foundThreats.length) {
+    const more = foundThreats.length > 1
+    result = `Threat${more ? 's' : ''} detected: ${foundThreats[0]}${more ? ', and more' : ''}.`
+  } else if (unableToScan.length) {
+    const more = unableToScan.length > 1
+    result = `Unable to scan: ${unableToScan[0]}${more ? ', and more' : ''}.`
+  }
+
+  if (result) {
+    // Unlink all files when at least one threat is found
+    // Should continue even when encountering errors
+    await Promise.all(infoMap.map(info =>
+      utils.unlinkFile(info.data.filename).catch(logger.error)
+    ))
+  }
+
+  return result
+}
+
 self.scanFiles = async (req, user, infoMap) => {
   if (user && utils.clamscan.groupBypass && perms.is(user, utils.clamscan.groupBypass)) {
     logger.debug(`[ClamAV]: Skipping ${infoMap.length} file(s), ${utils.clamscan.groupBypass} group bypass`)
@@ -619,7 +664,7 @@ self.scanFiles = async (req, user, infoMap) => {
 
   const foundThreats = []
   const unableToScan = []
-  const results = await Promise.all(infoMap.map(async info => {
+  const result = await Promise.all(infoMap.map(async info => {
     if (utils.clamscan.whitelistExtensions && utils.clamscan.whitelistExtensions.includes(info.data.extname)) {
       logger.debug(`[ClamAV]: Skipping ${info.data.filename}, extension whitelisted`)
       return
@@ -630,7 +675,7 @@ self.scanFiles = async (req, user, infoMap) => {
       return
     }
 
-    logger.debug(`[ClamAV]: Scanning ${info.data.filename}\u2026`)
+    logger.debug(`[ClamAV]: ${info.data.filename}: Scanning\u2026`)
     const response = await utils.clamscan.instance.isInfected(info.path)
     if (response.isInfected) {
       logger.log(`[ClamAV]: ${info.data.filename}: ${response.viruses.join(', ')}`)
@@ -652,7 +697,7 @@ self.scanFiles = async (req, user, infoMap) => {
     return 'An unexpected error occurred with ClamAV, please contact the site owner.'
   })
 
-  if (results) {
+  if (result) {
     // Unlink all files when at least one threat is found OR any errors occurred
     // Should continue even when encountering errors
     await Promise.all(infoMap.map(info =>
@@ -660,7 +705,7 @@ self.scanFiles = async (req, user, infoMap) => {
     ))
   }
 
-  return results
+  return result
 }
 
 self.stripTags = async (req, infoMap) => {

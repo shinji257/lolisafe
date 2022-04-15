@@ -2,6 +2,9 @@ const fs = require('fs')
 const path = require('path')
 const blake3 = require('blake3')
 const mkdirp = require('mkdirp')
+const logger = require('./../../logger')
+
+const REQUIRED_WEIGHT = 2
 
 function DiskStorage (opts) {
   this.getFilename = opts.filename
@@ -12,21 +15,36 @@ function DiskStorage (opts) {
   } else {
     this.getDestination = opts.destination
   }
+
+  this.clamscan = opts.clamscan
 }
 
 DiskStorage.prototype._handleFile = function _handleFile (req, file, cb) {
   const that = this
 
+  // "weighted" callback, to be able to "await" multiple callbacks
+  let tempError = null
+  let tempObject = {}
+  let tempWeight = 0
+  const _cb = (err, result, weight = 1) => {
+    tempError = err
+    tempWeight += weight
+    tempObject = Object.assign(result, tempObject)
+    if (tempError || tempWeight >= REQUIRED_WEIGHT) {
+      cb(tempError, tempObject)
+    }
+  }
+
   that.getDestination(req, file, function (err, destination) {
-    if (err) return cb(err)
+    if (err) return _cb(err)
 
     that.getFilename(req, file, function (err, filename) {
-      if (err) return cb(err)
+      if (err) return _cb(err)
 
       const finalPath = path.join(destination, filename)
       const onerror = err => {
         hash.dispose()
-        cb(err)
+        _cb(err)
       }
 
       let outStream
@@ -53,24 +71,36 @@ DiskStorage.prototype._handleFile = function _handleFile (req, file, cb) {
 
       if (file._isChunk) {
         file.stream.on('end', () => {
-          cb(null, {
+          _cb(null, {
             destination,
             filename,
             path: finalPath
-          })
+          }, 2)
         })
         file.stream.pipe(outStream, { end: false })
       } else {
         outStream.on('finish', () => {
-          cb(null, {
+          _cb(null, {
             destination,
             filename,
             path: finalPath,
             size: outStream.bytesWritten,
             hash: hash.digest('hex')
-          })
+          }, that.clamscan.passthrough ? 1 : 2)
         })
-        file.stream.pipe(outStream)
+
+        if (that.clamscan.passthrough) {
+          logger.debug(`[ClamAV]: ${filename}: Passthrough scanning\u2026`)
+          const clamStream = that.clamscan.instance.passthrough()
+          clamStream.on('scan-complete', result => {
+            _cb(null, {
+              clamscan: result
+            })
+          })
+          file.stream.pipe(clamStream).pipe(outStream)
+        } else {
+          file.stream.pipe(outStream)
+        }
       }
     })
   })

@@ -22,7 +22,8 @@ const self = {
       config.uploads.scan.whitelistExtensions.length)
       ? config.uploads.scan.whitelistExtensions
       : null,
-    maxSize: (parseInt(config.uploads.scan.maxSize) * 1e6) || null
+    maxSize: (parseInt(config.uploads.scan.maxSize) * 1e6) || null,
+    passthrough: config.uploads.scan.clamPassthrough
   },
   gitHash: null,
   idSet: null,
