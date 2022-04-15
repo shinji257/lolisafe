@@ -401,21 +401,31 @@ module.exports = {
       // Make sure maxSize is no bigger than the max size you configured for your ClamAV
       maxSize: null, // Needs to be in MB
 
-      // https://github.com/kylefarris/clamscan/tree/v1.3.3#getting-started
-      // Breaking options (do not use): remove_infected, quarantine_infected
-      // Untested options (may work): scan_log, debug_mode, file_list, scan_recursively
-      // Supported options: clamscan, clamdscan, preference
+      // https://github.com/kylefarris/clamscan/tree/v2.1.2#getting-started
+      // Breaking options (do not use): removeInfected, quarantineInfected, fileList, scanRecursively
+      // Untested options (may work): scanLog
+      // Supported options: debugMode, clamscan, clamdscan, preference
       clamOptions: {
-        // clamscan: {},
+        debugMode: false,
+        clamscan: {
+          path: '/usr/bin/clamscan',
+          db: null,
+          scanArchives: true,
+          active: true
+        },
         clamdscan: {
           // When both socket and host+port are specified, it will only use socket
           socket: '/var/run/clamav/clamd.ctl',
           host: '127.0.0.1',
           port: 3310,
           timeout: 1 * 60 * 1000, // 1 minute
+          localFallback: true,
+          path: '/usr/bin/clamdscan',
+          configFile: null,
           multiscan: true,
-          reload_db: false,
-          active: true
+          reloadDb: false,
+          active: true,
+          bypassTest: false
         },
         preference: 'clamdscan'
       }

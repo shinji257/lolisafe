@@ -687,7 +687,7 @@ self.stats = async (req, res, next) => {
 
         if (self.clamscan.instance) {
           try {
-            self.clamscan.version = await self.clamscan.instance.get_version().then(s => s.trim())
+            self.clamscan.version = await self.clamscan.instance.getVersion().then(s => s.trim())
           } catch (error) {
             logger.error(error)
             self.clamscan.version = 'Errored when querying version.'

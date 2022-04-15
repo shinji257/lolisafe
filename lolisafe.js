@@ -11,10 +11,10 @@ process.on('unhandledRejection', error => {
 
 // Require libraries
 const bodyParser = require('body-parser')
-const ClamScan = require('clamscan')
 const contentDisposition = require('content-disposition')
 const express = require('express')
 const helmet = require('helmet')
+const NodeClam = require('clamscan')
 const nunjucks = require('nunjucks')
 const path = require('path')
 const rateLimit = require('express-rate-limit')
@@ -312,8 +312,8 @@ safe.use('/api', api)
         logger.error('Missing object config.uploads.scan.clamOptions (check config.sample.js)')
         process.exit(1)
       }
-      utils.clamscan.instance = await new ClamScan().init(config.uploads.scan.clamOptions)
-      utils.clamscan.version = await utils.clamscan.instance.get_version().then(s => s.trim())
+      utils.clamscan.instance = await new NodeClam().init(config.uploads.scan.clamOptions)
+      utils.clamscan.version = await utils.clamscan.instance.getVersion().then(s => s.trim())
       logger.log(`Connection established with ${utils.clamscan.version}`)
     }
 

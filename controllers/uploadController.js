@@ -618,6 +618,7 @@ self.scanFiles = async (req, user, infoMap) => {
   }
 
   const foundThreats = []
+  const unableToScan = []
   const results = await Promise.all(infoMap.map(async info => {
     if (utils.clamscan.whitelistExtensions && utils.clamscan.whitelistExtensions.includes(info.data.extname)) {
       logger.debug(`[ClamAV]: Skipping ${info.data.filename}, extension whitelisted`)
@@ -630,16 +631,24 @@ self.scanFiles = async (req, user, infoMap) => {
     }
 
     logger.debug(`[ClamAV]: Scanning ${info.data.filename}\u2026`)
+    const response = await utils.clamscan.instance.isInfected(info.path)
+    if (response.isInfected) {
       logger.log(`[ClamAV]: ${info.data.filename}: ${response.viruses.join(', ')}`)
       foundThreats.push(...response.viruses)
+    } else if (response.isInfected === null) {
+      logger.log(`[ClamAV]: ${info.data.filename}: Unable to scan`)
+      unableToScan.push(info.data.filename)
     }
   })).then(() => {
     if (foundThreats.length) {
       const more = foundThreats.length > 1
       return `Threat${more ? 's' : ''} detected: ${foundThreats[0]}${more ? ', and more' : ''}.`
+    } else if (unableToScan.length) {
+      const more = unableToScan.length > 1
+      return `Unable to scan: ${unableToScan[0]}${more ? ', and more' : ''}.`
     }
   }).catch(error => {
-    logger.error(`[ClamAV]: ${error.toString()}`)
+    logger.error(`[ClamAV]: ${infoMap.map(info => info.data.filename).join(', ')}: ${error.toString()}`)
     return 'An unexpected error occurred with ClamAV, please contact the site owner.'
   })
 
