@@ -137,7 +137,7 @@ module.exports = {
 
   /*
     Helmet security headers.
-    https://github.com/helmetjs/helmet#how-it-works
+    https://github.com/helmetjs/helmet/tree/v5.0.2#how-it-works
   */
   helmet: {
     contentSecurityPolicy: false,
@@ -161,7 +161,7 @@ module.exports = {
   /*
     Rate limits.
     Please be aware that these apply to all users, including site owners.
-    https://github.com/nfriedly/express-rate-limit#usage
+    https://github.com/nfriedly/express-rate-limit/tree/v6.3.0#configuration
   */
   rateLimits: [
     {
