@@ -82,8 +82,8 @@ nunjucks.configure('views', {
 safe.set('view engine', 'njk')
 safe.enable('view cache')
 
-// Configure rate limits
-if (Array.isArray(config.rateLimits) && config.rateLimits.length) {
+// Configure rate limits (disabled during development)
+if (!isDevMode && Array.isArray(config.rateLimits) && config.rateLimits.length) {
   for (const _rateLimit of config.rateLimits) {
     const limiter = rateLimit(_rateLimit.config)
     for (const route of _rateLimit.routes) {
