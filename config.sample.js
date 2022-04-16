@@ -431,6 +431,7 @@ module.exports = {
       },
 
       // Experimental .passthrough() support
+      // Make sure StreamMaxLength option in ClamAV config is big enough
       // https://github.com/kylefarris/clamscan/tree/v2.1.2#passthrough
       clamPassthrough: false
     },

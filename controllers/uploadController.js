@@ -103,7 +103,7 @@ const initChunks = async uuid => {
 /** Multer */
 
 const executeMulter = multer({
-  // Guide: https://github.com/expressjs/multer#limits
+  // Guide: https://github.com/expressjs/multer/tree/v1.4.4#limits
   limits: {
     fileSize: maxSizeBytes,
     // Maximum number of non-file fields.
