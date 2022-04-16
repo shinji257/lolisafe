@@ -188,9 +188,16 @@ self.stripIndents = string => {
   return result
 }
 
-self.assertUser = async token => {
+self.assertUser = async (token, fields) => {
+  const _fields = ['id', 'username', 'enabled', 'timestamp', 'permission', 'registration']
+  if (typeof fields === 'string') fields = [fields]
+  if (Array.isArray(fields)) {
+    _fields.push(...fields)
+  }
+
   const user = await db.table('users')
     .where('token', token)
+    .select(_fields)
     .first()
   if (user) {
     if (user.enabled === false || user.enabled === 0) {
@@ -202,12 +209,12 @@ self.assertUser = async token => {
   }
 }
 
-self.authorize = async req => {
+self.authorize = async (req, fields) => {
   const token = req.headers.token
   if (token === undefined) {
     throw new ClientError('No token provided.', { statusCode: 403 })
   }
-  return self.assertUser(token)
+  return self.assertUser(token, fields)
 }
 
 self.generateThumbs = async (name, extname, force) => {

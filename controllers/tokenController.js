@@ -78,7 +78,7 @@ self.list = async (req, res, next) => {
 
 self.change = async (req, res, next) => {
   try {
-    const user = await utils.authorize(req)
+    const user = await utils.authorize(req, 'token')
 
     const newToken = await self.generateUniqueToken()
     if (!newToken) {
