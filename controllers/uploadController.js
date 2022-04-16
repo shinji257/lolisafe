@@ -20,6 +20,8 @@ const self = {
   onHold: new Set()
 }
 
+/** Preferences */
+
 const fileIdentifierLengthFallback = 32
 const fileIdentifierLengthChangeable = !config.uploads.fileIdentifierLength.force &&
   typeof config.uploads.fileIdentifierLength.min === 'number' &&
@@ -47,6 +49,8 @@ const urlExtensionsFilter = Array.isArray(config.uploads.urlExtensionsFilter) &&
   config.uploads.urlExtensionsFilter.length
 const temporaryUploads = Array.isArray(config.uploads.temporaryUploadAges) &&
   config.uploads.temporaryUploadAges.length
+
+/** Chunks helper class & function **/
 
 class ChunksData {
   constructor (uuid, root) {
@@ -95,6 +99,8 @@ const initChunks = async uuid => {
   chunksData[uuid].setTimeout(chunkedUploadsTimeout)
   return chunksData[uuid]
 }
+
+/** Multer */
 
 const executeMulter = multer({
   // Guide: https://github.com/expressjs/multer#limits
@@ -163,6 +169,8 @@ const executeMulter = multer({
     clamscan: utils.clamscan
   })
 }).array('files[]')
+
+/** Helper functions */
 
 self.isExtensionFiltered = extname => {
   // If empty extension needs to be filtered
@@ -256,6 +264,8 @@ self.parseStripTags = stripTags => {
 
   return Boolean(parseInt(stripTags))
 }
+
+/** Uploads */
 
 self.upload = async (req, res, next) => {
   try {
@@ -356,6 +366,8 @@ self.actuallyUploadFiles = async (req, res, user, albumid, age) => {
   const result = await self.storeFilesToDb(req, res, user, infoMap)
   return self.sendUploadResponse(req, res, user, result)
 }
+
+/** URL uploads */
 
 self.actuallyUploadUrls = async (req, res, user, albumid, age) => {
   if (!config.uploads.urlMaxSize) {
@@ -476,6 +488,8 @@ self.actuallyUploadUrls = async (req, res, user, albumid, age) => {
     }
   }
 }
+
+/** Chunk uploads */
 
 self.finishChunks = async (req, res, next) => {
   try {
@@ -620,6 +634,8 @@ self.cleanUpChunks = async (uuid, onTimeout) => {
   delete chunksData[uuid]
 }
 
+/** Virus scanning (ClamAV) */
+
 self.assertPassthroughScans = async (req, user, infoMap) => {
   const foundThreats = []
   const unableToScan = []
@@ -710,6 +726,8 @@ self.scanFiles = async (req, user, infoMap) => {
   return result
 }
 
+/** Strip tags (EXIF, etc.) */
+
 self.stripTags = async (req, infoMap) => {
   if (!self.parseStripTags(req.headers.striptags)) return
 
@@ -728,6 +746,8 @@ self.stripTags = async (req, infoMap) => {
     throw error
   }
 }
+
+/** Database functions */
 
 self.storeFilesToDb = async (req, res, user, infoMap) => {
   const files = []
@@ -839,6 +859,8 @@ self.storeFilesToDb = async (req, res, user, infoMap) => {
   return [...files, ...exists]
 }
 
+/** Final response */
+
 self.sendUploadResponse = async (req, res, user, result) => {
   // Send response
   return res.json({
@@ -873,6 +895,8 @@ self.sendUploadResponse = async (req, res, user, result) => {
     })
   })
 }
+
+/** Delete uploads */
 
 self.delete = async (req, res, next) => {
   // Map /api/delete requests to /api/bulkdelete
@@ -914,6 +938,8 @@ self.bulkDelete = async (req, res, next) => {
     return apiErrorsHandler(error, req, res, next)
   }
 }
+
+/** List uploads */
 
 self.list = async (req, res, next) => {
   try {
