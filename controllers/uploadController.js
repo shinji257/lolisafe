@@ -627,8 +627,10 @@ self.assertPassthroughScans = async (req, user, infoMap) => {
   for (const info of infoMap) {
     if (info.data.clamscan) {
       if (info.data.clamscan.isInfected) {
+        logger.log(`[ClamAV]: ${info.data.filename}: ${info.data.clamscan.viruses.join(', ')}`)
         foundThreats.push(...info.data.clamscan.viruses)
       } else if (info.data.clamscan.isInfected === null) {
+        logger.log(`[ClamAV]: ${info.data.filename}: Unable to scan`)
         unableToScan.push(info.data.filename)
       }
     } else {

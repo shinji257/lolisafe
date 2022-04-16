@@ -26,7 +26,7 @@ DiskStorage.prototype._handleFile = function _handleFile (req, file, cb) {
   let tempError = null
   let tempObject = {}
   let tempWeight = 0
-  const _cb = (err = null, result = {}, weight = 1) => {
+  const _cb = (err = null, result = {}, weight = 2) => {
     tempError = err
     tempWeight += weight
     tempObject = Object.assign(result, tempObject)
@@ -75,7 +75,7 @@ DiskStorage.prototype._handleFile = function _handleFile (req, file, cb) {
             destination,
             filename,
             path: finalPath
-          }, 2)
+          })
         })
         file.stream.pipe(outStream, { end: false })
       } else {
@@ -95,7 +95,7 @@ DiskStorage.prototype._handleFile = function _handleFile (req, file, cb) {
           clamStream.on('scan-complete', result => {
             _cb(null, {
               clamscan: result
-            })
+            }, 1)
           })
           file.stream.pipe(clamStream).pipe(outStream)
         } else {
