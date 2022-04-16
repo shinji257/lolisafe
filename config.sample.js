@@ -432,7 +432,7 @@ module.exports = {
 
       // Experimental .passthrough() support
       // https://github.com/kylefarris/clamscan/tree/v2.1.2#passthrough
-      clamPassthrough: true
+      clamPassthrough: false
     },
 
     /*
