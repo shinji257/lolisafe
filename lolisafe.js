@@ -51,6 +51,7 @@ const nojs = require('./routes/nojs')
 const player = require('./routes/player')
 
 const db = require('knex')(config.database)
+const isDevMode = process.env.NODE_ENV === 'development'
 
 // Helmet security headers
 if (config.helmet instanceof Object && Object.keys(config.helmet).length) {
@@ -75,8 +76,8 @@ if (config.trustProxy) {
 nunjucks.configure('views', {
   autoescape: true,
   express: safe,
-  watch: process.env.NODE_ENV === 'development'
-  // noCache: process.env.NODE_ENV === 'development'
+  watch: isDevMode
+  // noCache: isDevMode
 })
 safe.set('view engine', 'njk')
 safe.enable('view cache')
@@ -388,7 +389,7 @@ safe.use('/api', api)
     }
 
     // NODE_ENV=development yarn start
-    if (process.env.NODE_ENV === 'development') {
+    if (isDevMode) {
       // Add readline interface to allow evaluating arbitrary JavaScript from console
       readline.createInterface({
         input: process.stdin,
@@ -406,7 +407,10 @@ safe.use('/api', api)
       }).on('SIGINT', () => {
         process.exit(0)
       })
-      logger.log('DEVELOPMENT MODE: Disabled Nunjucks caching & enabled readline interface')
+      logger.log('!!! DEVELOPMENT MODE !!!')
+      logger.log('- Nunjucks will auto rebuild (not live reload)')
+      logger.log('- Rate limits disabled')
+      logger.log('- Readline interface enabled')
     }
   } catch (error) {
     logger.error(error)
