@@ -122,7 +122,7 @@ page.reloadVideo = () => {
     page.player = videojs('video-js', options, () => {
       let message = `Using video.js ${videojs.VERSION}`
       if (isaudio) {
-        message += `with videojs-wavesurfer ${videojs.getPluginVersion('wavesurfer')} and wavesurfer.js ${WaveSurfer.VERSION}`
+        message += ` with videojs-wavesurfer ${videojs.getPluginVersion('wavesurfer')} and wavesurfer.js ${WaveSurfer.VERSION}`
       }
       videojs.log(message)
       page.player.src({ src, type })
