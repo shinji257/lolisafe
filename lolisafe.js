@@ -60,7 +60,11 @@ if (config.helmet instanceof Object && Object.keys(config.helmet).length) {
   // Fallback to old behavior when the whole helmet option was not configurable from the config file
   safe.use(helmet({
     contentSecurityPolicy: false,
-    hsts: false
+    crossOriginEmbedderPolicy: false,
+    crossOriginOpenerPolicy: false,
+    crossOriginResourcePolicy: false,
+    hsts: false,
+    originAgentCluster: false
   }))
 
   if (config.hsts instanceof Object && Object.keys(config.hsts).length) {

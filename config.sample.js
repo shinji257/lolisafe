@@ -142,13 +142,23 @@ module.exports = {
   helmet: {
     contentSecurityPolicy: false,
     /*
+      Cross-Origin-* headers were enabled by default since Helmet v5.0.0
+      However, for installations that use own http server for files (nginx, etc.),
+      these headers also need to be configured in there.
+    */
+    crossOriginEmbedderPolicy: false,
+    crossOriginOpenerPolicy: false,
+    crossOriginResourcePolicy: false,
+    /*
     hsts: {
       maxAge: 63072000, // 2 years
       includeSubDomains: true,
       preload: true
     }
     */
-    hsts: false
+    hsts: false,
+    // This was also enabled by default since Helmet v5.0.0
+    originAgentCluster: false
   },
 
   /*
