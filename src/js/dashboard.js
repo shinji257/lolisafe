@@ -1002,7 +1002,6 @@ page.displayPreview = id => {
       })
     } else {
       const match = file.file.match(/.*\/(.*)$/)
-      console.log(file.file, match)
       if (match || match[1]) {
         div.querySelector('#swalOriginal').setAttribute('href', `v/${match[1]}`)
         div.querySelector('#swalOriginal').setAttribute('target', '_blank')
