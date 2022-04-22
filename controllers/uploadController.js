@@ -655,7 +655,7 @@ self.scanHelpers.assertFileBypass = data => {
     return true
   }
 
-  if (Number.isFinite(data.size) && utils.scan.maxSize && data.size > utils.scan.maxSize) {
+  if (utils.scan.maxSize && Number.isFinite(data.size) && data.size > utils.scan.maxSize) {
     logger.debug(`[ClamAV]: ${data.filename}: Skipped, size ${data.size} > ${utils.scan.maxSize}`)
     return true
   }
