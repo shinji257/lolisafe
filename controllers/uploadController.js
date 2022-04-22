@@ -675,6 +675,8 @@ self.assertPassthroughScans = async (req, user, infoMap) => {
       } else if (info.data.scan.isInfected === null) {
         logger.log(`[ClamAV]: ${info.data.filename}: Unable to scan`)
         unableToScan.push(info.data.filename)
+      } else {
+        logger.debug(`[ClamAV]: ${info.data.filename}: File is clean`)
       }
     }
   }
@@ -722,6 +724,8 @@ self.scanFiles = async (req, user, infoMap) => {
     } else if (response.isInfected === null) {
       logger.log(`[ClamAV]: ${info.data.filename}: Unable to scan`)
       unableToScan.push(info.data.filename)
+    } else {
+      logger.debug(`[ClamAV]: ${info.data.filename}: File is clean`)
     }
   })).then(() => {
     if (foundThreats.length) {
