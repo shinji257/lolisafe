@@ -17,7 +17,8 @@ const logger = require('./../logger')
 const db = require('knex')(config.database)
 
 const self = {
-  onHold: new Set()
+  onHold: new Set(),
+  scanHelpers: {}
 }
 
 /** Preferences */
@@ -166,7 +167,8 @@ const executeMulter = multer({
       }
     },
 
-    clamscan: utils.clamscan
+    scan: utils.scan,
+    scanHelpers: self.scanHelpers
   })
 }).array('files[]')
 
@@ -302,8 +304,9 @@ self.upload = async (req, res, next) => {
 
 self.actuallyUploadFiles = async (req, res, user, albumid, age) => {
   const error = await new Promise(resolve => {
+    req._user = user
     return executeMulter(req, res, err => resolve(err))
-  })
+  }).finally(() => delete req._user)
 
   if (error) {
     const suppress = [
@@ -349,9 +352,9 @@ self.actuallyUploadFiles = async (req, res, user, albumid, age) => {
     throw new ClientError('Empty files are not allowed.')
   }
 
-  if (utils.clamscan.instance) {
+  if (utils.scan.instance) {
     let scanResult
-    if (utils.clamscan.passthrough) {
+    if (utils.scan.passthrough) {
       scanResult = await self.assertPassthroughScans(req, user, infoMap)
     } else {
       scanResult = await self.scanFiles(req, user, infoMap)
@@ -461,7 +464,7 @@ self.actuallyUploadUrls = async (req, res, user, albumid, age) => {
     // If no errors encountered, clear cache of downloaded files
     downloaded.length = 0
 
-    if (utils.clamscan.instance) {
+    if (utils.scan.instance) {
       const scanResult = await self.scanFiles(req, user, infoMap)
       if (scanResult) throw new ClientError(scanResult)
     }
@@ -591,7 +594,7 @@ self.actuallyFinishChunks = async (req, res, user) => {
       infoMap.push({ path: destination, data })
     }))
 
-    if (utils.clamscan.instance) {
+    if (utils.scan.instance) {
       const scanResult = await self.scanFiles(req, user, infoMap)
       if (scanResult) throw new ClientError(scanResult)
     }
@@ -636,21 +639,43 @@ self.cleanUpChunks = async (uuid, onTimeout) => {
 
 /** Virus scanning (ClamAV) */
 
+self.scanHelpers.assertUserBypass = (user, filenames) => {
+  if (!user || !utils.scan.groupBypass) return false
+  if (!Array.isArray(filenames)) filenames = [filenames]
+  logger.debug(`[ClamAV]: ${filenames.join(', ')}: Skipped, uploaded by ${user.username} (${utils.scan.groupBypass})`)
+  return perms.is(user, utils.scan.groupBypass)
+}
+
+self.scanHelpers.assertFileBypass = data => {
+  if (typeof data !== 'object' || !data.filename) return false
+
+  const extname = data.extname || utils.extname(data.filename)
+  if (utils.scan.whitelistExtensions && utils.scan.whitelistExtensions.includes(extname)) {
+    logger.debug(`[ClamAV]: ${data.filename}: Skipped, extension whitelisted`)
+    return true
+  }
+
+  if (Number.isFinite(data.size) && utils.scan.maxSize && data.size > utils.scan.maxSize) {
+    logger.debug(`[ClamAV]: ${data.filename}: Skipped, size ${data.size} > ${utils.scan.maxSize}`)
+    return true
+  }
+
+  return false
+}
+
 self.assertPassthroughScans = async (req, user, infoMap) => {
   const foundThreats = []
   const unableToScan = []
 
   for (const info of infoMap) {
-    if (info.data.clamscan) {
-      if (info.data.clamscan.isInfected) {
-        logger.log(`[ClamAV]: ${info.data.filename}: ${info.data.clamscan.viruses.join(', ')}`)
-        foundThreats.push(...info.data.clamscan.viruses)
-      } else if (info.data.clamscan.isInfected === null) {
+    if (info.data.scan) {
+      if (info.data.scan.isInfected) {
+        logger.log(`[ClamAV]: ${info.data.filename}: ${info.data.scan.viruses.join(', ')}`)
+        foundThreats.push(...info.data.scan.viruses)
+      } else if (info.data.scan.isInfected === null) {
         logger.log(`[ClamAV]: ${info.data.filename}: Unable to scan`)
         unableToScan.push(info.data.filename)
       }
-    } else {
-      unableToScan.push(info.data.filename)
     }
   }
 
@@ -675,26 +700,22 @@ self.assertPassthroughScans = async (req, user, infoMap) => {
 }
 
 self.scanFiles = async (req, user, infoMap) => {
-  if (user && utils.clamscan.groupBypass && perms.is(user, utils.clamscan.groupBypass)) {
-    logger.debug(`[ClamAV]: Skipping ${infoMap.length} file(s), ${utils.clamscan.groupBypass} group bypass`)
+  const filenames = infoMap.map(info => info.data.filename)
+  if (self.scanHelpers.assertUserBypass(user, filenames)) {
     return false
   }
 
   const foundThreats = []
   const unableToScan = []
   const result = await Promise.all(infoMap.map(async info => {
-    if (utils.clamscan.whitelistExtensions && utils.clamscan.whitelistExtensions.includes(info.data.extname)) {
-      logger.debug(`[ClamAV]: Skipping ${info.data.filename}, extension whitelisted`)
-      return
-    }
-
-    if (utils.clamscan.maxSize && info.data.size > utils.clamscan.maxSize) {
-      logger.debug(`[ClamAV]: Skipping ${info.data.filename}, size ${info.data.size} > ${utils.clamscan.maxSize}`)
-      return
-    }
+    if (self.scanHelpers.assertFileBypass({
+      filename: info.data.filename,
+      extname: info.data.extname,
+      size: info.data.size
+    })) return
 
     logger.debug(`[ClamAV]: ${info.data.filename}: Scanning\u2026`)
-    const response = await utils.clamscan.instance.isInfected(info.path)
+    const response = await utils.scan.instance.isInfected(info.path)
     if (response.isInfected) {
       logger.log(`[ClamAV]: ${info.data.filename}: ${response.viruses.join(', ')}`)
       foundThreats.push(...response.viruses)
@@ -711,7 +732,7 @@ self.scanFiles = async (req, user, infoMap) => {
       return `Unable to scan: ${unableToScan[0]}${more ? ', and more' : ''}.`
     }
   }).catch(error => {
-    logger.error(`[ClamAV]: ${infoMap.map(info => info.data.filename).join(', ')}: ${error.toString()}`)
+    logger.error(`[ClamAV]: ${filenames.join(', ')}: ${error.toString()}`)
     return 'An unexpected error occurred with ClamAV, please contact the site owner.'
   })
 

@@ -408,7 +408,8 @@ module.exports = {
         '.mov',
         '.mkv'
       ], */
-      // Make sure maxSize is no bigger than the max size you configured for your ClamAV
+
+      // Make sure this doesn't exceed size limit in your ClamAV config
       maxSize: null, // Needs to be in MB
 
       // https://github.com/kylefarris/clamscan/tree/v2.1.2#getting-started
@@ -440,9 +441,18 @@ module.exports = {
         preference: 'clamdscan'
       },
 
-      // Experimental .passthrough() support
-      // Make sure StreamMaxLength option in ClamAV config is big enough
-      // https://github.com/kylefarris/clamscan/tree/v2.1.2#passthrough
+      /*
+        Experimental .passthrough() support.
+        https://github.com/kylefarris/clamscan/tree/v2.1.2#passthrough
+
+        If enabled, StreamMaxLength in ClamAV config must be able to accommodate your
+        main "maxSize" option (not to be confused with "maxSize" in "scan" options group).
+        Final file size can't be determined before passthrough,
+        so file of all sizes will have to be scanned regardless.
+
+        This will only passthrough scan non-chunked file uploads.
+        Chunked file uploads and URL uploads will still use the default scan method.
+      */
       clamPassthrough: false
     },
 

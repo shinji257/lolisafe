@@ -14,7 +14,7 @@ const logger = require('./../logger')
 const db = require('knex')(config.database)
 
 const self = {
-  clamscan: {
+  scan: {
     instance: null,
     version: null,
     groupBypass: config.uploads.scan.groupBypass || null,
@@ -693,12 +693,12 @@ self.stats = async (req, res, next) => {
         const time = si.time()
         const nodeUptime = process.uptime()
 
-        if (self.clamscan.instance) {
+        if (self.scan.instance) {
           try {
-            self.clamscan.version = await self.clamscan.instance.getVersion().then(s => s.trim())
+            self.scan.version = await self.scan.instance.getVersion().then(s => s.trim())
           } catch (error) {
             logger.error(error)
-            self.clamscan.version = 'Errored when querying version.'
+            self.scan.version = 'Errored when querying version.'
           }
         }
 
@@ -706,7 +706,7 @@ self.stats = async (req, res, next) => {
           Platform: `${os.platform} ${os.arch}`,
           Distro: `${os.distro} ${os.release}`,
           Kernel: os.kernel,
-          Scanner: self.clamscan.version || 'N/A',
+          Scanner: self.scan.version || 'N/A',
           'CPU Load': `${currentLoad.currentLoad.toFixed(1)}%`,
           'CPUs Load': currentLoad.cpus.map(cpu => `${cpu.load.toFixed(1)}%`).join(', '),
           'System Memory': {

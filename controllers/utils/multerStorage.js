@@ -16,7 +16,8 @@ function DiskStorage (opts) {
     this.getDestination = opts.destination
   }
 
-  this.clamscan = opts.clamscan
+  this.scan = opts.scan
+  this.scanHelpers = opts.scanHelpers
 }
 
 DiskStorage.prototype._handleFile = function _handleFile (req, file, cb) {
@@ -49,6 +50,7 @@ DiskStorage.prototype._handleFile = function _handleFile (req, file, cb) {
 
       let outStream
       let hash
+      let scanStream
       if (file._isChunk) {
         if (!file._chunksData.stream) {
           file._chunksData.stream = fs.createWriteStream(finalPath, { flags: 'a' })
@@ -64,6 +66,12 @@ DiskStorage.prototype._handleFile = function _handleFile (req, file, cb) {
         outStream = fs.createWriteStream(finalPath)
         outStream.on('error', onerror)
         hash = blake3.createHash()
+
+        if (that.scan.passthrough &&
+          !that.scanHelpers.assertUserBypass(req._user, filename) &&
+          !that.scanHelpers.assertFileBypass({ filename })) {
+          scanStream = that.scan.instance.passthrough()
+        }
       }
 
       file.stream.on('error', onerror)
@@ -86,18 +94,16 @@ DiskStorage.prototype._handleFile = function _handleFile (req, file, cb) {
             path: finalPath,
             size: outStream.bytesWritten,
             hash: hash.digest('hex')
-          }, that.clamscan.passthrough ? 1 : 2)
+          }, scanStream ? 1 : 2)
         })
 
-        if (that.clamscan.passthrough) {
+        if (scanStream) {
           logger.debug(`[ClamAV]: ${filename}: Passthrough scanning\u2026`)
-          const clamStream = that.clamscan.instance.passthrough()
-          clamStream.on('scan-complete', result => {
-            _cb(null, {
-              clamscan: result
-            }, 1)
+          scanStream.on('error', onerror)
+          scanStream.on('scan-complete', scan => {
+            _cb(null, { scan }, 1)
           })
-          file.stream.pipe(clamStream).pipe(outStream)
+          file.stream.pipe(scanStream).pipe(outStream)
         } else {
           file.stream.pipe(outStream)
         }

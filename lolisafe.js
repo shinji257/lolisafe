@@ -317,9 +317,9 @@ safe.use('/api', api)
         logger.error('Missing object config.uploads.scan.clamOptions (check config.sample.js)')
         process.exit(1)
       }
-      utils.clamscan.instance = await new NodeClam().init(config.uploads.scan.clamOptions)
-      utils.clamscan.version = await utils.clamscan.instance.getVersion().then(s => s.trim())
-      logger.log(`Connection established with ${utils.clamscan.version}`)
+      utils.scan.instance = await new NodeClam().init(config.uploads.scan.clamOptions)
+      utils.scan.version = await utils.scan.instance.getVersion().then(s => s.trim())
+      logger.log(`Connection established with ${utils.scan.version}`)
     }
 
     // Cache file identifiers
