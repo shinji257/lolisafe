@@ -54,22 +54,27 @@ const db = require('knex')(config.database)
 const isDevMode = process.env.NODE_ENV === 'development'
 
 // Helmet security headers
-if (config.helmet instanceof Object && Object.keys(config.helmet).length) {
-  safe.use(helmet(config.helmet))
+if (config.helmet instanceof Object) {
+  // If an empty object, simply do not use Helmet
+  if (Object.keys(config.helmet).length) {
+    safe.use(helmet(config.helmet))
+  }
 } else {
   // Fallback to old behavior when the whole helmet option was not configurable from the config file
-  safe.use(helmet({
+  const defaults = {
     contentSecurityPolicy: false,
     crossOriginEmbedderPolicy: false,
     crossOriginOpenerPolicy: false,
     crossOriginResourcePolicy: false,
     hsts: false,
     originAgentCluster: false
-  }))
+  }
 
   if (config.hsts instanceof Object && Object.keys(config.hsts).length) {
-    safe.use(helmet.hsts(config.hsts))
+    defaults.hsts = config.hsts
   }
+
+  safe.use(helmet(defaults))
 }
 
 if (config.trustProxy) {
