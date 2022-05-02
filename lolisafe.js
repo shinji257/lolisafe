@@ -77,6 +77,20 @@ if (config.helmet instanceof Object) {
   safe.use(helmet(defaults))
 }
 
+// Access-Control-Allow-Origin
+if (config.accessControlAllowOrigin) {
+  if (config.accessControlAllowOrigin === true) {
+    config.accessControlAllowOrigin = '*'
+  }
+  safe.use((req, res, next) => {
+    res.set('Access-Control-Allow-Origin', config.accessControlAllowOrigin)
+    if (config.accessControlAllowOrigin !== '*') {
+      res.vary('Origin')
+    }
+    next()
+  })
+}
+
 if (config.trustProxy) {
   safe.set('trust proxy', 1)
 }
@@ -105,9 +119,7 @@ safe.use(bodyParser.urlencoded({ extended: true }))
 safe.use(bodyParser.json())
 
 const cdnPages = [...config.pages]
-let setHeaders = res => {
-  res.set('Access-Control-Allow-Origin', '*')
-}
+let setHeaders
 
 const contentTypes = config.overrideContentTypes && Object.keys(config.overrideContentTypes)
 const overrideContentTypes = (res, path) => {
@@ -187,7 +199,6 @@ if (config.cacheControl) {
   if (config.serveFilesWithNode) {
     initServeStaticUploads({
       setHeaders: (res, path) => {
-        res.set('Access-Control-Allow-Origin', '*')
         // Override Content-Type if necessary
         if (contentTypes && contentTypes.length) {
           overrideContentTypes(res, path)
@@ -205,13 +216,11 @@ if (config.cacheControl) {
   // This requires the assets to use version in their query string,
   // as they will be cached by clients for a very long time.
   setHeaders = res => {
-    res.set('Access-Control-Allow-Origin', '*')
     res.set('Cache-Control', cacheControls.static)
   }
 
   // Consider album ZIPs static as well, since they use version in their query string
   safe.use(['/api/album/zip'], (req, res, next) => {
-    res.set('Access-Control-Allow-Origin', '*')
     const versionString = parseInt(req.query.v)
     if (versionString > 0) {
       res.set('Cache-Control', cacheControls.static)
@@ -223,7 +232,6 @@ if (config.cacheControl) {
 } else if (config.serveFilesWithNode) {
   initServeStaticUploads({
     setHeaders: (res, path) => {
-      res.set('Access-Control-Allow-Origin', '*')
       // Override Content-Type if necessary
       if (contentTypes && contentTypes.length) {
         overrideContentTypes(res, path)

@@ -138,14 +138,18 @@ module.exports = {
   /*
     Helmet security headers.
     https://github.com/helmetjs/helmet/tree/v5.0.2#how-it-works
+
+    These headers will be applied to ALL resources, including API endpoints,
+    and files if you serve them with node.
+    If you need to disable some of the headers at certain routes, it's recommended
+    to instead use own http server (nginx, etc.) in front of lolisafe and configure from there.
+
+    NOTE: You may set "helmet" option as an empty object {} to disable Helmet entirely.
+    Setting it as any falsy value will instead apply some default configurations.
   */
   helmet: {
     contentSecurityPolicy: false,
-    /*
-      Cross-Origin-* headers were enabled by default since Helmet v5.0.0
-      However, for installations that use own http server for files (nginx, etc.),
-      these headers also need to be configured in there.
-    */
+    // Cross-Origin-* headers were enabled by default since Helmet v5.0.0
     crossOriginEmbedderPolicy: false,
     crossOriginOpenerPolicy: false,
     crossOriginResourcePolicy: false,
@@ -160,6 +164,21 @@ module.exports = {
     // This was also enabled by default since Helmet v5.0.0
     originAgentCluster: false
   },
+
+  /*
+    Access-Control-Allow-Origin
+    https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Origin
+    These headers will be applied to ALL resources, including API endpoints,
+    and files if you serve them with node.
+
+    If set to true, it will be set as wildcard (*).
+    If set to any falsy value, it will be not set altogether.
+    Otherwise if any string value, it will be set as-is.
+
+    Whether to use this in conjunction with Cross-Origin-* headers depends on your needs.
+    FAQ: https://resourcepolicy.fyi/#acao
+  */
+  accessControlAllowOrigin: false,
 
   /*
     Trust proxy.
