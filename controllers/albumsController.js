@@ -270,7 +270,6 @@ self.disable = async (req, res, next) => {
     if (!album) {
       throw new ClientError('Could not get album with the specified ID.')
     }
-    logger.inspect(album)
 
     if (purge) {
       const files = await db.table('files')
