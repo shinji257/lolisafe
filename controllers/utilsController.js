@@ -1,6 +1,7 @@
 const { promisify } = require('util')
 const fetch = require('node-fetch')
 const ffmpeg = require('fluent-ffmpeg')
+const MarkdownIt = require('markdown-it')
 const path = require('path')
 const sharp = require('sharp')
 const si = require('systeminformation')
@@ -25,6 +26,15 @@ const self = {
     maxSize: (parseInt(config.uploads.scan.maxSize) * 1e6) || null,
     passthrough: config.uploads.scan.clamPassthrough
   },
+  md: {
+    instance: new MarkdownIt({
+      // https://markdown-it.github.io/markdown-it/#MarkdownIt.new
+      html: false,
+      breaks: true,
+      linkify: true
+    }),
+    defaultRenderers: {}
+  },
   gitHash: null,
   idSet: null,
 
@@ -43,6 +53,22 @@ const self = {
 
   albumsCache: {},
   timezoneOffset: new Date().getTimezoneOffset()
+}
+
+// Remember old renderer, if overridden, or proxy to default renderer
+self.md.defaultRenderers.link_open = self.md.instance.renderer.rules.link_open || function (tokens, idx, options, env, that) {
+  return that.renderToken(tokens, idx, options)
+}
+
+// Add target="_blank" to URLs if applicable
+self.md.instance.renderer.rules.link_open = function (tokens, idx, options, env, that) {
+  const aIndex = tokens[idx].attrIndex('target')
+  if (aIndex < 0) {
+    tokens[idx].attrPush(['target', '_blank'])
+  } else {
+    tokens[idx].attrs[aIndex][1] = '_blank'
+  }
+  return self.md.defaultRenderers.link_open(tokens, idx, options, env, that)
 }
 
 const statsData = {

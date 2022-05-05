@@ -76,6 +76,7 @@ routes.get('/a/:identifier', async (req, res, next) => {
     : `api/album/zip/${album.identifier}?v=${album.editedAt}`
 
   album.url = `a/${album.identifier}`
+  album.description = utils.md.instance.render(album.description)
 
   return res.render('album', {
     config,

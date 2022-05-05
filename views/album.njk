@@ -97,8 +97,8 @@
     </nav>
 
     {% if album.description -%}
-    <div class="subtitle description">
-      {{ album.description | nl2br | safe }}
+    <div class="subtitle description content">
+      {{ album.description | safe }}
     </div>
     {%- endif %}
     <hr>
