@@ -128,6 +128,9 @@ self.list = async (req, res, next) => {
       album.uploads = 0
       album.size = 0
       album.zipSize = null
+      album.descriptionHtml = album.description
+        ? utils.md.instance.render(album.description)
+        : ''
 
       // Map by IDs
       albumids[album.id] = album

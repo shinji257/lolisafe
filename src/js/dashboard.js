@@ -1797,6 +1797,7 @@ page.getAlbums = (params = {}) => {
         download: album.download,
         public: album.public,
         description: album.description,
+        descriptionHtml: album.descriptionHtml,
         enabled,
         homeDomain,
         urlPath,
@@ -1895,8 +1896,16 @@ page.editAlbum = id => {
       <div class="control">
         <textarea id="swalDescription" class="textarea" placeholder="Description" rows="2" maxlength="${page.albumDescMaxLength}">${(album.description || '').substring(0, page.albumDescMaxLength)}</textarea>
       </div>
-      <p class="help">Max length is ${page.albumDescMaxLength} characters.</p>
+      <p class="help"><b>Markdown supported.</b> Max length is ${page.albumDescMaxLength} characters.</p>
     </div>
+    ${album.descriptionHtml
+      ? `<div class="field">
+          <div class="content swal-display-description-preview">
+            ${album.descriptionHtml}
+          </div>
+          <p class="help">Save changes then re-open this Edit prompt to refresh this preview.</p>
+        </div>`
+      : ''}
     ${page.currentView === 'albumsAll' && page.permissions.moderator
       ? `<div class="field">
           <div class="control">
@@ -2668,7 +2677,7 @@ page.editUser = id => {
     ${isHigher
       ? ''
       : `<div class="notification is-danger">
-      You <strong>cannot</strong> modify user in the same or higher group as you.
+      You <b>cannot</b> modify user in the same or higher group as you.
     </div>`
     }
   `

@@ -158,3 +158,13 @@ $swal-modal-background: $grey-darker;
   align-items: center;
   justify-content: center
 }
+
+.swal-display-description-preview {
+  background-color: $scheme-main;
+  border-radius: 4px;
+  padding: calc(0.5em - 1px) calc(0.75em - 1px) calc(0.5em - 1px) calc(0.75em - 1px);
+
+  &.content {
+    margin-bottom: 0
+  }
+}
