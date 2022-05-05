@@ -967,8 +967,11 @@ self.stats = async (req, res, next) => {
           activeAlbums.push(album.id)
           if (album.download) stats[data.title].Downloadable++
           if (album.public) stats[data.title].Public++
-          if (album.zipGeneratedAt) stats[data.title]['ZIP Generated']++
         }
+
+        await paths.readdir(paths.zips).then(files => {
+          stats[data.title]['ZIP Generated'] = files.length
+        }).catch(() => {})
 
         stats[data.title]['Files in albums'] = await db.table('files')
           .whereIn('albumid', activeAlbums)
