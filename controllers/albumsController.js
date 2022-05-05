@@ -246,16 +246,37 @@ self.disable = async (req, res, next) => {
 
     const ismoderator = perms.is(user, 'moderator')
 
-    const id = req.body.id
+    const id = parseInt(req.body.id)
+    if (isNaN(id)) throw new ClientError('No album specified.')
+
     const purge = req.body.purge
     const del = ismoderator ? req.body.del : false
-    if (!Number.isFinite(id)) throw new ClientError('No album specified.')
+
+    const filter = function () {
+      this.where('id', id)
+
+      if (!ismoderator) {
+        this.andWhere({
+          enabled: 1,
+          userid: user.id
+        })
+      }
+    }
+
+    const album = await db.table('albums')
+      .where(filter)
+      .first()
+
+    if (!album) {
+      throw new ClientError('Could not get album with the specified ID.')
+    }
+    logger.inspect(album)
 
     if (purge) {
       const files = await db.table('files')
         .where({
           albumid: id,
-          userid: user.id
+          userid: album.userid
         })
 
       if (files.length) {
@@ -265,16 +286,6 @@ self.disable = async (req, res, next) => {
       }
       utils.invalidateStatsCache('uploads')
     }
-
-    const filter = {
-      id,
-      userid: user.id
-    }
-    const identifier = await db.table('albums')
-      .select('identifier')
-      .where(filter)
-      .first()
-      .then(row => row.identifier)
 
     if (del) {
       await db.table('albums')
@@ -291,7 +302,7 @@ self.disable = async (req, res, next) => {
     utils.invalidateStatsCache('albums')
 
     try {
-      await paths.unlink(path.join(paths.zips, `${identifier}.zip`))
+      await paths.unlink(path.join(paths.zips, `${album.identifier}.zip`))
     } catch (error) {
       // Re-throw non-ENOENT error
       if (error.code !== 'ENOENT') throw error
