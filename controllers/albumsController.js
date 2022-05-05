@@ -236,6 +236,7 @@ self.create = async (req, res, next) => {
 
 self.delete = async (req, res, next) => {
   // Map /delete requests to /disable route
+  req.body.del = true
   return self.disable(req, res, next)
 }
 
@@ -243,8 +244,11 @@ self.disable = async (req, res, next) => {
   try {
     const user = await utils.authorize(req)
 
+    const ismoderator = perms.is(user, 'moderator')
+
     const id = req.body.id
     const purge = req.body.purge
+    const del = ismoderator ? req.body.del : false
     if (!Number.isFinite(id)) throw new ClientError('No album specified.')
 
     if (purge) {
@@ -262,23 +266,29 @@ self.disable = async (req, res, next) => {
       utils.invalidateStatsCache('uploads')
     }
 
-    await db.table('albums')
-      .where({
-        id,
-        userid: user.id
-      })
-      .update('enabled', 0)
-    utils.invalidateAlbumsCache([id])
-    utils.invalidateStatsCache('albums')
-
+    const filter = {
+      id,
+      userid: user.id
+    }
     const identifier = await db.table('albums')
       .select('identifier')
-      .where({
-        id,
-        userid: user.id
-      })
+      .where(filter)
       .first()
       .then(row => row.identifier)
+
+    if (del) {
+      await db.table('albums')
+        .where(filter)
+        .first()
+        .del()
+    } else {
+      await db.table('albums')
+        .where(filter)
+        .first()
+        .update('enabled', 0)
+    }
+    utils.invalidateAlbumsCache([id])
+    utils.invalidateStatsCache('albums')
 
     try {
       await paths.unlink(path.join(paths.zips, `${identifier}.zip`))

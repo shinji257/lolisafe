@@ -386,6 +386,8 @@ page.domClick = event => {
       return page.editAlbum(id)
     case 'disable-album':
       return page.disableAlbum(id)
+    case 'delete-album':
+      return page.deleteAlbum(id)
     case 'view-album-uploads':
       return page.viewAlbumUploads(id, element)
     // Manage users
@@ -1683,7 +1685,7 @@ page.getAlbums = (params = {}) => {
           </a>
           <a class="button is-small is-dangerish is-outlined" title="Bulk disable (WIP)" data-action="bulk-disable-albums" disabled>
             <span class="icon">
-              <i class="icon-trash"></i>
+              <i class="icon-cancel"></i>
             </span>
             ${!params.all ? '<span>Bulk disable</span>' : ''}
           </a>
@@ -1840,9 +1842,16 @@ page.getAlbums = (params = {}) => {
           </a>
           <a class="button is-small is-dangerish is-outlined" title="Disable album" data-action="disable-album"${enabled ? '' : ' disabled'}>
             <span class="icon is-small">
-              <i class="icon-trash"></i>
+              <i class="icon-cancel"></i>
             </span>
           </a>
+          ${params.all
+            ? `<a class="button is-small is-danger is-outlined" title="Delete album" data-action="delete-album">
+              <span class="icon is-small">
+                <i class="icon-trash"></i>
+              </span>
+            </a>`
+            : ''}
         </td>
       `
 
@@ -2043,7 +2052,63 @@ page.disableAlbum = id => {
         }
       }
 
-      swal('Disabled!', 'Your album has been disabled.', 'success', {
+      swal('Disabled!', 'The album has been disabled.', 'success', {
+        buttons: false,
+        timer: 1500
+      })
+
+      page.getAlbumsSidebar()
+      // Reload albums list
+      // eslint-disable-next-line compat/compat
+      page.getAlbums(Object.assign(page.views[page.currentView], {
+        autoPage: true
+      }))
+    }).catch(page.onAxiosError)
+  })
+}
+
+page.deleteAlbum = id => {
+  swal({
+    title: 'Are you sure?',
+    text: 'You won\'t be able to recover this album!\n' +
+      'This also won\'t delete the uploads associated with the album!',
+    icon: 'warning',
+    dangerMode: true,
+    buttons: {
+      cancel: true,
+      confirm: {
+        text: 'Yes, delete it!',
+        closeModal: false
+      },
+      purge: {
+        text: 'Umm, delete the uploads, please?',
+        value: 'purge',
+        className: 'swal-button--danger',
+        closeModal: false
+      }
+    }
+  }).then(proceed => {
+    if (!proceed) return
+
+    axios.post('api/albums/delete', {
+      id,
+      purge: proceed === 'purge'
+    }).then(response => {
+      if (response.data.success === false) {
+        const failed = Array.isArray(response.data.failed)
+          ? response.data.failed
+          : []
+
+        if (response.data.description === 'No token provided') {
+          return page.verifyToken(page.token)
+        } else if (failed.length) {
+          return swal('An error occurred!', `Unable to delete ${failed.length} of the album's upload${failed.length === 1 ? '' : 's'}.`, 'error')
+        } else {
+          return swal('An error occurred!', response.data.description, 'error')
+        }
+      }
+
+      swal('Disabled!', 'The album has been deleted.', 'success', {
         buttons: false,
         timer: 1500
       })

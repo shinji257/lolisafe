@@ -308,8 +308,6 @@ self.deleteUser = async (req, res, next) => {
       }
     }
 
-    // TODO: Figure out why can't we just just delete the albums from DB
-    // DISCLAIMER: Upstream always had it coded this way for some reason
     const albums = await db.table('albums')
       .where('userid', id)
       .where('enabled', 1)
