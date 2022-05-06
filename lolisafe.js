@@ -18,7 +18,6 @@ const NodeClam = require('clamscan')
 const nunjucks = require('nunjucks')
 const path = require('path')
 const rateLimit = require('express-rate-limit')
-const readline = require('readline')
 const serveStatic = require('@bobbywibowo/serve-static')
 const { accessSync, constants } = require('fs')
 
@@ -407,27 +406,27 @@ safe.use('/api', api)
 
     // NODE_ENV=development yarn start
     if (isDevMode) {
+      const { inspect } = require('util')
       // Add readline interface to allow evaluating arbitrary JavaScript from console
-      readline.createInterface({
-        input: process.stdin,
-        output: process.stdout,
-        prompt: ''
+      require('readline').createInterface({
+        input: process.stdin
       }).on('line', line => {
         try {
           if (line === 'rs') return
           if (line === '.exit') return process.exit(0)
           // eslint-disable-next-line no-eval
-          logger.log(eval(line))
+          const evaled = eval(line)
+          process.stdout.write(`${typeof evaled === 'string' ? evaled : inspect(evaled)}\n`)
         } catch (error) {
-          logger.error(error.toString())
+          process.stderr.write(`${error.stack}\n`)
         }
       }).on('SIGINT', () => {
         process.exit(0)
       })
-      logger.log('!!! DEVELOPMENT MODE !!!')
-      logger.log('- Nunjucks will auto rebuild (not live reload)')
-      logger.log('- Rate limits disabled')
-      logger.log('- Readline interface enabled')
+      logger.log(utils.stripIndents(`!!! DEVELOPMENT MODE !!!
+        [=] Nunjucks will auto rebuild (not live reload)
+        [=] HTTP rate limits disabled
+        [=] Readline interface enabled (eval arbitrary JS input)`))
     }
   } catch (error) {
     logger.error(error)
