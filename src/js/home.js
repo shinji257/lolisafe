@@ -22,6 +22,7 @@ const page = {
   maxSize: null,
   chunkSizeConfig: null,
   temporaryUploadAges: null,
+  defaultTemporaryUploadAge: null,
   fileIdentifierLength: null,
   stripTagsConfig: null,
 
@@ -182,6 +183,7 @@ page.checkIfPublic = () => {
     }
 
     page.temporaryUploadAges = response.data.temporaryUploadAges
+    page.defaultTemporaryUploadAge = response.data.defaultTemporaryUploadAge || null
     page.fileIdentifierLength = response.data.fileIdentifierLength
     page.stripTagsConfig = response.data.stripTags
 
@@ -210,6 +212,13 @@ page.verifyToken = token => {
   return axios.post('api/tokens/verify', { token }).then(response => {
     localStorage[lsKeys.token] = token
     page.token = token
+
+    // If user has its own retention periods array, override defaults
+    if (Array.isArray(response.data.retentionPeriods)) {
+      page.temporaryUploadAges = response.data.retentionPeriods
+      page.defaultTemporaryUploadAge = response.data.defaultRetentionPeriod
+    }
+
     return page.prepareUpload()
   }).catch(error => {
     return swal({
@@ -917,11 +926,14 @@ page.prepareUploadConfig = () => {
   }
 
   if (temporaryUploadAges) {
+    const _default = page.defaultTemporaryUploadAge === null
+      ? page.temporaryUploadAges[0]
+      : page.defaultTemporaryUploadAge
     const stored = parseFloat(localStorage[lsKeys.uploadAge])
     for (let i = 0; i < page.temporaryUploadAges.length; i++) {
       const age = page.temporaryUploadAges[i]
       config.uploadAge.select.push({
-        value: i === 0 ? 'default' : String(age),
+        value: age === _default ? 'default' : String(age),
         text: page.getPrettyUploadAge(age)
       })
       if (age === stored) {

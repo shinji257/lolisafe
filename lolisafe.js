@@ -372,10 +372,8 @@ safe.use('/api', api)
       }
     }
 
-    // Temporary uploads (only check for expired uploads if config.uploads.temporaryUploadsInterval is also set)
-    if (Array.isArray(config.uploads.temporaryUploadAges) &&
-      config.uploads.temporaryUploadAges.length &&
-      config.uploads.temporaryUploadsInterval) {
+    // Initiate internal periodical check ups of temporary uploads if required
+    if (utils.retentions && utils.retentions.enabled && config.uploads.temporaryUploadsInterval > 0) {
       let temporaryUploadsInProgress = false
       const temporaryUploadCheck = async () => {
         if (temporaryUploadsInProgress) return

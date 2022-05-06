@@ -59,6 +59,15 @@ self.verify = async (req, res, next) => {
       permissions: perms.mapPermissions(user)
     }
 
+    const group = perms.group(user)
+    if (group) {
+      obj.group = group
+      if (utils.retentions.enabled) {
+        obj.retentionPeriods = utils.retentions.periods[group]
+        obj.defaultRetentionPeriod = utils.retentions.default[group]
+      }
+    }
+
     if (utils.clientVersion) {
       obj.version = utils.clientVersion
     }

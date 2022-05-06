@@ -52,7 +52,13 @@ const self = {
   ffprobe: promisify(ffmpeg.ffprobe),
 
   albumsCache: {},
-  timezoneOffset: new Date().getTimezoneOffset()
+  timezoneOffset: new Date().getTimezoneOffset(),
+
+  retentions: {
+    enabled: false,
+    periods: {},
+    default: {}
+  }
 }
 
 // Remember old renderer, if overridden, or proxy to default renderer
@@ -69,6 +75,75 @@ self.md.instance.renderer.rules.link_open = function (tokens, idx, options, env,
     tokens[idx].attrs[aIndex][1] = '_blank'
   }
   return self.md.defaultRenderers.link_open(tokens, idx, options, env, that)
+}
+
+if (typeof config.uploads.retentionPeriods === 'object' &&
+Object.keys(config.uploads.retentionPeriods).length) {
+  // Build a temporary index of group values
+  const _retentionPeriods = Object.assign({}, config.uploads.retentionPeriods)
+  const _groups = { _: -1 }
+  Object.assign(_groups, perms.permissions)
+
+  // Sanitize config values
+  const names = Object.keys(_groups)
+  for (const name of names) {
+    if (Array.isArray(_retentionPeriods[name]) && _retentionPeriods[name].length) {
+      _retentionPeriods[name] = _retentionPeriods[name]
+        .filter((v, i, a) => (Number.isFinite(v) && v >= 0) || v === null)
+    } else {
+      _retentionPeriods[name] = []
+    }
+  }
+
+  if (!_retentionPeriods._.length && !config.private) {
+    logger.error('Guests\' retention periods are missing, yet this installation is not set to private.')
+    process.exit(1)
+  }
+
+  // Create sorted array of group names based on their values
+  const _sorted = Object.keys(_groups)
+    .sort((a, b) => _groups[a] - _groups[b])
+
+  // Build retention periods array for each groups
+  for (let i = 0; i < _sorted.length; i++) {
+    const current = _sorted[i]
+    const _periods = [..._retentionPeriods[current]]
+    self.retentions.default[current] = _periods.length ? _periods[0] : null
+
+    if (i > 0) {
+      // Inherit retention periods of lower-valued groups
+      for (let j = i - 1; j >= 0; j--) {
+        const lower = _sorted[j]
+        if (_groups[lower] < _groups[current]) {
+          _periods.unshift(..._retentionPeriods[lower])
+          if (self.retentions.default[current] === null) {
+            self.retentions.default[current] = self.retentions.default[lower]
+          }
+        }
+      }
+    }
+
+    self.retentions.periods[current] = _periods
+      .filter((v, i, a) => v !== null && a.indexOf(v) === i) // re-sanitize & uniquify
+      .sort((a, b) => a - b) // sort from lowest to highest (zero/permanent will always be first)
+
+    // Mark the feature as enabled, if at least one group was configured
+    if (self.retentions.periods[current].length) {
+      self.retentions.enabled = true
+    }
+  }
+} else if (Array.isArray(config.uploads.temporaryUploadAges) &&
+config.uploads.temporaryUploadAges.length) {
+  self.retentions.periods._ = config.uploads.temporaryUploadAges
+    .filter((v, i, a) => Number.isFinite(v) && v >= 0)
+  self.retentions.default._ = self.retentions.periods._[0]
+
+  for (const name of Object.keys(perms.permissions)) {
+    self.retentions.periods[name] = self.retentions.periods._
+    self.retentions.default[name] = self.retentions.default._
+  }
+
+  self.retentions.enabled = true
 }
 
 const statsData = {

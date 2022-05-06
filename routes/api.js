@@ -12,11 +12,16 @@ routes.get('/check', (req, res, next) => {
     enableUserAccounts: config.enableUserAccounts,
     maxSize: config.uploads.maxSize,
     chunkSize: config.uploads.chunkSize,
-    temporaryUploadAges: config.uploads.temporaryUploadAges,
     fileIdentifierLength: config.uploads.fileIdentifierLength,
     stripTags: config.uploads.stripTags
   }
-  if (utilsController.clientVersion) obj.version = utilsController.clientVersion
+  if (utilsController.retentions.enabled && utilsController.retentions.periods._) {
+    obj.temporaryUploadAges = utilsController.retentions.periods._
+    obj.defaultTemporaryUploadAge = utilsController.retentions.default._
+  }
+  if (utilsController.clientVersion) {
+    obj.version = utilsController.clientVersion
+  }
   return res.json(obj)
 })
 

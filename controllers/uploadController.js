@@ -48,8 +48,6 @@ const extensionsFilter = Array.isArray(config.extensionsFilter) &&
   config.extensionsFilter.length
 const urlExtensionsFilter = Array.isArray(config.uploads.urlExtensionsFilter) &&
   config.uploads.urlExtensionsFilter.length
-const temporaryUploads = Array.isArray(config.uploads.temporaryUploadAges) &&
-  config.uploads.temporaryUploadAges.length
 
 /** Chunks helper class & function **/
 
@@ -244,17 +242,29 @@ self.getUniqueRandomName = async (length, extension) => {
   throw new ServerError('Failed to allocate a unique name for the upload. Try again?')
 }
 
-self.parseUploadAge = age => {
-  if (age === undefined || age === null) {
-    return config.uploads.temporaryUploadAges[0]
+self.assertRetentionPeriod = (user, age) => {
+  if (!utils.retentions.enabled) return null
+
+  const group = user ? perms.group(user) : '_'
+  if (!group || !utils.retentions.periods[group]) {
+    throw new ClientError('You are not eligible for any file retention periods.', { statusCode: 403 })
   }
 
-  const parsed = parseFloat(age)
-  if (config.uploads.temporaryUploadAges.includes(parsed)) {
-    return parsed
+  let parsed = null
+  if (age === undefined || age === null) {
+    parsed = utils.retentions.default[group]
   } else {
-    return null
+    parsed = parseFloat(age)
+    if (!utils.retentions.periods[group].includes(parsed)) {
+      throw new ClientError('You are not eligible for the specified file retention period.', { statusCode: 403 })
+    }
   }
+
+  if (!parsed && !utils.retentions.periods[group].includes(0)) {
+    throw new ClientError('Permanent uploads are not permitted.', { statusCode: 403 })
+  }
+
+  return parsed
 }
 
 self.parseStripTags = stripTags => {
@@ -287,13 +297,7 @@ self.upload = async (req, res, next) => {
     let albumid = parseInt(req.headers.albumid || req.params.albumid)
     if (isNaN(albumid)) albumid = null
 
-    let age = null
-    if (temporaryUploads) {
-      age = self.parseUploadAge(req.headers.age)
-      if (!age && !config.uploads.temporaryUploadAges.includes(0)) {
-        throw new ClientError('Permanent uploads are not permitted.', { statusCode: 403 })
-      }
-    }
+    const age = self.assertRetentionPeriod(user, req.headers.age)
 
     const func = req.body.urls ? self.actuallyUploadUrls : self.actuallyUploadFiles
     await func(req, res, user, albumid, age)
@@ -539,12 +543,7 @@ self.actuallyFinishChunks = async (req, res, user) => {
         throw new ClientError(`${file.extname ? `${file.extname.substr(1).toUpperCase()} files` : 'Files with no extension'} are not permitted.`)
       }
 
-      if (temporaryUploads) {
-        file.age = self.parseUploadAge(file.age)
-        if (!file.age && !config.uploads.temporaryUploadAges.includes(0)) {
-          throw new ClientError('Permanent uploads are not permitted.')
-        }
-      }
+      file.age = self.assertRetentionPeriod(user, file.age)
 
       file.size = chunksData[file.uuid].stream.bytesWritten
       if (config.filterEmptyFile && file.size === 0) {
@@ -1455,7 +1454,7 @@ self.list = async (req, res, next) => {
     else if (offset < 0) offset = Math.max(0, Math.ceil(count / 25) + offset)
 
     const columns = ['id', 'name', 'original', 'userid', 'size', 'timestamp']
-    if (temporaryUploads) columns.push('expirydate')
+    if (utils.retentions.enabled) columns.push('expirydate')
     if (!all ||
       filterObj.queries.albumid ||
       filterObj.queries.exclude.albumid ||
