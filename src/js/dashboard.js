@@ -790,9 +790,9 @@ page.getUploads = (params = {}) => {
           <div class="details">
             <p class="name" title="${upload.file}">${upload.name}</p>
             ${showOriginalNames ? `<p class="originalname" title="${upload.original}">${upload.original}</p>` : ''}
-            <p class="prettybytes">${upload.appendix ? `<span>${upload.appendix}</span> – ` : ''}${upload.prettyBytes}</p>
+            <p class="prettybytes" data-bytes="${upload.size}">${upload.appendix ? `<span>${upload.appendix}</span> – ` : ''}${upload.prettyBytes}</p>
             ${hasExpiryDateColumn && upload.prettyExpiryDate
-              ? `<p class="prettyexpirydate">EXP: ${upload.prettyExpiryDate}</p>`
+              ? `<p class="prettyexpirydate"${upload.expirydate ? ` data-timestamp="${upload.expirydate}"` : ''}>EXP: ${upload.prettyExpiryDate}</p>`
               : ''}
           </div>
         `
@@ -843,10 +843,10 @@ page.getUploads = (params = {}) => {
           ${showOriginalNames ? `<th class="originalname" title="${upload.original}">${upload.original}</th>` : ''}
           ${typeof params.album === 'undefined' ? `<th class="appendix">${upload.appendix}</th>` : ''}
           ${allAlbums ? `<th class="album">${upload.albumid ? (albums[upload.albumid] || '') : ''}</th>` : ''}
-          <td class="prettybytes">${upload.prettyBytes}</td>
+          <td class="prettybytes" data-bytes="${upload.size}">${upload.prettyBytes}</td>
           ${params.all ? `<td class="ip">${upload.ip || ''}</td>` : ''}
-          <td class="prettydate">${upload.prettyDate}</td>
-          ${hasExpiryDateColumn ? `<td class="prettyexpirydate">${upload.prettyExpiryDate || '-'}</td>` : ''}
+          <td class="prettydate" data-timestamp="${upload.timestamp}">${upload.prettyDate}</td>
+          ${hasExpiryDateColumn ? `<td class="prettyexpirydate"${upload.expirydate ? ` data-timestamp="${upload.expirydate}"` : ''}>${upload.prettyExpiryDate || '-'}</td>` : ''}
           <td class="controls has-text-right">
             <a class="button is-small is-primary is-outlined" title="${upload.previewable ? 'Display preview' : 'File can\'t be previewed'}" data-action="display-preview"${upload.previewable ? '' : ' disabled'}>
               <span class="icon">
@@ -1814,10 +1814,10 @@ page.getAlbums = (params = {}) => {
         <th${enabled ? '' : ' class="has-text-grey"'}>${album.name}</td>
         ${params.all ? `<th>${album.userid ? (users[album.userid] || '') : ''}</th>` : ''}
         <th>${album.uploads}</th>
-        <td>${page.getPrettyBytes(album.size)}</td>
-        <td>${album.prettyDate}</td>
-        <td>${album.hasZip ? page.getPrettyBytes(album.zipSize) : '-'}</td>
-        <td${album.isZipExpired ? ' class="has-text-warning" title="This album has been modified since the last time its ZIP was generated."' : ''}>${album.hasZip ? album.prettyZipDate : '-'}</td$>
+        <td data-bytes="${album.size}">${page.getPrettyBytes(album.size)}</td>
+        <td data-timestamp="${album.timestamp}">${album.prettyDate}</td>
+        <td${album.hasZip ? ` data-bytes="${album.zipSize}"` : ''}>${album.hasZip ? page.getPrettyBytes(album.zipSize) : '-'}</td>
+        <td${album.hasZip ? ` data-timestamp="${album.zipGeneratedAt}"` : ''}${album.isZipExpired ? ' class="has-text-warning" title="This album has been modified since the last time its ZIP was generated."' : ''}>${album.hasZip ? album.prettyZipDate : '-'}</td$>
         <td><a ${enabled && album.public ? '' : 'class="is-linethrough" '}href="${albumUrl}" target="_blank">${albumUrlText}</a></td>
         <td class="has-text-right" data-id="${album.id}">
           <a class="button is-small is-primary is-outlined" title="Edit album" data-action="edit-album">

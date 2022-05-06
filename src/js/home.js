@@ -717,6 +717,7 @@ page.updateTemplate = (file, response) => {
 
   if (response.expirydate) {
     const expiryDate = file.previewElement.querySelector('.expiry-date')
+    expiryDate.dataset.timestamp = response.expirydate
     expiryDate.innerHTML = `EXP: ${page.getPrettyDate(new Date(response.expirydate * 1000))}`
     expiryDate.classList.remove('is-hidden')
   }
