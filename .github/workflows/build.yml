@@ -10,6 +10,9 @@ on:
       - 'src/**/*.scss'
       - 'src/versions.json'
 
+env:
+  NODE_VERSION: 16
+
 jobs:
   build:
     name: Rebuild client assets and bump v1 version string
@@ -20,11 +23,18 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '16.x'
-          cache: 'yarn'
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Cache node_modules
+        uses: actions/cache@v2
+        id: cache-nodemodules
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-${{ env.NODE_VERSION }}-nodemodules-${{ hashFiles('**/yarn.lock') }}
 
       - name: Install dependencies
-        run: yarn install
+        if: steps.cache-nodemodules.outputs.cache-hit != 'true'
+        run: yarn install --frozen-lockfile --non-interactive
 
       - name: Update browserslist/caniuse-lite
         run: npx browserslist@latest --update-db
