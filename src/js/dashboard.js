@@ -158,7 +158,7 @@ page.onAxiosError = error => {
 }
 
 page.preparePage = () => {
-  if (page.token) page.verifyToken(page.token, true)
+  if (page.token) page.verifyToken(page.token)
   else window.location = 'auth'
 }
 
@@ -182,20 +182,8 @@ page.checkClientVersion = apiVersion => {
   }
 }
 
-page.verifyToken = (token, reloadOnError) => {
+page.verifyToken = token => {
   axios.post('api/tokens/verify', { token }).then(response => {
-    if (response.data.success === false) {
-      return swal({
-        title: 'An error occurred!',
-        text: response.data.description,
-        icon: 'error'
-      }).then(() => {
-        if (!reloadOnError) return
-        localStorage.removeItem(lsKeys.token)
-        window.location = 'auth'
-      })
-    }
-
     axios.defaults.headers.common.token = token
     localStorage[lsKeys.token] = token
 
@@ -207,7 +195,18 @@ page.verifyToken = (token, reloadOnError) => {
     page.username = response.data.username
     page.permissions = response.data.permissions
     page.prepareDashboard()
-  }).catch(page.onAxiosError)
+  }).catch(error => {
+    return swal({
+      title: 'An error occurred!',
+      text: error.response.data ? error.response.data.description : error.toString(),
+      icon: 'error'
+    }).then(() => {
+      if (error.response.data && error.response.data.code === 10001) {
+        localStorage.removeItem(lsKeys.token)
+        window.location = 'auth'
+      }
+    })
+  })
 }
 
 page.prepareDashboard = () => {

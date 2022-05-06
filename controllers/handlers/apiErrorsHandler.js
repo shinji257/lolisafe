@@ -21,12 +21,22 @@ module.exports = (error, req, res, next) => {
     ? error.statusCode
     : 500
 
+  const json = {}
+
   const description = (isClientError || isServerError)
     ? error.message
     : 'An unexpected error occurred. Try again?'
-
   if (description) {
-    return res.status(statusCode).json({ success: false, description })
+    json.description = description
+  }
+
+  if ((isClientError || isServerError) && error.code) {
+    json.code = error.code
+  }
+
+  if (Object.keys(json).length) {
+    json.success = false
+    return res.status(statusCode).json(json)
   } else {
     return res.status(statusCode).end()
   }

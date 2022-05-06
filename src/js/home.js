@@ -81,6 +81,7 @@ page.onInitError = error => {
     window.location.reload()
   })
 
+  if (!error) return
   if (error.response) page.onAxiosError(error)
   else page.onError(error)
 }
@@ -189,42 +190,41 @@ page.checkIfPublic = () => {
 }
 
 page.preparePage = () => {
-  if (page.private) {
-    if (page.token) {
-      return page.verifyToken(page.token, true)
+  if (page.token) {
+    return page.verifyToken(page.token)
+  } else if (page.private) {
+    const button = document.querySelector('#loginToUpload')
+    button.href = 'auth'
+    button.classList.remove('is-loading')
+    if (page.enableUserAccounts) {
+      button.innerText = 'Anonymous upload is disabled.\nLog in or register to upload.'
     } else {
-      const button = document.querySelector('#loginToUpload')
-      button.href = 'auth'
-      button.classList.remove('is-loading')
-      if (page.enableUserAccounts) {
-        button.innerText = 'Anonymous upload is disabled.\nLog in or register to upload.'
-      } else {
-        button.innerText = 'Running in private mode.\nLog in to upload.'
-      }
+      button.innerText = 'Running in private mode.\nLog in to upload.'
     }
   } else {
     return page.prepareUpload()
   }
 }
 
-page.verifyToken = (token, reloadOnError) => {
+page.verifyToken = token => {
   return axios.post('api/tokens/verify', { token }).then(response => {
-    if (response.data.success === false) {
-      return swal({
-        title: 'An error occurred!',
-        text: response.data.description,
-        icon: 'error'
-      }).then(() => {
-        if (!reloadOnError) return
-        localStorage.removeItem('token')
-        window.location.reload()
-      })
-    }
-
     localStorage[lsKeys.token] = token
     page.token = token
     return page.prepareUpload()
-  }).catch(page.onInitError)
+  }).catch(error => {
+    return swal({
+      title: 'An error occurred!',
+      text: error.response.data ? error.response.data.description : error.toString(),
+      icon: 'error'
+    }).then(() => {
+      if (error.response.data && error.response.data.code === 10001) {
+        localStorage.removeItem(lsKeys.token)
+        window.location.reload()
+      } else {
+        page.onInitError()
+      }
+    })
+  })
 }
 
 page.prepareUpload = () => {
