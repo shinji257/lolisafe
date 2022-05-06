@@ -382,15 +382,22 @@ safe.use('/api', api)
 
         temporaryUploadsInProgress = true
         try {
-          const result = await utils.bulkDeleteExpired()
+          const result = await utils.bulkDeleteExpired(false, isDevMode)
 
-          if (result.expired.length) {
-            let logMessage = `Expired uploads: ${result.expired.length} deleted`
-            if (result.failed.length) {
-              logMessage += `, ${result.failed.length} errored`
+          if (result.expired.length || result.failed.length) {
+            if (isDevMode) {
+              let logMessage = `Expired uploads (${result.expired.length}): ${result.expired.map(file => file.name).join(', ')}`
+              if (result.failed.length) {
+                logMessage += `\nErrored (${result.failed.length}): ${result.failed.map(file => file.name).join(', ')}`
+              }
+              logger.debug(logMessage)
+            } else {
+              let logMessage = `Expired uploads: ${result.expired.length} deleted`
+              if (result.failed.length) {
+                logMessage += `, ${result.failed.length} errored`
+              }
+              logger.log(logMessage)
             }
-
-            logger.log(logMessage)
           }
         } catch (error) {
           // Simply print-out errors, then continue

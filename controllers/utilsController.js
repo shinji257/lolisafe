@@ -669,8 +669,11 @@ self.bulkDeleteExpired = async (dryrun, verbose) => {
     const field = fields[0]
     const values = result.expired.slice().map(row => row[field])
     result.failed = await self.bulkDeleteFromDb(field, values, sudo)
+    if (verbose && result.failed.length) {
+      result.failed = result.failed
+        .map(failed => result.expired.find(file => file[fields[0]] === failed))
+    }
   }
-
   return result
 }
 
