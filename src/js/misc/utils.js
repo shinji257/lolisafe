@@ -2,6 +2,7 @@
 
 // keys for localStorage
 lsKeys.siBytes = 'siBytes'
+lsKeys.ampmTime = 'ampmTime'
 
 page.prepareShareX = () => {
   const sharexElement = document.querySelector('#ShareX')
@@ -46,17 +47,19 @@ page.prepareShareX = () => {
 }
 
 page.getPrettyDate = date => {
+  // Not using .toLocaleString() for date display to maintain a global standard,
+  // but its AM/PM logic is perfect for our use case as long as it's fixed to "en" locale.
   return date.getFullYear() + '/' +
     (date.getMonth() < 9 ? '0' : '') + // month's index starts from zero
     (date.getMonth() + 1) + '/' +
     (date.getDate() < 10 ? '0' : '') +
     date.getDate() + ' ' +
-    (date.getHours() < 10 ? '0' : '') +
-    date.getHours() + ':' +
-    (date.getMinutes() < 10 ? '0' : '') +
-    date.getMinutes() + ':' +
-    (date.getSeconds() < 10 ? '0' : '') +
-    date.getSeconds()
+    date.toLocaleString('en', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: localStorage[lsKeys.ampmTime] === '1'
+    })
 }
 
 page.getPrettyBytes = num => {

@@ -821,6 +821,15 @@ page.prepareUploadConfig = () => {
       help: 'This will be used in our homepage, dashboard, and album public pages.',
       valueHandler () {} // Do nothing
     },
+    ampmTime: {
+      label: 'Show AM/PM on date',
+      select: [
+        { value: 'default', text: 'No' },
+        { value: '1', text: 'Yes' }
+      ],
+      help: 'This will be used in our homepage and dashboard.',
+      valueHandler () {} // Do nothing
+    },
     fileLength: {
       display: fileIdentifierLength,
       label: 'File identifier length',
