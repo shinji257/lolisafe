@@ -250,14 +250,11 @@ self.assertRetentionPeriod = (user, age) => {
     throw new ClientError('You are not eligible for any file retention periods.', { statusCode: 403 })
   }
 
-  let parsed = null
-  if (age === undefined || age === null) {
+  let parsed = parseFloat(age)
+  if (Number.isNaN(parsed) || age < 0) {
     parsed = utils.retentions.default[group]
-  } else {
-    parsed = parseFloat(age)
-    if (!utils.retentions.periods[group].includes(parsed)) {
-      throw new ClientError('You are not eligible for the specified file retention period.', { statusCode: 403 })
-    }
+  } else if (!utils.retentions.periods[group].includes(parsed)) {
+    throw new ClientError('You are not eligible for the specified file retention period.', { statusCode: 403 })
   }
 
   if (!parsed && !utils.retentions.periods[group].includes(0)) {
