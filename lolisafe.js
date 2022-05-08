@@ -18,7 +18,6 @@ const NodeClam = require('clamscan')
 const nunjucks = require('nunjucks')
 const path = require('path')
 const rateLimit = require('express-rate-limit')
-const serveStatic = require('@bobbywibowo/serve-static')
 const { accessSync, constants } = require('fs')
 
 // Check required config files
@@ -158,7 +157,7 @@ const initServeStaticUploads = (opts = {}) => {
     // serveStatic is provided with @bobbywibowo/serve-static, a fork of express/serve-static.
     // The fork allows specifying an async setHeaders function by the name preSetHeaders.
     // It will await the said function before creating 'send' stream to client.
-    safe.use('/', serveStatic(paths.uploads, opts))
+    safe.use('/', require('@bobbywibowo/serve-static')(paths.uploads, opts))
   } else {
     safe.use('/', express.static(paths.uploads, opts))
   }
