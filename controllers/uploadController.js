@@ -442,13 +442,15 @@ self.actuallyUploadUrls = async (req, res, user, albumid, age) => {
         throw new ServerError(`${fetchFile.status} ${fetchFile.statusText}`)
       }
 
+      const contentType = fetchFile.headers.get('content-type')
+
       infoMap.push({
         path: destination,
         data: {
           filename: name,
           originalname: original,
           extname,
-          mimetype: fetchFile.headers.get('content-type').split(';')[0] || '',
+          mimetype: contentType ? contentType.split(';')[0] : '',
           size: outStream.bytesWritten,
           hash: hash.digest('hex'),
           albumid,
