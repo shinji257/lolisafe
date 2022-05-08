@@ -30,7 +30,8 @@ const fileIdentifierLengthChangeable = !config.uploads.fileIdentifierLength.forc
 
 const maxSize = parseInt(config.uploads.maxSize)
 const maxSizeBytes = maxSize * 1e6
-const urlMaxSizeBytes = parseInt(config.uploads.urlMaxSize) * 1e6
+const urlMaxSize = parseInt(config.uploads.urlMaxSize)
+const urlMaxSizeBytes = urlMaxSize * 1e6
 
 const maxFilesPerUpload = 20
 
@@ -382,6 +383,18 @@ self.actuallyUploadUrls = async (req, res, user, albumid, age) => {
     throw new ClientError(`Maximum ${maxFilesPerUpload} URLs at a time.`)
   }
 
+  const assertSize = (size, isContentLength = false) => {
+    if (config.filterEmptyFile && size === 0) {
+      throw new ClientError('Empty files are not allowed.')
+    } else if (size > urlMaxSizeBytes) {
+      if (isContentLength) {
+        throw new ClientError(`File too large. Content-Length header reports file is bigger than ${urlMaxSize} MB.`)
+      } else {
+        throw new ClientError(`File too large. File is bigger than ${urlMaxSize} MB.`)
+      }
+    }
+  }
+
   const downloaded = []
   const infoMap = []
   try {
@@ -419,8 +432,25 @@ self.actuallyUploadUrls = async (req, res, user, albumid, age) => {
       // Push to array early, so regardless of its progress it will be deleted on errors
       downloaded.push(destination)
 
+      // Try to determine size early via Content-Length header,
+      // but continue anyway if it isn't a valid number
+      try {
+        const head = await fetch(url, { method: 'HEAD', size: urlMaxSizeBytes })
+        if (head.status === 200) {
+          const contentLength = parseInt(head.headers.get('content-length'))
+          if (!Number.isNaN(contentLength)) {
+            assertSize(contentLength, true)
+          }
+        }
+      } catch (ex) {
+        // Re-throw only if ClientError, otherwise ignore
+        if (ex instanceof ClientError) {
+          throw ex
+        }
+      }
+
       // Limit max response body size with maximum allowed size
-      const fetchFile = await fetch(url, { size: urlMaxSizeBytes })
+      const fetchFile = await fetch(url, { method: 'GET', size: urlMaxSizeBytes })
         .then(res => new Promise((resolve, reject) => {
           if (res.status === 200) {
             const onerror = error => {
@@ -443,6 +473,8 @@ self.actuallyUploadUrls = async (req, res, user, albumid, age) => {
       }
 
       const contentType = fetchFile.headers.get('content-type')
+      // Re-test size via actual bytes written to physical file
+      assertSize(outStream.bytesWritten)
 
       infoMap.push({
         path: destination,
