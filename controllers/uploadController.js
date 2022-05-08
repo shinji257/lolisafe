@@ -399,96 +399,109 @@ self.actuallyUploadUrls = async (req, res, user, albumid, age) => {
   const infoMap = []
   try {
     await Promise.all(urls.map(async url => {
-      const original = path.basename(url).split(/[?#]/)[0]
-      const extname = utils.extname(original)
-
-      // Extensions filter
-      let filtered = false
-      if (urlExtensionsFilter && ['blacklist', 'whitelist'].includes(config.uploads.urlExtensionsFilterMode)) {
-        const match = config.uploads.urlExtensionsFilter.includes(extname.toLowerCase())
-        const whitelist = config.uploads.urlExtensionsFilterMode === 'whitelist'
-        filtered = ((!whitelist && match) || (whitelist && !match))
-      } else {
-        filtered = self.isExtensionFiltered(extname)
-      }
-
-      if (filtered) {
-        throw new ClientError(`${extname ? `${extname.substr(1).toUpperCase()} files` : 'Files with no extension'} are not permitted.`)
-      }
-
-      if (config.uploads.urlProxy) {
-        url = config.uploads.urlProxy
-          .replace(/{url}/g, encodeURIComponent(url))
-          .replace(/{url-noprot}/g, encodeURIComponent(url.replace(/^https?:\/\//, '')))
-      }
-
-      const length = self.parseFileIdentifierLength(req.headers.filelength)
-      const name = await self.getUniqueRandomName(length, extname)
-
-      const destination = path.join(paths.uploads, name)
-      const outStream = fs.createWriteStream(destination)
-      const hash = blake3.createHash()
-
-      // Push to array early, so regardless of its progress it will be deleted on errors
-      downloaded.push(destination)
-
-      // Try to determine size early via Content-Length header,
-      // but continue anyway if it isn't a valid number
+      let outStream
+      let hasher
       try {
-        const head = await fetch(url, { method: 'HEAD', size: urlMaxSizeBytes })
-        if (head.status === 200) {
-          const contentLength = parseInt(head.headers.get('content-length'))
-          if (!Number.isNaN(contentLength)) {
-            assertSize(contentLength, true)
-          }
-        }
-      } catch (ex) {
-        // Re-throw only if ClientError, otherwise ignore
-        if (ex instanceof ClientError) {
-          throw ex
-        }
-      }
+        const original = path.basename(url).split(/[?#]/)[0]
+        const extname = utils.extname(original)
 
-      // Limit max response body size with maximum allowed size
-      const fetchFile = await fetch(url, { method: 'GET', size: urlMaxSizeBytes })
-        .then(res => new Promise((resolve, reject) => {
-          if (res.status === 200) {
-            const onerror = error => {
-              hash.dispose()
-              reject(error)
+        // Extensions filter
+        let filtered = false
+        if (urlExtensionsFilter && ['blacklist', 'whitelist'].includes(config.uploads.urlExtensionsFilterMode)) {
+          const match = config.uploads.urlExtensionsFilter.includes(extname.toLowerCase())
+          const whitelist = config.uploads.urlExtensionsFilterMode === 'whitelist'
+          filtered = ((!whitelist && match) || (whitelist && !match))
+        } else {
+          filtered = self.isExtensionFiltered(extname)
+        }
+
+        if (filtered) {
+          throw new ClientError(`${extname ? `${extname.substr(1).toUpperCase()} files` : 'Files with no extension'} are not permitted.`)
+        }
+
+        if (config.uploads.urlProxy) {
+          url = config.uploads.urlProxy
+            .replace(/{url}/g, encodeURIComponent(url))
+            .replace(/{url-noprot}/g, encodeURIComponent(url.replace(/^https?:\/\//, '')))
+        }
+
+        // Try to determine size early via Content-Length header,
+        // but continue anyway if it isn't a valid number
+        try {
+          const head = await fetch(url, { method: 'HEAD', size: urlMaxSizeBytes })
+          if (head.status === 200) {
+            const contentLength = parseInt(head.headers.get('content-length'))
+            if (!Number.isNaN(contentLength)) {
+              assertSize(contentLength, true)
             }
-            outStream.on('error', onerror)
-            res.body.on('error', onerror)
-            res.body.on('data', d => hash.update(d))
-
-            res.body.pipe(outStream)
-            outStream.on('finish', () => resolve(res))
-          } else {
-            resolve(res)
           }
-        }))
-
-      if (fetchFile.status !== 200) {
-        throw new ServerError(`${fetchFile.status} ${fetchFile.statusText}`)
-      }
-
-      const contentType = fetchFile.headers.get('content-type')
-      // Re-test size via actual bytes written to physical file
-      assertSize(outStream.bytesWritten)
-
-      infoMap.push({
-        path: destination,
-        data: {
-          filename: name,
-          originalname: original,
-          extname,
-          mimetype: contentType ? contentType.split(';')[0] : '',
-          size: outStream.bytesWritten,
-          hash: hash.digest('hex'),
-          albumid,
-          age
+        } catch (ex) {
+          // Re-throw only if ClientError, otherwise ignore
+          if (ex instanceof ClientError) {
+            throw ex
+          }
         }
-      })
+
+        const length = self.parseFileIdentifierLength(req.headers.filelength)
+        const name = await self.getUniqueRandomName(length, extname)
+
+        const destination = path.join(paths.uploads, name)
+        outStream = fs.createWriteStream(destination)
+        hasher = blake3.createHash()
+
+        // Push to array early, so regardless of its progress it will be deleted on errors
+        downloaded.push(destination)
+
+        // Limit max response body size with maximum allowed size
+        const fetchFile = await fetch(url, { method: 'GET', size: urlMaxSizeBytes })
+          .then(res => new Promise((resolve, reject) => {
+            if (res.status === 200) {
+              outStream.on('error', reject)
+              res.body.on('error', reject)
+              res.body.on('data', d => hasher.update(d))
+
+              res.body.pipe(outStream)
+              outStream.on('finish', () => resolve(res))
+            } else {
+              resolve(res)
+            }
+          }))
+
+        if (fetchFile.status !== 200) {
+          throw new ServerError(`${fetchFile.status} ${fetchFile.statusText}`)
+        }
+
+        const contentType = fetchFile.headers.get('content-type')
+        // Re-test size via actual bytes written to physical file
+        assertSize(outStream.bytesWritten)
+
+        infoMap.push({
+          path: destination,
+          data: {
+            filename: name,
+            originalname: original,
+            extname,
+            mimetype: contentType ? contentType.split(';')[0] : '',
+            size: outStream.bytesWritten,
+            hash: hasher.digest('hex'),
+            albumid,
+            age
+          }
+        })
+      } catch (err) {
+        // Dispose of unfinished write & hasher streams
+        if (outStream && !outStream.destroyed) {
+          outStream.destroy()
+        }
+        try {
+          if (hasher) {
+            hasher.dispose()
+          }
+        } catch (_) {}
+
+        // Re-throw errors
+        throw err
+      }
     }))
 
     // If no errors encountered, clear cache of downloaded files
@@ -646,7 +659,7 @@ self.actuallyFinishChunks = async (req, res, user) => {
 }
 
 self.cleanUpChunks = async uuid => {
-  // Dispose unfinished write & hasher streams
+  // Dispose of unfinished write & hasher streams
   if (chunksData[uuid].stream && !chunksData[uuid].stream.destroyed) {
     chunksData[uuid].stream.destroy()
   }
