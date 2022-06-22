@@ -39,6 +39,10 @@ jobs:
       - name: Update browserslist/caniuse-lite
         run: npx browserslist@latest --update-db
 
+      - name: Install sass-embedded
+        if: steps.cache-nodemodules.outputs.cache-hit != 'true'
+        run: yarn add --pure-lockfile --non-interactive --dev sass-embedded && git restore package.json
+
       - name: yarn build
         run: yarn build
 
