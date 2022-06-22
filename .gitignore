@@ -44,9 +44,8 @@ package-lock.json
 /config.js
 /views/_globals.njk
 
-# Database
-/database/db
-/database/db-*
+# Database directory
+/database
 
 # Uploads directory
 /uploads
