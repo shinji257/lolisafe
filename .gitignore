@@ -62,8 +62,6 @@ package-lock.json
 .node-version
 .nvmrc
 !.gitkeep
-/start.json
-/migrate.js
 
 # User directories (renders)
 /public/render/**/original

@@ -1,4 +1,4 @@
-const init = async db => {
+const initDatabase = async db => {
   // Create the tables we need to store galleries and files
   await db.schema.hasTable('albums').then(exists => {
     if (!exists) {
@@ -63,10 +63,10 @@ const init = async db => {
       password: hash,
       token: require('randomstring').generate(64),
       timestamp,
-      permission: require('./../controllers/permissionController').permissions.superadmin,
+      permission: require('./../permissionController').permissions.superadmin,
       registration: timestamp
     })
   }
 }
 
-module.exports = init
+module.exports = initDatabase
