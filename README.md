@@ -49,8 +49,8 @@ During development, the rebuilt files will be saved in `dist-dev` directory inst
 
 Once you feel like your modifications are ready for production usage, you can then run `yarn build` to build production-ready files that will actually go to `dist` directory.
 
-> If you are submitting a Pull Request, running `yarn build` before pushing the commit is NOT necessary. As long as the changes already work well in development mode, you may push the commit as-is.  
-> This fork uses GitHub Actions to automatically rebuild client assets after every commit that modifies the source files in `src` directory.
+> If you are submitting a Pull Request, please do not stage any changes to files in `dist` directory.  
+> GitHub Actions will automatically rebuild those assets if and when required.
 
 ## Updating when you have modified some files
 
