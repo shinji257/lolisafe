@@ -1,6 +1,6 @@
+const paths = require('./../controllers/pathsController')
 const perms = require('./../controllers/permissionController')
 const config = require('./../config')
-const db = require('knex')(config.database)
 
 const map = {
   files: {
@@ -21,6 +21,21 @@ const map = {
 }
 
 ;(async () => {
+  if (config.database && ['better-sqlite3', 'sqlite3'].includes(config.database.client)) {
+    try {
+      await paths.access(config.database.connection.filename)
+    } catch (err) {
+      if (err.code === 'ENOENT') {
+        console.log('Sqlite3 database file missing. Assumes first install, migration skipped.')
+        process.exit(0)
+      }
+      throw err
+    }
+  }
+
+  const db = require('knex')(config.database)
+  let done = 0
+
   const tableNames = Object.keys(map)
   for (const tableName of tableNames) {
     const columnNames = Object.keys(map[tableName])
@@ -32,23 +47,34 @@ const map = {
         table[columnType](columnName)
       })
       console.log(`OK: ${tableName} <- ${columnName} (${columnType})`)
+      done++
     }
   }
 
-  await db.table('users')
+  const root = await db.table('users')
     .where('username', 'root')
+    .select('permission')
     .first()
-    .update({
-      permission: perms.permissions.superadmin
-    })
-    .then(result => {
-      // NOTE: permissionController.js actually has a hard-coded check for "root" account so that
-      // it will always have "superadmin" permission regardless of its permission value in database
-      if (!result) return console.log('Unable to update root\'s permission into superadmin.')
-      console.log(`Updated root's permission to ${perms.permissions.superadmin} (superadmin).`)
-    })
+  if (root.permission !== perms.permissions.superadmin) {
+    await db.table('users')
+      .where('username', 'root')
+      .first()
+      .update({
+        permission: perms.permissions.superadmin
+      })
+      .then(result => {
+        // NOTE: permissionController.js actually has a hard-coded check for "root" account so that
+        // it will always have "superadmin" permission regardless of its permission value in database
+        console.log(`Updated root's permission to ${perms.permissions.superadmin} (superadmin).`)
+        done++
+      })
+  }
 
-  console.log('Migration finished! Now you may start lolisafe normally.')
+  let status = 'Database migration was not required.'
+  if (done) {
+    status = `Completed ${done} database migration task(s).`
+  }
+  console.log(`${status} You may now start lolisafe normally.`)
 })()
   .then(() => process.exit(0))
   .catch(error => {
