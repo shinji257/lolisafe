@@ -41,6 +41,7 @@ logger.log('Starting lolisafe\u2026')
 const safe = express()
 
 const paths = require('./controllers/pathsController')
+paths.initSync()
 const utils = require('./controllers/utilsController')
 
 const album = require('./routes/album')
@@ -251,8 +252,8 @@ safe.use('/api', api)
     // Init database
     await require('./controllers/utils/initDatabase.js')(utils.db)
 
-    // Verify paths, create missing ones, clean up temp ones
-    await paths.init()
+    // Purge any leftover in chunks directory, do not wait
+    paths.purgeChunks()
 
     if (!Array.isArray(config.pages) || !config.pages.length) {
       logger.error('Config file does not have any frontend pages enabled')

@@ -21,7 +21,7 @@ const map = {
 }
 
 ;(async () => {
-  if (config.database && ['better-sqlite3', 'sqlite3'].includes(config.database.client)) {
+  if (['better-sqlite3', 'sqlite3'].includes(config.database.client)) {
     try {
       await paths.access(config.database.connection.filename)
     } catch (err) {
