@@ -249,7 +249,7 @@ safe.use('/api', api)
 ;(async () => {
   try {
     // Init database
-    await require('./database/db.js')(utils.db)
+    await require('./controllers/utils/initDatabase.js')(utils.db)
 
     // Verify paths, create missing ones, clean up temp ones
     await paths.init()
