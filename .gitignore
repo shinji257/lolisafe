@@ -65,7 +65,4 @@ docker-compose.config.yml
 .node-version
 .nvmrc
 !.gitkeep
-
-# User directories (renders)
-/public/render/**/original
-/public/render/**/wip
+/public/render/*
