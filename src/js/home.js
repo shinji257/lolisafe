@@ -692,7 +692,11 @@ page.updateTemplate = (file, response) => {
   const link = file.previewElement.querySelector('.link')
   const a = link.querySelector('a')
   const clipboard = file.previewElement.querySelector('.clipboard-mobile > .clipboard-js')
-  a.href = a.innerHTML = clipboard.dataset.clipboardText = response.url
+  let url = response.url
+  if (!/^https?:\/\//i.test(url)) {
+    url = `${window.location.origin}/${url}`
+  }
+  a.href = a.innerHTML = clipboard.dataset.clipboardText = url
 
   link.classList.remove('is-hidden')
   clipboard.parentElement.classList.remove('is-hidden')

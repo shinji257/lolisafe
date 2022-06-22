@@ -678,9 +678,9 @@ page.getUploads = (params = {}) => {
 
     for (let i = 0; i < files.length; i++) {
       // Build full URLs
-      files[i].file = `${basedomain}/${files[i].name}`
+      files[i].file = `${basedomain || window.location.origin}/${files[i].name}`
       if (files[i].thumb) {
-        files[i].thumb = `${basedomain}/${files[i].thumb}`
+        files[i].thumb = `${basedomain ? `${basedomain}/` : ''}${files[i].thumb}`
       }
 
       // Determine types
@@ -1621,7 +1621,7 @@ page.getAlbums = (params = {}) => {
     page.cache = {}
 
     const users = response.data.users
-    const homeDomain = response.data.homeDomain
+    const homeDomain = response.data.homeDomain || window.location.origin
 
     if (params.pageNum < 0) params.pageNum = Math.max(0, pages + params.pageNum)
     const pagination = page.paginate(response.data.count, 25, params.pageNum)

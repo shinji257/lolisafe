@@ -938,7 +938,7 @@ self.sendUploadResponse = async (req, res, user, result) => {
     files: result.map(file => {
       const map = {
         name: file.name,
-        url: `${config.domain}/${file.name}`
+        url: `${config.domain ? `${config.domain}/` : ''}${file.name}`
       }
 
       // If a temporary upload, add expiry date
