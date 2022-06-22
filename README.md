@@ -52,22 +52,6 @@ Once you feel like your modifications are ready for production usage, you can th
 > If you are submitting a Pull Request, running `yarn build` before pushing the commit is NOT necessary. As long as the changes already work well in development mode, you may push the commit as-is.  
 > This fork uses GitHub Actions to automatically rebuild client assets after every commit that modifies the source files in `src` directory.
 
-## Failing to build dependencies
-
-Some dependencies may fail to build with Python 2.x, in particular `sqlite3` package.
-
-If that happens, I recommend building dependencies with Python 3.x instead.
-
-To force Python 3.x for dependencies building, you can choose to create a file named `.npmrc` in your lolisafe root directory, and fill it with:
-
-```none
-python=/path/to/your/python3.x
-```
-
-Or you can try the alternative solutions listed in here: [https://github.com/nodejs/node-gyp#configuring-python-dependency](https://github.com/nodejs/node-gyp#configuring-python-dependency).
-
-> Note: Despite the file being named `.npmrc`, that preference will also be used when installing dependencies with `yarn`, so I still recommend sticking with it.
-
 ## Updating when you have modified some files
 
 Try to use [git stash](https://www.git-scm.com/docs/git-stash).
@@ -86,30 +70,6 @@ If you only do some small modifications such as editing `views/_globals.njk` and
 Still, I heavily recommend simply forking this repository and manually merging upstream changes whenever you feel like doing so. Read more about [syncing a fork](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/syncing-a-fork).
 
 Afterwards, you can instead clone your fork in your production server and pull updates from there. You can then choose to only install production dependencies with `yarn install --production` there (hint: this is how I setup safe.fiery.me).
-
-## Script for missing thumbnails
-
-Thumbnails will not be automatically generated for files that were uploaded before enabling thumbnails generation in the config file.
-
-To generate thumbnails for those files, you can use `yarn thumbs`.
-
-```none
-$ yarn thumbs
-$ node ./scripts/thumbs.js
-Generate thumbnails.
-
-Usage:
-node scripts/thumbs.js <mode=1|2|3> [force=0|1] [verbose=0|1] [cfcache=0|1]
-
-mode    : 1 = images only, 2 = videos only, 3 = both images and videos
-force   : 0 = no force (default), 1 = overwrite existing thumbnails
-verbose : 0 = only print missing thumbs (default), 1 = print all, 2 = print nothing
-cfcache : 0 = do not clear cloudflare cache (default), 1 = clear cloudflare cache
-```
-
-For example, if you only want to generate thumbnails for image files without overwriting existing ones, you can run `yarn thumbs 1`, or if you want to generate thumbnails for both image and video files, while also overwriting existsing ones, you can run `yarn thumbs 3 1`.
-
-You will also need to use this script to overwrite existing thumbnails if you want to change thumbnail size.
 
 ## ClamAV support
 
