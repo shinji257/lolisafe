@@ -722,7 +722,7 @@ module.exports = {
     The following values shouldn't be touched, unless you know what you are doing.
   */
   database: {
-    client: 'sqlite3',
+    client: 'better-sqlite3',
     connection: { filename: './database/db' },
     useNullAsDefault: true
   }
