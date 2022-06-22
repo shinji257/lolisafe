@@ -343,8 +343,8 @@ safe.use('/api', api)
     }
 
     // Binds Express to port
-    await new Promise(resolve => safe.listen(config.port, () => resolve()))
-    logger.log(`lolisafe started on port ${config.port}`)
+    await new Promise(resolve => safe.listen(utils.conf.port, () => resolve()))
+    logger.log(`lolisafe started on port ${utils.conf.port}`)
 
     // Cache control (safe.fiery.me)
     // Purge Cloudflare cache

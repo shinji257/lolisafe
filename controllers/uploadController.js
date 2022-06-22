@@ -938,7 +938,7 @@ self.sendUploadResponse = async (req, res, user, result) => {
     files: result.map(file => {
       const map = {
         name: file.name,
-        url: `${config.domain ? `${config.domain}/` : ''}${file.name}`
+        url: `${utils.conf.domain ? `${utils.conf.domain}/` : ''}${file.name}`
       }
 
       // If a temporary upload, add expiry date
@@ -1021,7 +1021,7 @@ self.list = async (req, res, next) => {
     const ismoderator = perms.is(user, 'moderator')
     if (all && !ismoderator) return res.status(403).end()
 
-    const basedomain = config.domain
+    const basedomain = utils.conf.domain
 
     // Thresholds for regular users
     const MAX_WILDCARDS_IN_KEY = 2

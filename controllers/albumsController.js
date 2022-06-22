@@ -22,7 +22,7 @@ const self = {
   onHold: new Set()
 }
 
-const homeDomain = config.homeDomain || config.domain
+const homeDomain = utils.conf.homeDomain || utils.conf.domain
 
 const zipMaxTotalSize = parseInt(config.cloudflare.zipMaxTotalSize)
 const zipMaxTotalSizeBytes = zipMaxTotalSize * 1e6
@@ -447,14 +447,14 @@ self.get = async (req, res, next) => {
 
     for (const file of files) {
       if (req._upstreamCompat) {
-        file.url = `${config.domain}/${file.name}`
+        file.url = `${utils.conf.domain}/${file.name}`
       } else {
-        file.file = `${config.domain}/${file.name}`
+        file.file = `${utils.conf.domain}/${file.name}`
       }
 
       const extname = utils.extname(file.name)
       if (utils.mayGenerateThumb(extname)) {
-        file.thumb = `${config.domain}/thumbs/${file.name.slice(0, -extname.length)}.png`
+        file.thumb = `${utils.conf.domain}/thumbs/${file.name.slice(0, -extname.length)}.png`
         if (req._upstreamCompat) file.thumbSquare = file.thumb
       }
     }

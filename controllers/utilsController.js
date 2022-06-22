@@ -16,6 +16,12 @@ const logger = require('./../logger')
 
 const self = {
   db: knex(config.database),
+  conf: {
+    // Allow some config options to be overriden via env vars
+    port: process.env.PORT || config.port,
+    domain: process.env.DOMAIN || config.domain,
+    homeDomain: process.env.HOME_DOMAIN || config.homeDomain
+  },
   scan: {
     instance: null,
     version: null,
@@ -632,8 +638,8 @@ self.purgeCloudflareCache = async (names, uploads, thumbs) => {
     return [{ success: false, files: [], errors }]
   }
 
-  let domain = config.domain
-  if (!uploads) domain = config.homeDomain
+  let domain = self.conf.domain
+  if (!uploads) domain = self.conf.homeDomain
 
   const thumbNames = []
   names = names.map(name => {
