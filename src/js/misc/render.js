@@ -7,7 +7,7 @@ const render = {
       name: 'ship waifu~',
       root: 'render/al/',
       // 001.png ~ 038.png
-      array: Array.apply(null, { length: 50 }).map((_, i) => `${('00' + (i + 1)).slice(-3)}.png`)
+      array: Array.apply(null, { length: 38 }).map((_, i) => `${('00' + (i + 1)).slice(-3)}.png`)
     },
     miku: {
       name: 'miku ❤️~',
