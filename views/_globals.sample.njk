@@ -28,6 +28,11 @@
 {# Enabling the option below will hide FAQ categories which are irrelevant for personal installation #}
 {% set is_for_personal_use = true %}
 
+{# Requires configuring your own renders in public/libs/render. Consult src/js/misc/render.js. #}
+{% set enable_home_renders = false %}
+{% set enable_home_renders_config = "miku" %}
+{% set enable_home_newsfeed = false %}
+
 {#
   These are the footer links in the homepage and the No-JS uploader (home.njk & nojs.njk respectively).
   In the homepage uploader, they will be displayed as icons,
