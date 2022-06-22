@@ -32,11 +32,9 @@ module.exports = {
 
     Both cases require you to type the domain where the files will be served on the `domain` key below.
     Which one you use is ultimately up to you.
-
-    NOTE: Set to falsy value if using Docker.
   */
   serveFilesWithNode: false,
-  domain: 'https://lolisafe.moe',
+  domain: null,
 
   /*
     If you serve files with node, you can optionally choose to set Content-Disposition header
@@ -63,7 +61,6 @@ module.exports = {
 
   /*
     Port on which to run the server.
-    NOTE: Change port in .env file if using Docker.
   */
   port: 9999,
 
@@ -601,7 +598,7 @@ module.exports = {
     */
     generateThumbs: {
       image: true,
-      video: false,
+      video: true,
       // Placeholder defaults to 'public/images/unavailable.png'.
       placeholder: null,
       size: 200
