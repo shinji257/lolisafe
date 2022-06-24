@@ -19,7 +19,6 @@
 {% endblock %}
 
 {% block scripts %}
-{% if not nojs -%}
 <!-- Libs scripts -->
 <script src="../libs/sweetalert/sweetalert.min.js{{ versions[3] }}"></script>
 <script src="../libs/axios/axios.min.js{{ versions[3] }}"></script>
@@ -33,7 +32,6 @@
 <script id="mainScript" src="../js/player.js{{ versions[1] }}" data-upload-root="{{ uploadRoot }}" data-title-format="
 {{ titleFormat }}"></script>
 <script src="../js/misc/utils.js{{ versions[1] }}"></script>
-{%- endif %}
 {% endblock %}
 
 {% block endmeta %}
