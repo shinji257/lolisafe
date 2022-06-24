@@ -54,8 +54,12 @@ module.exports = {
 
   /*
     If you are serving your files with a different domain than your lolisafe homepage,
-    then fill this option with your lolisafe homepage, otherwise any falsy value.
-    This will be used when listing album links in the dashboard.
+    then fill this option with the actual domain for your lolisafe homepage.
+    This will be used for Open Graph tags and wherever lolisafe need to link to internal pages.
+    If any falsy value, it will inherit "domain" option.
+
+    NOTE: If this, or the inherited "domain" option, is not set to an explicit domain,
+    Open Graph tags may fail in websites that do not support relative URLs.
   */
   homeDomain: null,
 
