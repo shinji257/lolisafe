@@ -1,6 +1,6 @@
 FROM jrottenberg/ffmpeg:5-alpine as ffmpeg
 
-FROM node:16-alpine
+FROM node:18-alpine
 
 WORKDIR /usr/lolisafe
 COPY package.json yarn.lock ./
