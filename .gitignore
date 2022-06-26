@@ -55,7 +55,7 @@ docker-compose.config.yml
 /uploads
 
 # Custom pages directory
-/pages/custom
+/pages/custom/*
 
 # Dist dev
 /dist-dev
