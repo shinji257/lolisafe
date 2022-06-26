@@ -70,6 +70,9 @@ module.exports = {
 
   /*
     Pages to process for the frontend.
+    To add new pages, you may create a new Nunjucks-templated pages (.njk) in "views" directory,
+    or regular HTML files (.html) in "pages/custom" directory,
+    then simply add the filename without its extension name into the array below.
   */
   pages: ['home', 'auth', 'dashboard', 'faq'],
 
