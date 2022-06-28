@@ -1,4 +1,4 @@
-/* global swal, axios */
+/* global swal, axios, ClipboardJS */
 
 const lsKeys = {
   token: 'token'
@@ -14,13 +14,15 @@ const page = {
   messageElement: document.querySelector('#message'),
   fileinfoContainer: document.querySelector('#fileinfo'),
 
-  downloadBtn: document.querySelector('#downloadBtn'),
+  clipboardBtn: document.querySelector('#clipboardBtn'),
   playerBtn: document.querySelector('#playerBtn'),
+  downloadBtn: document.querySelector('#downloadBtn'),
   deleteBtn: document.querySelector('#deleteBtn'),
   uploadRoot: null,
   titleFormat: null,
 
-  file: null
+  file: null,
+  clipboardJS: null
 }
 
 page.updateMessageBody = content => {
@@ -161,9 +163,9 @@ page.loadFileinfo = () => {
       </div>
     `
 
-    if (page.downloadBtn) {
-      page.downloadBtn.setAttribute('href', `${page.uploadRoot}/${page.file.name}`)
-    }
+    const fileUrl = `${page.uploadRoot}/${page.file.name}`
+    page.downloadBtn.setAttribute('href', fileUrl)
+    page.clipboardBtn.dataset.clipboardText = fileUrl
 
     const isimage = page.file.type.startsWith('image/')
     const isvideo = page.file.type.startsWith('video/')
@@ -226,6 +228,17 @@ window.addEventListener('DOMContentLoaded', () => {
 
   // eslint-disable-next-line compat/compat
   page.urlParams = new URLSearchParams(window.location.search)
+
+  page.clipboardJS = new ClipboardJS('.clipboard-js')
+
+  page.clipboardJS.on('success', () => {
+    return swal('', 'The link has been copied to clipboard.', 'success', {
+      buttons: false,
+      timer: 1500
+    })
+  })
+
+  page.clipboardJS.on('error', page.onError)
 
   page.deleteBtn.addEventListener('click', page.deleteFile)
 
