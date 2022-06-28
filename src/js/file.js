@@ -167,16 +167,15 @@ page.loadFileinfo = () => {
     page.downloadBtn.setAttribute('href', fileUrl)
     page.clipboardBtn.dataset.clipboardText = fileUrl
 
-    const isimage = page.file.type.startsWith('image/')
+    const img = page.fileinfoContainer.querySelector('img')
+    img.setAttribute('alt', page.file.name || '')
+    img.src = `${page.uploadRoot}/${page.file.name}`
+    img.parentNode.classList.remove('is-hidden')
+    img.onerror = event => event.currentTarget.classList.add('is-hidden')
+
     const isvideo = page.file.type.startsWith('video/')
     const isaudio = page.file.type.startsWith('audio/')
-    if (isimage) {
-      const img = page.fileinfoContainer.querySelector('img')
-      img.setAttribute('alt', page.file.name || '')
-      img.src = `${page.uploadRoot}/${page.file.name}`
-      img.parentNode.classList.remove('is-hidden')
-      img.onerror = event => event.currentTarget.classList.add('is-hidden')
-    } else if (isvideo || isaudio) {
+    if (isvideo || isaudio) {
       page.playerBtn.setAttribute('href', `../v/${page.file.name}`)
       page.playerBtn.parentNode.parentNode.classList.remove('is-hidden')
     }
