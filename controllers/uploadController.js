@@ -1594,4 +1594,35 @@ self.list = async (req, res, next) => {
   }
 }
 
+/** Get file info */
+
+self.get = async (req, res, next) => {
+  try {
+    const user = await utils.authorize(req)
+    const ismoderator = perms.is(user, 'moderator')
+
+    const identifier = req.params.identifier
+    if (identifier === undefined) {
+      throw new ClientError('No identifier provided.')
+    }
+
+    const file = await utils.db.table('files')
+      .where('name', identifier)
+      .where(function () {
+        if (!ismoderator) {
+          this.where('userid', user.id)
+        }
+      })
+      .first()
+
+    if (!file) {
+      throw new ClientError('File not found.', { statusCode: 404 })
+    }
+
+    await res.json({ success: true, file })
+  } catch (error) {
+    return apiErrorsHandler(error, req, res, next)
+  }
+}
+
 module.exports = self
