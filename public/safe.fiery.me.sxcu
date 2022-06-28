@@ -1,4 +1,5 @@
 {
+  "Version": "13.4.0",
   "Name": "safe.fiery.me",
   "DestinationType": "ImageUploader, FileUploader",
   "RequestMethod": "POST",

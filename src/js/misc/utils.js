@@ -23,6 +23,7 @@ page.prepareShareX = () => {
   const originClean = origin.replace(/\//g, '_')
 
   const sharexConfObj = {
+    Version: '13.4.0',
     Name: originClean,
     DestinationType: 'ImageUploader, FileUploader',
     RequestMethod: 'POST',
