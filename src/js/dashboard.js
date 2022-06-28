@@ -770,6 +770,11 @@ page.getUploads = (params = {}) => {
               </span>
             </a>`
               : ''}
+            <a class="button is-small is-info" title="View file info" href="file/${upload.name}" target="_blank">
+              <span class="icon">
+                <i class="icon-info"></i>
+              </span>
+            </a>
             <a class="button is-small is-info clipboard-js" title="Copy link to clipboard" data-clipboard-text="${upload.file}">
               <span class="icon">
                 <i class="icon-clipboard"></i>
@@ -850,6 +855,11 @@ page.getUploads = (params = {}) => {
             <a class="button is-small is-primary is-outlined" title="${upload.previewable ? 'Display preview' : 'File can\'t be previewed'}" data-action="display-preview"${upload.previewable ? '' : ' disabled'}>
               <span class="icon">
                 <i class="${upload.type !== 'other' ? `icon-${upload.type}` : 'icon-doc-inv'}"></i>
+              </span>
+            </a>
+            <a class="button is-small is-info is-outlined" title="View file info" href="file/${upload.name}" target="_blank">
+              <span class="icon">
+                <i class="icon-info"></i>
               </span>
             </a>
             <a class="button is-small is-info is-outlined clipboard-js" title="Copy link to clipboard" data-clipboard-text="${upload.file}">
