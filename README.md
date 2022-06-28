@@ -10,9 +10,9 @@
 
 This fork is the one being used at [https://safe.fiery.me](https://safe.fiery.me). If you are looking for the original, head to [WeebDev/lolisafe](https://github.com/WeebDev/lolisafe).
 
-If you want to use an existing lolisafe v3 database with this fork, copy over `database/db` from your previous installation, then run `node ./database/migration.js` (or `yarn migrate`) at least once to create the new columns introduced in this fork (don't forget to make a backup).
+If you want to use an existing lolisafe v3 database with this fork, copy over `database/db` file from your previous installation, then run `yarn migrate` at least once to create the new database columns introduced in this fork (don't forget to make a backup).
 
-> **Said migration script is NOT COMPATIBLE with chibisafe (lolisafe v4/rewrite).**
+> **Said migration script is NOT COMPATIBLE with chibisafe (a.k.a lolisafe v4/rewrite).**
 
 Configuration file of lolisafe v3 (`config.js`) is also NOT fully compatible with this fork. There are some options that had been renamed and/or restructured. Please make sure your config matches the sample in `config.sample.js` before starting.
 
@@ -40,7 +40,7 @@ The pre-built files are processed with [postcss-preset-env](https://github.com/c
 This fork has a separate development mode, with which client-side CSS/JS files in `src` directory will be automatically rebuilt using [Gulp](https://github.com/gulpjs/gulp#what-is-gulp) tasks.
 
 1. Follow step 1 to 4 from the production instructions above.
-2. Run `yarn install` to install all dependencies (including development ones).
+2. Run `yarn install` to install all dependencies, including development ones.
 3. Run `yarn develop` to start the service in development mode.
 
 You can configure the Gulp tasks through `gulpfile.js` file.
@@ -65,20 +65,20 @@ Basically you'll be doing this:
 
 Be warned that some files may have been updated too heavily that they will require manual merging.
 
-If you only do some small modifications such as editing `views/_globals.njk` and not much else, it's generally safe to do this even in a live production environment. But it's still best practice to at least review just what have been updated, and whether you will need to do some manual merging beforehand.
+If you only do some small modifications such as editing `.njk` files and not much else, it's generally safe to do this even in a live production environment. But it's still best practice to at least review just what have been updated, and whether you will need to do some manual merging beforehand.
 
-Still, I heavily recommend simply forking this repository and manually merging upstream changes whenever you feel like doing so. Read more about [syncing a fork](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/syncing-a-fork).
+Still, I heavily recommend simply forking this repository and manually merging upstream changes whenever you feel like doing so. Read more about [syncing a fork](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/syncing-a-fork). Especially if you intend to modify client-side CSS/JS files in `src` directory, since you will then need to rebuild assets that go into `dist` directory, which are guaranteed to always conflict with every updates from this fork that modify them.
 
-Afterwards, you can instead clone your fork in your production server and pull updates from there. You can then choose to only install production dependencies with `yarn install --production` there (hint: this is how I setup safe.fiery.me).
+Afterwards, you can instead clone your fork into your production server and pull updates from there. You can then choose to only install production dependencies with `yarn install --production` there to save some disk space (hint: this is how I setup safe.fiery.me).
 
 ## ClamAV support
 
 This fork has an optional virus scanning support using [ClamAV](https://www.clamav.net/), utilizing [clamscan](https://github.com/kylefarris/clamscan) library (Linux and OS X only).
 
-It will scan new files right after they are uploaded. It will then alert the uploaders of the virus names in ClamAV's database if their files are dirty.
+It will scan new files right after they are uploaded, then alert the uploaders of the virus names in ClamAV's database if the files are dirty.
 
 Unfortunately, this will slow down uploads processing as it has to wait for the scans before responding the uploaders. However, it's still highly recommended for public usage, or if you're like me who find the constant buzzing from Google Safe Search too annoying.
 
-To enable this, make sure you have [ClamAV installed](https://github.com/kylefarris/clamscan#to-use-local-binary-method-of-scanning), or additionally have [ClamAV daemon running](https://github.com/kylefarris/clamscan#to-use-clamav-using-tcp-sockets). Afterwards configure `uploads.scan` options, and more importantly its sub-option `clamOptions`. Read more about it in the `config.sample.js` file.
+To enable this, make sure you have [ClamAV installed](https://github.com/kylefarris/clamscan#to-use-local-binary-method-of-scanning), or additionally have [ClamAV daemon running](https://github.com/kylefarris/clamscan#to-use-clamav-using-tcp-sockets) (using daemon is considerably faster). Afterwards configure `uploads.scan` options, and more importantly its sub-option `clamOptions`. Read more about it in the `config.sample.js` file.
 
 Additionally, you can also configure usergroups bypass, extensions whitelist, and max file size, to lessen the burden on your server.
