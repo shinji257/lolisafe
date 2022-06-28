@@ -22,11 +22,11 @@ const { accessSync, constants } = require('fs')
 
 // Check required config files
 const configFiles = ['config.js', 'views/_globals.njk']
-for (const file of configFiles) {
+for (const _file of configFiles) {
   try {
-    accessSync(file, constants.R_OK)
+    accessSync(_file, constants.R_OK)
   } catch (error) {
-    logger.error(`Config file '${file}' cannot be found or read.`)
+    logger.error(`Config file '${_file}' cannot be found or read.`)
     logger.error('Please copy the provided sample file and modify it according to your needs.')
     process.exit(1)
   }
@@ -144,11 +144,11 @@ const initServeStaticUploads = (opts = {}) => {
         const relpath = path.replace(paths.uploads, '')
         if (relpath.indexOf('/', 1) === -1 && req.method === 'GET') {
           const name = relpath.substring(1)
-          const file = await utils.db.table('files')
+          const _file = await utils.db.table('files')
             .where('name', name)
             .select('original')
             .first()
-          res.set('Content-Disposition', contentDisposition(file.original, { type: 'inline' }))
+          res.set('Content-Disposition', contentDisposition(_file.original, { type: 'inline' }))
         }
       } catch (error) {
         logger.error(error)
@@ -383,9 +383,9 @@ safe.use('/api', api)
 
           if (result.expired.length || result.failed.length) {
             if (isDevMode) {
-              let logMessage = `Expired uploads (${result.expired.length}): ${result.expired.map(file => file.name).join(', ')}`
+              let logMessage = `Expired uploads (${result.expired.length}): ${result.expired.map(_file => _file.name).join(', ')}`
               if (result.failed.length) {
-                logMessage += `\nErrored (${result.failed.length}): ${result.failed.map(file => file.name).join(', ')}`
+                logMessage += `\nErrored (${result.failed.length}): ${result.failed.map(_file => _file.name).join(', ')}`
               }
               logger.debug(logMessage)
             } else {
