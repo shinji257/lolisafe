@@ -183,15 +183,18 @@ if (config.cacheControl) {
     next()
   })
 
-  // If using CDN, cache public pages in CDN
-  if (config.cacheControl !== 2) {
-    cdnPages.push('api/check')
-    for (const page of cdnPages) {
-      safe.use(`/${page === 'home' ? '' : page}`, (req, res, next) => {
-        res.set('Cache-Control', cacheControls.cdn)
-        next()
-      })
-    }
+  switch (config.cacheControl) {
+    case 1:
+    case true:
+      // If using CDN, cache public pages in CDN
+      cdnPages.push('api/check')
+      for (const page of cdnPages) {
+        safe.get(`/${page === 'home' ? '' : page}`, (req, res, next) => {
+          res.set('Cache-Control', cacheControls.cdn)
+          next()
+        })
+      }
+      break
   }
 
   // If serving uploads with node

@@ -708,11 +708,13 @@ module.exports = {
   },
 
   /*
-    ADVANCED: Use safe.fiery.me-exclusive cache control.
-    This will only work properly with certain settings in nginx reverse proxy and Cloudflare.
-    Do NOT enable unless you know what you are doing.
-    true: With CDN (Cloudflare)
-    2: When NOT using Cloudflare
+    Enable Cache-Control header tags.
+    Please consult the relevant codes in lolisafe.js to learn the specifics.
+    true or 1: Cloudflare (will cache some frontend pages in CDN)
+    2: Basic Cache-Control without CDNs
+
+    NOTE: If set to Cloudflare, and auth is specified in "cloudflare" option above,
+    lolisafe will automatically call Cloudflare API to purge cache of the relevant frontend pages.
   */
   cacheControl: false,
 
