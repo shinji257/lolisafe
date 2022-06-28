@@ -171,7 +171,7 @@ page.loadFileinfo = () => {
     img.setAttribute('alt', page.file.name || '')
     img.src = `${page.uploadRoot}/${page.file.name}`
     img.parentNode.classList.remove('is-hidden')
-    img.onerror = event => event.currentTarget.classList.add('is-hidden')
+    img.onerror = event => event.currentTarget.parentNode.classList.add('is-hidden')
 
     const isvideo = page.file.type.startsWith('video/')
     const isaudio = page.file.type.startsWith('audio/')
