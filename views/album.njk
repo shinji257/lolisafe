@@ -147,7 +147,7 @@
 {% set floatingHomeHref = '..' %}
 {% include "_partial/floating-home.njk" %}
 {% if not nojs -%}
-{% set noscriptMessage = 'If you are not automatically redirected to its No-JS version, <a href="' + noJsUrl + '">click here</a>.' %}
+{% set noscriptMessage = '<p>If you are not automatically redirected to its No-JS version, <a href="' + noJsUrl + '">click here</a>.</p>' %}
 {% include "_partial/noscript.njk" %}
 {%- endif %}
 {% endblock %}

@@ -34,6 +34,7 @@
 <script src="../js/misc/utils.js{{ versions[1] }}"></script>
 {% endblock %}
 
+{% set noscriptRefreshUrl = null %}
 {% block endmeta %}
 {% include "_partial/noscript-refresh.njk" %}
 {% endblock %}
@@ -92,5 +93,6 @@
 
 {% set floatingHomeHref = '..' %}
 {% include "_partial/floating-home.njk" %}
+{% set noscriptMessage = null %}
 {% include "_partial/noscript.njk" %}
 {% endblock %}
