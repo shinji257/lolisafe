@@ -35,10 +35,9 @@ page.prepareShareX = () => {
     ThumbnailURL: '$json:files[0].url$'
   }
 
-  /*
-  if (page.token)
+  if (page.token) {
     sharexConfObj.DeletionURL = '$json:files[0].deleteUrl$'
-  */
+  }
 
   const sharexConfStr = JSON.stringify(sharexConfObj, null, 2)
   const sharexBlob = new Blob([sharexConfStr], { type: 'application/octet-binary' })

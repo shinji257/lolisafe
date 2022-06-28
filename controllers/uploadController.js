@@ -953,13 +953,9 @@ self.sendUploadResponse = async (req, res, user, result) => {
 
       // If uploaded by user, add delete URL (intended for ShareX and its derivatives)
       // Homepage uploader will not use this (use dashboard instead)
-      // REVISION: I wasn't aware ShareX wouldn't do a basic GET request to this API,
-      // which I hoped would then use the token header in the downloadable ShareX config file.
-      // At its current state, this isn't really usable.
-      /*
-      if (user)
-        map.deleteUrl = `${config.homeDomain}/api/upload/delete/${file.name}`
-      */
+      if (user) {
+        map.deleteUrl = `${config.homeDomain}/file/${file.name}?delete`
+      }
 
       return map
     })
@@ -978,14 +974,7 @@ self.delete = async (req, res, next) => {
       field: 'id',
       values: isNaN(id) ? undefined : [id]
     }
-  } /* else if (req.method === 'GET') {
-    // ShareX-compatible API (or other clients that require basic GET-based API)
-    const name = req.params.name
-    body = {
-      field: 'name',
-      values: name ? [name] : undefined
-    }
-  } */
+  }
 
   req.body = body
   return self.bulkDelete(req, res, next)

@@ -46,6 +46,7 @@ const utils = require('./controllers/utilsController')
 
 const album = require('./routes/album')
 const api = require('./routes/api')
+const file = require('./routes/file')
 const nojs = require('./routes/nojs')
 const player = require('./routes/player')
 
@@ -243,6 +244,7 @@ safe.use('/', express.static(paths.public, { setHeaders }))
 safe.use('/', express.static(paths.dist, { setHeaders }))
 
 safe.use('/', album)
+safe.use('/', file)
 safe.use('/', nojs)
 safe.use('/', player)
 safe.use('/api', api)
