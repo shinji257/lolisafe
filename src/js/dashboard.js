@@ -952,8 +952,8 @@ page.displayPreview = id => {
   div.innerHTML = `
     <div class="content has-text-centered">
       <p>
-        <div class="has-text-weight-bold">${file.name}</div>
-        <div>${file.original}</div>
+        <div class="has-text-weight-bold has-word-break-all">${file.name}</div>
+        <div class="has-word-break-all">${file.original}</div>
       </p>
       ${file.thumb
         ? `<p class="swal-display-thumb-container">

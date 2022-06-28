@@ -245,6 +245,10 @@ fieldset[disabled] .select select:hover {
   }
 }
 
+.has-word-break-all {
+  word-break: break-all
+}
+
 /** Fontello overrides **/
 
 .icon-gauge::before {
