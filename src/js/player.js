@@ -3,7 +3,6 @@
 // eslint-disable-next-line no-unused-vars
 const lsKeys = {}
 
-// eslint-disable-next-line no-unused-vars
 const page = {
   urlPrefix: null,
   urlIdentifier: null,
