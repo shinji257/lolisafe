@@ -836,7 +836,7 @@ self.storeFilesToDb = async (req, res, user, infoMap) => {
       })
       .where({
         hash: info.data.hash,
-        size: info.data.size
+        size: String(info.data.size)
       })
       // Select expirydate to display expiration date of existing files as well
       .select('name', 'expirydate')
@@ -861,7 +861,7 @@ self.storeFilesToDb = async (req, res, user, infoMap) => {
       name: info.data.filename,
       original: info.data.originalname,
       type: info.data.mimetype,
-      size: info.data.size,
+      size: String(info.data.size),
       hash: info.data.hash,
       // Only disable if explicitly set to false in config
       ip: config.uploads.storeIP !== false ? req.ip : null,

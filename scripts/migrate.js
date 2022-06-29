@@ -70,6 +70,19 @@ const map = {
       })
   }
 
+  const files = await db.table('files')
+    .where('size', 'like', '%.0')
+  if (files.length) {
+    console.log(`Found ${files.length} files with outdated "size" field, converting\u2026`)
+    for (const file of files) {
+      const size = file.size.replace(/\.0$/, '')
+      await db.table('files')
+        .update('size', size)
+        .where('id', file.id)
+      done++
+    }
+  }
+
   let status = 'Database migration was not required.'
   if (done) {
     status = `Completed ${done} database migration task(s).`
