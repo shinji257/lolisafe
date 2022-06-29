@@ -1083,7 +1083,7 @@ self.stats = async (req, res, next) => {
     Object.keys(statsData).forEach(key => {
       statsData[key].generating = false
     })
-    return apiErrorsHandler(error)
+    return apiErrorsHandler(error, req, res, next)
   }
 }
 
