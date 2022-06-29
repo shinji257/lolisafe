@@ -1,4 +1,5 @@
 const { promisify } = require('util')
+const fastq = require('fastq')
 const fetch = require('node-fetch')
 const ffmpeg = require('fluent-ffmpeg')
 const MarkdownIt = require('markdown-it')
@@ -189,6 +190,73 @@ const statsData = {
 const cloudflareAuth = config.cloudflare && config.cloudflare.zoneId &&
   (config.cloudflare.apiToken || config.cloudflare.userServiceKey ||
   (config.cloudflare.apiKey && config.cloudflare.email))
+
+const cloudflarePurgeCacheQueue = cloudflareAuth && fastq.promise(async chunk => {
+  const MAX_TRIES = 3
+  const url = `https://api.cloudflare.com/client/v4/zones/${config.cloudflare.zoneId}/purge_cache`
+
+  const result = {
+    success: false,
+    files: chunk,
+    errors: []
+  }
+
+  const headers = {
+    'Content-Type': 'application/json'
+  }
+  if (config.cloudflare.apiToken) {
+    headers.Authorization = `Bearer ${config.cloudflare.apiToken}`
+  } else if (config.cloudflare.userServiceKey) {
+    headers['X-Auth-User-Service-Key'] = config.cloudflare.userServiceKey
+  } else if (config.cloudflare.apiKey && config.cloudflare.email) {
+    headers['X-Auth-Key'] = config.cloudflare.apiKey
+    headers['X-Auth-Email'] = config.cloudflare.email
+  }
+
+  for (let i = 0; i < MAX_TRIES; i++) {
+    const _log = message => {
+      let prefix = `[CF]: ${i + 1}/${MAX_TRIES}: ${path.basename(chunk[0])}`
+      if (chunk.length > 1) prefix += ',\u2026'
+      logger.log(`${prefix}: ${message}`)
+    }
+
+    try {
+      const purge = await fetch(url, {
+        method: 'POST',
+        body: JSON.stringify({ files: chunk }),
+        headers
+      })
+      const response = await purge.json()
+
+      const hasErrorsArray = Array.isArray(response.errors) && response.errors.length
+      if (hasErrorsArray) {
+        const rateLimit = response.errors.find(error => /rate limit/i.test(error.message))
+        if (rateLimit && i < MAX_TRIES - 1) {
+          _log(`${rateLimit.code}: ${rateLimit.message}. Retrying in a minute\u2026`)
+          await new Promise(resolve => setTimeout(resolve, 60000))
+          continue
+        }
+      }
+
+      result.success = response.success
+      result.errors = hasErrorsArray
+        ? response.errors.map(error => `${error.code}: ${error.message}`)
+        : []
+    } catch (error) {
+      const errorString = error.toString()
+      if (i < MAX_TRIES - 1) {
+        _log(`${errorString}. Retrying in 5 seconds\u2026`)
+        await new Promise(resolve => setTimeout(resolve, 5000))
+        continue
+      }
+
+      result.errors = [errorString]
+    }
+    break
+  }
+
+  return result
+}, 1) // concurrency: 1
 
 self.mayGenerateThumb = extname => {
   extname = extname.toLowerCase()
@@ -659,79 +727,15 @@ self.purgeCloudflareCache = async (names, uploads, thumbs) => {
   // Split array into multiple arrays with max length of 30 URLs
   // https://api.cloudflare.com/#zone-purge-files-by-url
   const MAX_LENGTH = 30
-  const MAX_TRIES = 3 // only for rate limit and unexpected errors
   const chunks = []
   while (names.length) {
     chunks.push(names.splice(0, MAX_LENGTH))
   }
 
-  const url = `https://api.cloudflare.com/client/v4/zones/${config.cloudflare.zoneId}/purge_cache`
   const results = []
-
-  await Promise.all(chunks.map(async chunk => {
-    const result = {
-      success: false,
-      files: chunk,
-      errors: []
-    }
-
-    const headers = {
-      'Content-Type': 'application/json'
-    }
-    if (config.cloudflare.apiToken) {
-      headers.Authorization = `Bearer ${config.cloudflare.apiToken}`
-    } else if (config.cloudflare.userServiceKey) {
-      headers['X-Auth-User-Service-Key'] = config.cloudflare.userServiceKey
-    } else if (config.cloudflare.apiKey && config.cloudflare.email) {
-      headers['X-Auth-Key'] = config.cloudflare.apiKey
-      headers['X-Auth-Email'] = config.cloudflare.email
-    }
-
-    for (let i = 0; i < MAX_TRIES; i++) {
-      const _log = message => {
-        let prefix = `[CF]: ${i + 1}/${MAX_TRIES}: ${path.basename(chunk[0])}`
-        if (chunk.length > 1) prefix += ',\u2026'
-        logger.log(`${prefix}: ${message}`)
-      }
-
-      try {
-        const purge = await fetch(url, {
-          method: 'POST',
-          body: JSON.stringify({ files: chunk }),
-          headers
-        })
-        const response = await purge.json()
-
-        const hasErrorsArray = Array.isArray(response.errors) && response.errors.length
-        if (hasErrorsArray) {
-          const rateLimit = response.errors.find(error => /rate limit/i.test(error.message))
-          if (rateLimit && i < MAX_TRIES - 1) {
-            _log(`${rateLimit.code}: ${rateLimit.message}. Retrying in a minute\u2026`)
-            await new Promise(resolve => setTimeout(resolve, 60000))
-            continue
-          }
-        }
-
-        result.success = response.success
-        result.errors = hasErrorsArray
-          ? response.errors.map(error => `${error.code}: ${error.message}`)
-          : []
-      } catch (error) {
-        const errorString = error.toString()
-        if (i < MAX_TRIES - 1) {
-          _log(`${errorString}. Retrying in 5 seconds\u2026`)
-          await new Promise(resolve => setTimeout(resolve, 5000))
-          continue
-        }
-
-        result.errors = [errorString]
-      }
-
-      results.push(result)
-      break
-    }
-  }))
-
+  await Promise.all(chunks.map(async chunk =>
+    results.push(await cloudflarePurgeCacheQueue.push(chunk))
+  ))
   return results
 }
 
