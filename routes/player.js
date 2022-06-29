@@ -8,8 +8,7 @@ routes.get([
 ], async (req, res, next) => {
   // Uploads identifiers parsing, etc., are strictly handled by client-side JS at src/js/player.js
   return res.render('player', {
-    config,
-    versions: utils.versionStrings
+    config, utils, versions: utils.versionStrings
   })
 })
 

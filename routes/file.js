@@ -7,8 +7,7 @@ routes.get([
 ], async (req, res, next) => {
   // Uploads identifiers parsing, etc., are strictly handled by client-side JS at src/js/file.js
   return res.render('file', {
-    config,
-    versions: utils.versionStrings
+    config, utils, versions: utils.versionStrings
   })
 })
 

@@ -6,8 +6,8 @@ const config = require('./../config')
 routes.get('/nojs', async (req, res, next) => {
   return res.render('nojs', {
     config,
-    versions: utils.versionStrings,
-    gitHash: utils.gitHash
+    utils,
+    versions: utils.versionStrings
   })
 })
 
@@ -17,8 +17,8 @@ routes.post('/nojs', (req, res, next) => {
     const result = args[0]
     return res.render('nojs', {
       config,
+      utils,
       versions: utils.versionStrings,
-      gitHash: utils.gitHash,
       errorMessage: result.success ? '' : (result.description || 'An unexpected error occurred.'),
       files: result.files || [{}]
     })

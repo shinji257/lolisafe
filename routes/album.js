@@ -39,6 +39,7 @@ routes.get('/a/:identifier', async (req, res, next) => {
     if (!utils.albumsCache[cacheid].cache && utils.albumsCache[cacheid].generating) {
       return res.render('album-notice', {
         config,
+        utils,
         versions: utils.versionStrings,
         album,
         notice: 'This album\'s public page is still being generated. Please try again later.'
@@ -81,6 +82,7 @@ routes.get('/a/:identifier', async (req, res, next) => {
 
   return res.render('album', {
     config,
+    utils,
     versions: utils.versionStrings,
     album,
     files,

@@ -288,14 +288,11 @@ safe.use('/api', api)
         safe.get(`/${page === 'home' ? '' : page}`, (req, res, next) => res.sendFile(customPage))
       } else if (page === 'home') {
         safe.get('/', (req, res, next) => res.render(page, {
-          config,
-          versions: utils.versionStrings,
-          gitHash: utils.gitHash
+          config, utils, versions: utils.versionStrings
         }))
       } else {
         safe.get(`/${page}`, (req, res, next) => res.render(page, {
-          config,
-          versions: utils.versionStrings
+          config, utils, versions: utils.versionStrings
         }))
       }
     }

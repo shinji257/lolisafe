@@ -954,7 +954,7 @@ self.sendUploadResponse = async (req, res, user, result) => {
       // If uploaded by user, add delete URL (intended for ShareX and its derivatives)
       // Homepage uploader will not use this (use dashboard instead)
       if (user) {
-        map.deleteUrl = `${config.homeDomain}/file/${file.name}?delete`
+        map.deleteUrl = `${utils.conf.homeDomain}/file/${file.name}?delete`
       }
 
       return map
