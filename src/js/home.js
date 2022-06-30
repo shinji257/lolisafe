@@ -177,6 +177,8 @@ page.checkIfPublic = () => {
 
     page.maxSize = parseInt(response.data.maxSize)
     page.maxSizeBytes = page.maxSize * 1e6
+    document.querySelector('#maxSize > span').innerHTML = page.getPrettyBytes(page.maxSizeBytes)
+
     page.chunkSizeConfig = {
       max: (response.data.chunkSize && parseInt(response.data.chunkSize.max)) || 95,
       default: response.data.chunkSize && parseInt(response.data.chunkSize.default)
@@ -263,8 +265,7 @@ page.prepareUpload = () => {
   // Prepare & generate config tab
   page.prepareUploadConfig()
 
-  // Update elements wherever applicable
-  document.querySelector('#maxSize > span').innerHTML = page.getPrettyBytes(page.maxSizeBytes)
+  // Hide login button
   document.querySelector('#loginToUpload').classList.add('is-hidden')
 
   // Prepare & generate files upload tab
