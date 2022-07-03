@@ -120,8 +120,9 @@ safe.use(bodyParser.json())
 const cdnPages = [...config.pages]
 let setHeaders
 
-const contentTypes = config.overrideContentTypes && Object.keys(config.overrideContentTypes)
-const overrideContentTypes = (res, path) => {
+const contentTypes = typeof config.overrideContentTypes === 'object' &&
+  Object.keys(config.overrideContentTypes)
+const overrideContentTypes = contentTypes && contentTypes.length && function (res, path) {
   // Do only if accessing files from uploads' root directory (i.e. not thumbs, etc.)
   const relpath = path.replace(paths.uploads, '')
   if (relpath.indexOf('/', 1) === -1) {
@@ -201,8 +202,8 @@ if (config.cacheControl) {
   if (config.serveFilesWithNode) {
     initServeStaticUploads({
       setHeaders: (res, path) => {
-        // Override Content-Type if necessary
-        if (contentTypes && contentTypes.length) {
+        // Override Content-Type header if necessary
+        if (overrideContentTypes) {
           overrideContentTypes(res, path)
         }
         // If using CDN, cache uploads in CDN as well
@@ -232,14 +233,12 @@ if (config.cacheControl) {
     next()
   })
 } else if (config.serveFilesWithNode) {
-  initServeStaticUploads({
-    setHeaders: (res, path) => {
-      // Override Content-Type if necessary
-      if (contentTypes && contentTypes.length) {
-        overrideContentTypes(res, path)
-      }
-    }
-  })
+  const opts = {}
+  // Override Content-Type header if necessary
+  if (overrideContentTypes) {
+    opts.setHeaders = overrideContentTypes
+  }
+  initServeStaticUploads(opts)
 }
 
 // Static assets
