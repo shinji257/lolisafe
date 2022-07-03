@@ -139,6 +139,13 @@ const overrideContentTypes = contentTypes && contentTypes.length && function (re
 
 const initServeStaticUploads = (opts = {}) => {
   if (config.setContentDisposition) {
+    const SimpleDataStore = require('./controllers/utils/SimpleDataStore')
+    utils.contentDispositionStore = new SimpleDataStore(
+      config.contentDispositionOptions || {
+        limit: 50,
+        strategy: 'lastGetTime'
+      }
+    )
     opts.preSetHeaders = async (res, req, path, stat) => {
       try {
         // Do only if accessing files from uploads' root directory (i.e. not thumbs, etc.)
@@ -146,20 +153,33 @@ const initServeStaticUploads = (opts = {}) => {
         const relpath = path.replace(paths.uploads, '')
         if (relpath.indexOf('/', 1) === -1 && req.method === 'GET') {
           const name = relpath.substring(1)
-          const _file = await utils.db.table('files')
-            .where('name', name)
-            .select('original')
-            .first()
-          res.set('Content-Disposition', contentDisposition(_file.original, { type: 'inline' }))
+          let original = utils.contentDispositionStore.get(name)
+          if (!original) {
+            original = await utils.db.table('files')
+              .where('name', name)
+              .select('original')
+              .first()
+              .then(_file => {
+                utils.contentDispositionStore.set(name, _file.original)
+                return _file.original
+              })
+          }
+          if (original) {
+            res.set('Content-Disposition', contentDisposition(original, { type: 'inline' }))
+          }
         }
       } catch (error) {
         logger.error(error)
       }
     }
     // serveStatic is provided with @bobbywibowo/serve-static, a fork of express/serve-static.
-    // The fork allows specifying an async setHeaders function by the name preSetHeaders.
-    // It will await the said function before creating 'send' stream to client.
+    // The fork allows specifying an async function by the name preSetHeaders,
+    // which it will await before creating 'send' stream to client.
+    // This is necessary due to database queries being async tasks,
+    // and express/serve-static not having the functionality by default.
     safe.use('/', require('@bobbywibowo/serve-static')(paths.uploads, opts))
+    logger.debug('Inititated SimpleDataStore for Content-Disposition: ' +
+      `{ limit: ${utils.contentDispositionStore.limit}, strategy: "${utils.contentDispositionStore.strategy}" }`)
   } else {
     safe.use('/', express.static(paths.uploads, opts))
   }

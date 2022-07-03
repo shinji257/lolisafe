@@ -38,11 +38,25 @@ module.exports = {
 
   /*
     If you serve files with node, you can optionally choose to set Content-Disposition header
-    into their original file names. This allows users to save files into their original file names.
+    with their original file names. This allows users to download files into their original file names.
 
-    This will query the DB every time users access uploaded files as there's no caching mechanism.
+    "contentDispositionOptions" configures in-memory caching options,
+    as it would otherwise have to query database every single time.
+
+    If enabled, but "contentDispositionOptions" is missing, it will use these defaults:
+    { limit: 50, strategy: 'lastGetTime' }
   */
   setContentDisposition: false,
+  contentDispositionOptions: {
+    limit: 50,
+    /*
+      Available strategies: lastGetTime, getsCount
+
+      lastGetTime: when cache store exceeds limit, remove cache with oldest access time
+      getsCount: when cache store exceeds limit, remove cache with fewest access count
+    */
+    strategy: 'lastGetTime'
+  },
 
   /*
     If you serve files with node, you can optionally choose to

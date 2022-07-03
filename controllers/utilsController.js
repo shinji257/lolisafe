@@ -66,7 +66,9 @@ const self = {
     enabled: false,
     periods: {},
     default: {}
-  }
+  },
+
+  contentDispositionStore: null
 }
 
 // Remember old renderer, if overridden, or proxy to default renderer
@@ -654,10 +656,14 @@ self.bulkDeleteFromDb = async (field, values, user) => {
         })
       }
 
-      // Push album ids
       unlinked.forEach(file => {
+        // Push album ids
         if (file.albumid && !albumids.includes(file.albumid)) {
           albumids.push(file.albumid)
+        }
+        // Delete form Content-Disposition store if used
+        if (self.contentDispositionStore) {
+          self.contentDispositionStore.delete(file.name)
         }
       })
 
