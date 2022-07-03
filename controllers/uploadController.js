@@ -110,12 +110,16 @@ const executeMulter = multer({
     files: maxFilesPerUpload
   },
   fileFilter (req, file, cb) {
+    // BUG: Since multer@1.4.5-lts.1, UTF-8 filenames are not handled properly, so we force it
+    file.originalname = file.originalname &&
+      Buffer.from(file.originalname, 'latin1').toString('utf8')
+
     file.extname = utils.extname(file.originalname)
     if (self.isExtensionFiltered(file.extname)) {
       return cb(new ClientError(`${file.extname ? `${file.extname.substr(1).toUpperCase()} files` : 'Files with no extension'} are not permitted.`))
     }
 
-    // Re-map Dropzone keys so people can manually use the API without prepending 'dz'
+    // Re-map Dropzone chunked uploads keys so people can manually use the API without prepending 'dz'
     for (const key in req.body) {
       if (!/^dz/.test(key)) continue
       req.body[key.replace(/^dz/, '')] = req.body[key]
