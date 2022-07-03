@@ -52,14 +52,14 @@ class SimpleDataStore {
   }
 
   getStalest () {
-    let stalest = null
+    let stalest = [null, { stratval: Infinity }]
     switch (this.#strategy) {
       // both "lastGetTime" and "getsCount" simply must find lowest value
       // to determine the stalest entry
       case STRATEGIES[0]:
       case STRATEGIES[1]:
         for (const entry of this.#store) {
-          if (!stalest || entry[1].stratval < stalest[1].stratval) {
+          if (entry[1].stratval < stalest[1].stratval) {
             stalest = entry
           }
         }
