@@ -143,7 +143,7 @@ const initServeStaticUploads = (opts = {}) => {
     utils.contentDispositionStore = new SimpleDataStore(
       config.contentDispositionOptions || {
         limit: 50,
-        strategy: 'lastGetTime'
+        strategy: SimpleDataStore.STRATEGIES[0]
       }
     )
     opts.preSetHeaders = async (res, req, path, stat) => {

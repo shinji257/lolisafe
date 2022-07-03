@@ -1,6 +1,6 @@
 const STRATEGIES = [
-  'lastGetTime',
-  'getsCount'
+  'LAST_GET_TIME',
+  'GETS_COUNT'
 ]
 
 class SimpleDataStore {
@@ -122,3 +122,4 @@ class SimpleDataStore {
 }
 
 module.exports = SimpleDataStore
+module.exports.STRATEGIES = STRATEGIES

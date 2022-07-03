@@ -44,18 +44,18 @@ module.exports = {
     as it would otherwise have to query database every single time.
 
     If enabled, but "contentDispositionOptions" is missing, it will use these defaults:
-    { limit: 50, strategy: 'lastGetTime' }
+    { limit: 50, strategy: 'LAST_GET_TIME' }
   */
   setContentDisposition: false,
   contentDispositionOptions: {
     limit: 50,
     /*
-      Available strategies: lastGetTime, getsCount
+      Available strategies: LAST_GET_TIME, GETS_COUNT
 
-      lastGetTime: when cache store exceeds limit, remove cache with oldest access time
-      getsCount: when cache store exceeds limit, remove cache with fewest access count
+      LAST_GET_TIME: when cache store exceeds limit, remove cache with oldest access time
+      GETS_COUNT: when cache store exceeds limit, remove cache with fewest access count
     */
-    strategy: 'lastGetTime'
+    strategy: 'LAST_GET_TIME'
   },
 
   /*
