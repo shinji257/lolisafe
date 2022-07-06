@@ -5,6 +5,7 @@ const STRATEGIES = [
 
 class SimpleDataStore {
   #store
+  #size
   #limit
   #strategy
 
@@ -22,22 +23,28 @@ class SimpleDataStore {
     }
 
     this.#store = new Map()
+    this.#size = this.#store.size
     this.#limit = options.limit
     this.#strategy = options.strategy
   }
 
   clear () {
-    return this.#store.clear()
+    this.#store.clear()
+    this.#size = 0
   }
 
   delete (key) {
-    return this.#store.delete(key)
+    if (this.#store.delete(key)) {
+      this.#size--
+      return true
+    }
+    return false
   }
 
   deleteStalest () {
     const stalest = this.getStalest()
     if (stalest) {
-      return this.#store.delete(stalest)
+      return this.delete(stalest)
     }
   }
 
@@ -81,15 +88,12 @@ class SimpleDataStore {
   }
 
   hold (key) {
-    if (this.#store.size >= this.#limit) {
-      this.deleteStalest()
-    }
-    return this.#store.set(key, null) && true
+    this.#store.set(key, null)
+    return true
   }
 
   set (key, value) {
-    // Only do deleteStalest() if this key legitimately had not been set or held via hold()
-    if (this.#store.get(key) === undefined && this.#store.size >= this.#limit) {
+    if (this.#size >= this.#limit) {
       this.deleteStalest()
     }
 
@@ -103,7 +107,11 @@ class SimpleDataStore {
         break
     }
 
-    return this.#store.set(key, { value, stratval }) && true
+    if (this.#store.set(key, { value, stratval })) {
+      this.#size++
+      return true
+    }
+    return false
   }
 
   get limit () {
@@ -115,7 +123,7 @@ class SimpleDataStore {
   }
 
   get size () {
-    return this.#store.size
+    return this.#size
   }
 
   set size (_) {
