@@ -5,7 +5,7 @@ const STRATEGIES = [
 
 class SimpleDataStore {
   #store
-  #size
+  #held
   #limit
   #strategy
 
@@ -23,36 +23,35 @@ class SimpleDataStore {
     }
 
     this.#store = new Map()
-    this.#size = this.#store.size
+    this.#held = new Set()
     this.#limit = options.limit
     this.#strategy = options.strategy
   }
 
   clear () {
     this.#store.clear()
-    this.#size = 0
+    this.#held.clear()
   }
 
   delete (key) {
-    if (this.#store.delete(key)) {
-      this.#size--
-      return true
-    }
-    return false
+    // If key is in #held, assume is not in #store, thus return early
+    return this.#held.delete(key) || this.#store.delete(key)
   }
 
   deleteStalest () {
     const stalest = this.getStalest()
     if (stalest) {
-      return this.delete(stalest)
+      return this.#store.delete(stalest)
     }
   }
 
   get (key) {
+    // null should be used as an indicator for when key is held but not yet set with value
+    if (this.#held.has(key)) {
+      return null
+    }
+
     const entry = this.#store.get(key)
-    // This may return undefined or null
-    // undefined should be an indicator for when the key legitimately has not been set,
-    // null should be an indicator for when the key is still being held via hold() function
     if (!entry) return entry
 
     switch (this.#strategy) {
@@ -76,7 +75,7 @@ class SimpleDataStore {
       case STRATEGIES[0]:
       case STRATEGIES[1]:
         for (const entry of this.#store) {
-          if (entry[1] && entry[1].stratval < stalest[1].stratval) {
+          if (entry[1].stratval < stalest[1].stratval) {
             stalest = entry
           }
         }
@@ -88,12 +87,11 @@ class SimpleDataStore {
   }
 
   hold (key) {
-    this.#store.set(key, null)
-    return true
+    return this.#held.add(key) && true
   }
 
   set (key, value) {
-    if (this.#size >= this.#limit) {
+    if (!this.#store.has(key) && this.#store.size >= this.#limit) {
       this.deleteStalest()
     }
 
@@ -108,7 +106,7 @@ class SimpleDataStore {
     }
 
     if (this.#store.set(key, { value, stratval })) {
-      this.#size++
+      this.#held.delete(key)
       return true
     }
     return false
@@ -123,7 +121,7 @@ class SimpleDataStore {
   }
 
   get size () {
-    return this.#size
+    return this.#store.size
   }
 
   set size (_) {
@@ -138,9 +136,17 @@ class SimpleDataStore {
     throw Error('This property is read-only.')
   }
 
+  // Not advised to use the following functions during production
+  // Mainly intended to "inspect" internal stores when required
+
   get store () {
     // return shallow copy
     return new Map(this.#store)
+  }
+
+  get held () {
+    // return shallow copy
+    return new Set(this.#held)
   }
 }
 
