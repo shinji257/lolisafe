@@ -26,17 +26,13 @@ routes.get('/a/:identifier', async (req, res, next) => {
 
   let cacheid
   if (process.env.NODE_ENV !== 'development') {
-    // Cache ID - we initialize a separate cache for No-JS version
-    cacheid = nojs ? `${album.id}-nojs` : album.id
+    // Cache ID - we use a separate cache key for No-JS version
+    cacheid = `${album.id}${nojs ? '-nojs' : ''}`
 
-    if (!utils.albumsCache[cacheid]) {
-      utils.albumsCache[cacheid] = {
-        cache: null,
-        generating: false
-      }
-    }
-
-    if (!utils.albumsCache[cacheid].cache && utils.albumsCache[cacheid].generating) {
+    const cache = utils.albumRenderStore.get(cacheid)
+    if (cache) {
+      return res.send(cache)
+    } else if (cache === null) {
       return res.render('album-notice', {
         config,
         utils,
@@ -44,11 +40,9 @@ routes.get('/a/:identifier', async (req, res, next) => {
         album,
         notice: 'This album\'s public page is still being generated. Please try again later.'
       })
-    } else if (utils.albumsCache[cacheid].cache) {
-      return res.send(utils.albumsCache[cacheid].cache)
     }
 
-    utils.albumsCache[cacheid].generating = true
+    utils.albumRenderStore.hold(cacheid)
   }
 
   const files = await utils.db.table('files')
@@ -90,13 +84,16 @@ routes.get('/a/:identifier', async (req, res, next) => {
   }, (error, html) => {
     const data = error ? null : html
     if (cacheid) {
-      utils.albumsCache[cacheid].cache = data
-      utils.albumsCache[cacheid].generating = false
+      // Only store rendered page if it did not error out and album actually have files
+      if (data && files.length) {
+        utils.albumRenderStore.set(cacheid, data)
+      } else {
+        utils.albumRenderStore.delete(cacheid)
+      }
     }
 
     // Express should already send error to the next handler
-    if (error) return
-    return res.send(data)
+    if (!error) return res.send(data)
   })
 })
 

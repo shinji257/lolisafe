@@ -12,6 +12,7 @@ const perms = require('./permissionController')
 const apiErrorsHandler = require('./handlers/apiErrorsHandler')
 const ClientError = require('./utils/ClientError')
 const ServerError = require('./utils/ServerError')
+const SimpleDataStore = require('./utils/SimpleDataStore')
 const config = require('./../config')
 const logger = require('./../logger')
 
@@ -59,7 +60,6 @@ const self = {
   thumbsSize: config.uploads.generateThumbs.size || 200,
   ffprobe: promisify(ffmpeg.ffprobe),
 
-  albumsCache: {},
   timezoneOffset: new Date().getTimezoneOffset(),
 
   retentions: {
@@ -68,6 +68,10 @@ const self = {
     default: {}
   },
 
+  albumRenderStore: new SimpleDataStore({
+    limit: 10,
+    strategy: SimpleDataStore.STRATEGIES[0]
+  }),
   contentDispositionStore: null
 }
 
@@ -678,7 +682,7 @@ self.bulkDeleteFromDb = async (field, values, user) => {
           .whereIn('id', albumids)
           .update('editedAt', Math.floor(Date.now() / 1000))
           .catch(logger.error)
-        self.invalidateAlbumsCache(albumids)
+        self.deleteStoredAlbumRenders(albumids)
       }
 
       // Purge Cloudflare's cache if necessary, but do not wait
@@ -769,10 +773,10 @@ self.bulkDeleteExpired = async (dryrun, verbose) => {
   return result
 }
 
-self.invalidateAlbumsCache = albumids => {
+self.deleteStoredAlbumRenders = albumids => {
   for (const albumid of albumids) {
-    delete self.albumsCache[albumid]
-    delete self.albumsCache[`${albumid}-nojs`]
+    self.albumRenderStore.delete(`${albumid}`)
+    self.albumRenderStore.delete(`${albumid}-nojs`)
   }
 }
 

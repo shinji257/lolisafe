@@ -317,7 +317,7 @@ self.deleteUser = async (req, res, next) => {
       await utils.db.table('albums')
         .whereIn('id', albumids)
         .del()
-      utils.invalidateAlbumsCache(albumids)
+      utils.deleteStoredAlbumRenders(albumids)
 
       // Unlink their archives
       await Promise.all(albums.map(async album => {

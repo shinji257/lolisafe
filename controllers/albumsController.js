@@ -296,7 +296,7 @@ self.disable = async (req, res, next) => {
         .first()
         .update('enabled', 0)
     }
-    utils.invalidateAlbumsCache([id])
+    utils.deleteStoredAlbumRenders([id])
     utils.invalidateStatsCache('albums')
 
     try {
@@ -387,7 +387,7 @@ self.edit = async (req, res, next) => {
     await utils.db.table('albums')
       .where(filter)
       .update(update)
-    utils.invalidateAlbumsCache([id])
+    utils.deleteStoredAlbumRenders([id])
     utils.invalidateStatsCache('albums')
 
     if (req.body.requestLink) {
@@ -676,7 +676,7 @@ self.addFiles = async (req, res, next) => {
     await utils.db.table('albums')
       .whereIn('id', albumids)
       .update('editedAt', Math.floor(Date.now() / 1000))
-    utils.invalidateAlbumsCache(albumids)
+    utils.deleteStoredAlbumRenders(albumids)
 
     await res.json({ success: true, failed })
   } catch (error) {

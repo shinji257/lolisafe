@@ -926,7 +926,7 @@ self.storeFilesToDb = async (req, res, user, infoMap) => {
       await utils.db.table('albums')
         .whereIn('id', authorizedIds)
         .update('editedAt', Math.floor(Date.now() / 1000))
-      utils.invalidateAlbumsCache(authorizedIds)
+      utils.deleteStoredAlbumRenders(authorizedIds)
     }
   }
 
