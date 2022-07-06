@@ -34,9 +34,19 @@ class SimpleDataStore {
     return this.#store.delete(key)
   }
 
+  deleteStalest () {
+    const stalest = this.getStalest()
+    if (stalest) {
+      return this.#store.delete(stalest)
+    }
+  }
+
   get (key) {
     const entry = this.#store.get(key)
-    if (typeof entry === 'undefined') return entry
+    // This may return undefined or null
+    // undefined should be an indicator for when the key legitimately has not been set,
+    // null should be an indicator for when the key is still being held via hold() function
+    if (!entry) return entry
 
     switch (this.#strategy) {
       case STRATEGIES[0]:
@@ -59,7 +69,7 @@ class SimpleDataStore {
       case STRATEGIES[0]:
       case STRATEGIES[1]:
         for (const entry of this.#store) {
-          if (entry[1].stratval < stalest[1].stratval) {
+          if (entry[1] && entry[1].stratval < stalest[1].stratval) {
             stalest = entry
           }
         }
@@ -70,12 +80,17 @@ class SimpleDataStore {
     return stalest[0]
   }
 
-  set (key, value) {
+  hold (key) {
     if (this.#store.size >= this.#limit) {
-      const stalest = this.getStalest()
-      if (stalest) {
-        this.#store.delete(stalest)
-      }
+      this.deleteStalest()
+    }
+    return this.#store.set(key, null) && true
+  }
+
+  set (key, value) {
+    // Only do deleteStalest() if this key legitimately had not been set or held via hold()
+    if (this.#store.get(key) === undefined && this.#store.size >= this.#limit) {
+      this.deleteStalest()
     }
 
     let stratval
