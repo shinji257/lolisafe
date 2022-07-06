@@ -147,28 +147,29 @@ const initServeStaticUploads = (opts = {}) => {
       }
     )
     opts.preSetHeaders = async (res, req, path, stat) => {
+      // Do only if accessing files from uploads' root directory (i.e. not thumbs, etc.),
+      // AND only if GET requests
+      const relpath = path.replace(paths.uploads, '')
+      if (relpath.indexOf('/', 1) !== -1 || req.method !== 'GET') return
+      const name = relpath.substring(1)
       try {
-        // Do only if accessing files from uploads' root directory (i.e. not thumbs, etc.)
-        // and only if they are GET requests
-        const relpath = path.replace(paths.uploads, '')
-        if (relpath.indexOf('/', 1) === -1 && req.method === 'GET') {
-          const name = relpath.substring(1)
-          let original = utils.contentDispositionStore.get(name)
-          if (!original) {
-            original = await utils.db.table('files')
-              .where('name', name)
-              .select('original')
-              .first()
-              .then(_file => {
-                utils.contentDispositionStore.set(name, _file.original)
-                return _file.original
-              })
-          }
-          if (original) {
-            res.set('Content-Disposition', contentDisposition(original, { type: 'inline' }))
-          }
+        let original = utils.contentDispositionStore.get(name)
+        if (original === undefined) {
+          utils.contentDispositionStore.hold(name)
+          original = await utils.db.table('files')
+            .where('name', name)
+            .select('original')
+            .first()
+            .then(_file => {
+              utils.contentDispositionStore.set(name, _file.original)
+              return _file.original
+            })
+        }
+        if (original) {
+          res.set('Content-Disposition', contentDisposition(original, { type: 'inline' }))
         }
       } catch (error) {
+        utils.contentDispositionStore.delete(name)
         logger.error(error)
       }
     }
