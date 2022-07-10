@@ -1,7 +1,6 @@
 const randomstring = require('randomstring')
 const perms = require('./permissionController')
 const utils = require('./utilsController')
-const apiErrorsHandler = require('./handlers/apiErrorsHandler')
 const ClientError = require('./utils/ClientError')
 const ServerError = require('./utils/ServerError')
 
@@ -34,8 +33,8 @@ self.generateUniqueToken = async () => {
   return null
 }
 
-self.verify = async (req, res, next) => {
-  try {
+self.verify = (req, res, next) => {
+  Promise.resolve().then(async () => {
     const token = typeof req.body.token === 'string'
       ? req.body.token.trim()
       : ''
@@ -71,22 +70,18 @@ self.verify = async (req, res, next) => {
     }
 
     await res.json(obj)
-  } catch (error) {
-    return apiErrorsHandler(error, req, res, next)
-  }
+  }).catch(next)
 }
 
-self.list = async (req, res, next) => {
-  try {
+self.list = (req, res, next) => {
+  Promise.resolve().then(async () => {
     const user = await utils.authorize(req)
     await res.json({ success: true, token: user.token })
-  } catch (error) {
-    return apiErrorsHandler(error, req, res, next)
-  }
+  }).catch(next)
 }
 
-self.change = async (req, res, next) => {
-  try {
+self.change = (req, res, next) => {
+  Promise.resolve().then(async () => {
     const user = await utils.authorize(req, 'token')
 
     const newToken = await self.generateUniqueToken()
@@ -103,9 +98,7 @@ self.change = async (req, res, next) => {
     self.onHold.delete(newToken)
 
     await res.json({ success: true, token: newToken })
-  } catch (error) {
-    return apiErrorsHandler(error, req, res, next)
-  }
+  }).catch(next)
 }
 
 module.exports = self
