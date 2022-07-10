@@ -5,7 +5,6 @@ const paths = require('./pathsController')
 const perms = require('./permissionController')
 const tokens = require('./tokenController')
 const utils = require('./utilsController')
-const apiErrorsHandler = require('./handlers/apiErrorsHandler.js')
 const ClientError = require('./utils/ClientError')
 const ServerError = require('./utils/ServerError')
 const config = require('./../config')
@@ -31,8 +30,8 @@ const self = {
 // https://github.com/kelektiv/node.bcrypt.js/tree/v5.0.1#a-note-on-rounds
 const saltRounds = 10
 
-self.verify = async (req, res, next) => {
-  try {
+self.verify = (req, res, next) => {
+  Promise.resolve().then(async () => {
     const username = typeof req.body.username === 'string'
       ? req.body.username.trim()
       : ''
@@ -59,13 +58,11 @@ self.verify = async (req, res, next) => {
     } else {
       await res.json({ success: true, token: user.token })
     }
-  } catch (error) {
-    return apiErrorsHandler(error, req, res, next)
-  }
+  }).catch(next)
 }
 
-self.register = async (req, res, next) => {
-  try {
+self.register = (req, res, next) => {
+  Promise.resolve().then(async () => {
     if (config.enableUserAccounts === false) {
       throw new ClientError('Registration is currently disabled.', { statusCode: 403 })
     }
@@ -110,13 +107,11 @@ self.register = async (req, res, next) => {
     tokens.onHold.delete(token)
 
     await res.json({ success: true, token })
-  } catch (error) {
-    return apiErrorsHandler(error, req, res, next)
-  }
+  }).catch(next)
 }
 
-self.changePassword = async (req, res, next) => {
-  try {
+self.changePassword = (req, res, next) => {
+  Promise.resolve().then(async () => {
     const user = await utils.authorize(req)
 
     const password = typeof req.body.password === 'string'
@@ -133,9 +128,7 @@ self.changePassword = async (req, res, next) => {
       .update('password', hash)
 
     await res.json({ success: true })
-  } catch (error) {
-    return apiErrorsHandler(error, req, res, next)
-  }
+  }).catch(next)
 }
 
 self.assertPermission = (user, target) => {
@@ -148,8 +141,8 @@ self.assertPermission = (user, target) => {
   }
 }
 
-self.createUser = async (req, res, next) => {
-  try {
+self.createUser = (req, res, next) => {
+  Promise.resolve().then(async () => {
     const user = await utils.authorize(req)
 
     const isadmin = perms.is(user, 'admin')
@@ -209,13 +202,11 @@ self.createUser = async (req, res, next) => {
     tokens.onHold.delete(token)
 
     await res.json({ success: true, username, password, group })
-  } catch (error) {
-    return apiErrorsHandler(error, req, res, next)
-  }
+  }).catch(next)
 }
 
-self.editUser = async (req, res, next) => {
-  try {
+self.editUser = (req, res, next) => {
+  Promise.resolve().then(async () => {
     const user = await utils.authorize(req)
 
     const isadmin = perms.is(user, 'admin')
@@ -263,18 +254,16 @@ self.editUser = async (req, res, next) => {
     const response = { success: true, update }
     if (password) response.update.password = password
     await res.json(response)
-  } catch (error) {
-    return apiErrorsHandler(error, req, res, next)
-  }
+  }).catch(next)
 }
 
-self.disableUser = async (req, res, next) => {
+self.disableUser = (req, res, next) => {
   req.body = { id: req.body.id, enabled: false }
   return self.editUser(req, res, next)
 }
 
-self.deleteUser = async (req, res, next) => {
-  try {
+self.deleteUser = (req, res, next) => {
+  Promise.resolve().then(async () => {
     const user = await utils.authorize(req)
 
     const isadmin = perms.is(user, 'admin')
@@ -336,17 +325,15 @@ self.deleteUser = async (req, res, next) => {
     utils.invalidateStatsCache('users')
 
     await res.json({ success: true })
-  } catch (error) {
-    return apiErrorsHandler(error, req, res, next)
-  }
+  }).catch(next)
 }
 
-self.bulkDeleteUsers = async (req, res, next) => {
+self.bulkDeleteUsers = (req, res, next) => {
   // TODO
 }
 
-self.listUsers = async (req, res, next) => {
-  try {
+self.listUsers = (req, res, next) => {
+  Promise.resolve().then(async () => {
     const user = await utils.authorize(req)
 
     const isadmin = perms.is(user, 'admin')
@@ -385,9 +372,7 @@ self.listUsers = async (req, res, next) => {
     }
 
     await res.json({ success: true, users, count })
-  } catch (error) {
-    return apiErrorsHandler(error, req, res, next)
-  }
+  }).catch(next)
 }
 
 module.exports = self
