@@ -40,6 +40,7 @@ const versions = require('./src/versions')
 logger.log('Starting lolisafe\u2026')
 const safe = express()
 
+const errors = require('./controllers/errorsController')
 const paths = require('./controllers/pathsController')
 paths.initSync()
 const utils = require('./controllers/utilsController')
@@ -317,21 +318,9 @@ safe.use('/api', api)
       }
     }
 
-    // Error pages
-    safe.use((req, res, next) => {
-      if (!res.headersSent) {
-        res.setHeader('Cache-Control', 'no-store')
-        res.status(404).sendFile(path.join(paths.errorRoot, config.errorPages[404]))
-      }
-    })
-
-    safe.use((error, req, res, next) => {
-      logger.error(error)
-      if (!res.headersSent) {
-        res.setHeader('Cache-Control', 'no-store')
-        res.status(500).sendFile(path.join(paths.errorRoot, config.errorPages[500]))
-      }
-    })
+    // Express error handlers
+    safe.use(errors.handleMissing)
+    safe.use(errors.handle)
 
     // Git hash
     if (config.showGitHash) {
