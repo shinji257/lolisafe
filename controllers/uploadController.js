@@ -8,7 +8,6 @@ const searchQuery = require('search-query-parser')
 const paths = require('./pathsController')
 const perms = require('./permissionController')
 const utils = require('./utilsController')
-const apiErrorsHandler = require('./handlers/apiErrorsHandler.js')
 const ClientError = require('./utils/ClientError')
 const multerStorage = require('./utils/multerStorage')
 const ServerError = require('./utils/ServerError')
@@ -275,8 +274,8 @@ self.parseStripTags = stripTags => {
 
 /** Uploads */
 
-self.upload = async (req, res, next) => {
-  try {
+self.upload = (req, res, next) => {
+  Promise.resolve().then(async () => {
     let user
     if (config.private === true) {
       user = await utils.authorize(req)
@@ -297,9 +296,7 @@ self.upload = async (req, res, next) => {
 
     const func = req.body.urls ? self.actuallyUploadUrls : self.actuallyUploadFiles
     await func(req, res, user, albumid, age)
-  } catch (error) {
-    return apiErrorsHandler(error, req, res, next)
-  }
+  }).catch(next)
 }
 
 self.actuallyUploadFiles = async (req, res, user, albumid, age) => {
@@ -540,8 +537,8 @@ self.actuallyUploadUrls = async (req, res, user, albumid, age) => {
 
 /** Chunk uploads */
 
-self.finishChunks = async (req, res, next) => {
-  try {
+self.finishChunks = (req, res, next) => {
+  Promise.resolve().then(async () => {
     if (!chunkedUploads) {
       throw new ClientError('Chunked upload is disabled.', { statusCode: 403 })
     }
@@ -555,9 +552,7 @@ self.finishChunks = async (req, res, next) => {
     }
 
     await self.actuallyFinishChunks(req, res, user)
-  } catch (error) {
-    return apiErrorsHandler(error, req, res, next)
-  }
+  }).catch(next)
 }
 
 self.actuallyFinishChunks = async (req, res, user) => {
@@ -984,8 +979,8 @@ self.delete = async (req, res, next) => {
   return self.bulkDelete(req, res, next)
 }
 
-self.bulkDelete = async (req, res, next) => {
-  try {
+self.bulkDelete = (req, res, next) => {
+  Promise.resolve().then(async () => {
     const user = await utils.authorize(req)
 
     const field = req.body.field || 'id'
@@ -997,15 +992,13 @@ self.bulkDelete = async (req, res, next) => {
 
     const failed = await utils.bulkDeleteFromDb(field, values, user)
     await res.json({ success: true, failed })
-  } catch (error) {
-    return apiErrorsHandler(error, req, res, next)
-  }
+  }).catch(next)
 }
 
 /** List uploads */
 
-self.list = async (req, res, next) => {
-  try {
+self.list = (req, res, next) => {
+  Promise.resolve().then(async () => {
     const user = await utils.authorize(req)
 
     const all = req.headers.all === '1'
@@ -1582,15 +1575,13 @@ self.list = async (req, res, next) => {
     }
 
     await res.json({ success: true, files, count, users, albums, basedomain })
-  } catch (error) {
-    return apiErrorsHandler(error, req, res, next)
-  }
+  }).catch(next)
 }
 
 /** Get file info */
 
-self.get = async (req, res, next) => {
-  try {
+self.get = (req, res, next) => {
+  Promise.resolve().then(async () => {
     const user = await utils.authorize(req)
     const ismoderator = perms.is(user, 'moderator')
 
@@ -1613,9 +1604,7 @@ self.get = async (req, res, next) => {
     }
 
     await res.json({ success: true, file })
-  } catch (error) {
-    return apiErrorsHandler(error, req, res, next)
-  }
+  }).catch(next)
 }
 
 module.exports = self
