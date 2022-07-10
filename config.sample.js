@@ -743,7 +743,7 @@ module.exports = {
   */
   database: {
     client: 'better-sqlite3',
-    connection: { filename: './database/db' },
+    connection: { filename: './database/db.sqlite3' },
     useNullAsDefault: true
   }
 }
