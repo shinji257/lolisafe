@@ -9,7 +9,6 @@ const sharp = require('sharp')
 const si = require('systeminformation')
 const paths = require('./pathsController')
 const perms = require('./permissionController')
-const apiErrorsHandler = require('./handlers/apiErrorsHandler')
 const ClientError = require('./utils/ClientError')
 const ServerError = require('./utils/ServerError')
 const SimpleDataStore = require('./utils/SimpleDataStore')
@@ -785,8 +784,8 @@ self.invalidateStatsCache = type => {
   statsData[type].cache = null
 }
 
-self.stats = async (req, res, next) => {
-  try {
+self.stats = (req, res, next) => {
+  Promise.resolve().then(async () => {
     const user = await self.authorize(req)
 
     const isadmin = perms.is(user, 'admin')
@@ -1092,13 +1091,13 @@ self.stats = async (req, res, next) => {
     ])
 
     return res.json({ success: true, stats, hrtime: process.hrtime(hrstart) })
-  } catch (error) {
+  }).catch(error => {
     // Reset generating state when encountering any errors
     Object.keys(statsData).forEach(key => {
       statsData[key].generating = false
     })
-    return apiErrorsHandler(error, req, res, next)
-  }
+    return next(error)
+  })
 }
 
 module.exports = self
