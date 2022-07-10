@@ -7,7 +7,6 @@ const paths = require('./pathsController')
 const perms = require('./permissionController')
 const uploadController = require('./uploadController')
 const utils = require('./utilsController')
-const apiErrorsHandler = require('./handlers/apiErrorsHandler.js')
 const ClientError = require('./utils/ClientError')
 const ServerError = require('./utils/ServerError')
 const config = require('./../config')
@@ -71,8 +70,8 @@ self.getUniqueRandomName = async () => {
   throw new ServerError('Failed to allocate a unique identifier for the album. Try again?')
 }
 
-self.list = async (req, res, next) => {
-  try {
+self.list = (req, res, next) => {
+  Promise.resolve().then(async () => {
     const user = await utils.authorize(req)
 
     const all = req.headers.all === '1'
@@ -183,13 +182,11 @@ self.list = async (req, res, next) => {
     }
 
     await res.json({ success: true, albums, count, users, homeDomain })
-  } catch (error) {
-    return apiErrorsHandler(error, req, res, next)
-  }
+  }).catch(next)
 }
 
-self.create = async (req, res, next) => {
-  try {
+self.create = (req, res, next) => {
+  Promise.resolve().then(async resolve => {
     const user = await utils.authorize(req)
 
     const name = typeof req.body.name === 'string'
@@ -228,19 +225,17 @@ self.create = async (req, res, next) => {
     self.onHold.delete(identifier)
 
     await res.json({ success: true, id: ids[0] })
-  } catch (error) {
-    return apiErrorsHandler(error, req, res, next)
-  }
+  }).catch(next)
 }
 
-self.delete = async (req, res, next) => {
+self.delete = (req, res, next) => {
   // Map /delete requests to /disable route
   req.body.del = true
   return self.disable(req, res, next)
 }
 
-self.disable = async (req, res, next) => {
-  try {
+self.disable = (req, res, next) => {
+  Promise.resolve().then(async () => {
     const user = await utils.authorize(req)
 
     const ismoderator = perms.is(user, 'moderator')
@@ -306,13 +301,11 @@ self.disable = async (req, res, next) => {
       if (error.code !== 'ENOENT') throw error
     }
     await res.json({ success: true })
-  } catch (error) {
-    return apiErrorsHandler(error, req, res, next)
-  }
+  }).catch(next)
 }
 
-self.edit = async (req, res, next) => {
-  try {
+self.edit = (req, res, next) => {
+  Promise.resolve().then(async () => {
     const user = await utils.authorize(req)
 
     const ismoderator = perms.is(user, 'moderator')
@@ -410,19 +403,17 @@ self.edit = async (req, res, next) => {
     } else {
       await res.json({ success: true, name })
     }
-  } catch (error) {
-    return apiErrorsHandler(error, req, res, next)
-  }
+  }).catch(next)
 }
 
-self.rename = async (req, res, next) => {
+self.rename = (req, res, next) => {
   req._old = true
   req.body = { name: req.body.name }
   return self.edit(req, res, next)
 }
 
-self.get = async (req, res, next) => {
-  try {
+self.get = (req, res, next) => {
+  Promise.resolve().then(async () => {
     const identifier = req.params.identifier
     if (identifier === undefined) {
       throw new ClientError('No identifier provided.')
@@ -467,13 +458,11 @@ self.get = async (req, res, next) => {
       count: files.length,
       files
     })
-  } catch (error) {
-    return apiErrorsHandler(error, req, res, next)
-  }
+  }).catch(next)
 }
 
-self.generateZip = async (req, res, next) => {
-  try {
+self.generateZip = (req, res, next) => {
+  Promise.resolve().then(async () => {
     const versionString = parseInt(req.query.v)
 
     const identifier = req.params.identifier
@@ -515,13 +504,17 @@ self.generateZip = async (req, res, next) => {
     }
 
     if (self.zipEmitters.has(identifier)) {
-      logger.log(`Waiting previous zip task for album: ${identifier}.`)
-      return self.zipEmitters.get(identifier).once('done', (filePath, fileName, clientErr) => {
-        if (filePath && fileName) {
-          res.download(filePath, fileName)
-        } else if (clientErr) {
-          apiErrorsHandler(clientErr, req, res, next)
-        }
+      return new Promise((resolve, reject) => {
+        logger.log(`Waiting previous zip task for album: ${identifier}.`)
+        self.zipEmitters.get(identifier).once('done', (filePath, fileName, clientErr) => {
+          if (filePath && fileName) {
+            resolve({ filePath, fileName })
+          } else if (clientErr) {
+            reject(clientErr)
+          }
+        })
+      }).then(obj => {
+        return res.download(obj.filePath, obj.fileName)
       })
     }
 
@@ -583,12 +576,10 @@ self.generateZip = async (req, res, next) => {
 
     self.zipEmitters.get(identifier).emit('done', filePath, fileName)
     await res.download(filePath, fileName)
-  } catch (error) {
-    return apiErrorsHandler(error, req, res, next)
-  }
+  }).catch(next)
 }
 
-self.listFiles = async (req, res, next) => {
+self.listFiles = (req, res, next) => {
   if (req.params.page === undefined) {
     // Map to /api/album/get, but with lolisafe upstream compatibility, when accessed with this API route
     req.params.identifier = req.params.id
@@ -624,9 +615,9 @@ self.listFiles = async (req, res, next) => {
   }
 }
 
-self.addFiles = async (req, res, next) => {
+self.addFiles = (req, res, next) => {
   let ids, albumid, failed, albumids
-  try {
+  return Promise.resolve().then(async () => {
     const user = await utils.authorize(req)
 
     ids = req.body.ids
@@ -679,13 +670,13 @@ self.addFiles = async (req, res, next) => {
     utils.deleteStoredAlbumRenders(albumids)
 
     await res.json({ success: true, failed })
-  } catch (error) {
+  }).catch(error => {
     if (Array.isArray(failed) && (failed.length === ids.length)) {
-      return apiErrorsHandler(new ServerError(`Could not ${albumid === null ? 'add' : 'remove'} any files ${albumid === null ? 'to' : 'from'} the album.`), req, res, next)
+      return next(new ServerError(`Could not ${albumid === null ? 'add' : 'remove'} any files ${albumid === null ? 'to' : 'from'} the album.`))
     } else {
-      return apiErrorsHandler(error, req, res, next)
+      return next(error)
     }
-  }
+  })
 }
 
 module.exports = self
